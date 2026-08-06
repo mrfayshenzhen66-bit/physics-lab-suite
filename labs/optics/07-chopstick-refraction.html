@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>观察筷子的折射</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#141a26;font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#eef2f8;}
+  #topbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(20,26,38,.9);border-bottom:1px solid rgba(255,255,255,.06);}
+  #topbar a{color:#fff;text-decoration:none;font-size:13px;}
+  #topbar a:hover{text-decoration:underline;}
+  #topbar .t{font-size:15px;font-weight:600;letter-spacing:.5px;}
+  #topbar .hint{font-size:12px;color:rgba(255,255,255,.45);}
+  #stage{position:relative;width:min(1100px,97vw);margin:16px auto 30px;}
+  #cv{display:block;width:100%;height:auto;border-radius:12px;border:1px solid rgba(255,255,255,.07);box-shadow:0 10px 34px rgba(0,0,0,.45);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+  #chip{position:absolute;left:14px;bottom:18px;font-size:12px;color:rgba(255,255,255,.6);background:rgba(20,26,38,.7);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:5px 12px;pointer-events:none;}
+  #toolbar{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;display:flex;gap:8px;background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 14px;z-index:10;}
+  #toolbar button{background:rgba(255,255,255,.06);color:#dfe6f0;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  #toolbar button:hover{background:rgba(255,255,255,.16);}
+  .overlay{position:absolute;inset:0;background:rgba(8,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:30;border-radius:12px;}
+  .card{background:rgba(24,31,46,.97);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:18px 22px;box-shadow:0 14px 44px rgba(0,0,0,.55);max-width:560px;}
+  .card h3{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between;align-items:center;font-weight:600;gap:18px;}
+  .card h3 .x{cursor:pointer;color:rgba(255,255,255,.55);font-size:18px;padding:0 4px;line-height:1;}
+  .card h3 .x:hover{color:#fff;}
+  .card p{font-size:13.5px;line-height:1.9;margin:0;color:rgba(238,242,248,.92);}
+  #panel{position:absolute;top:12px;right:12px;width:264px;z-index:25;}
+  #panel .row{margin:12px 0;font-size:13px;}
+  #panel label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+  #panel input[type=range]{width:100%;accent-color:#6ea8fe;cursor:pointer;}
+  #panel .note{font-size:12px;color:rgba(255,255,255,.5);line-height:1.8;}
+  #rays .card{max-width:none;}
+  #cv2{display:block;width:min(900px,82vw);height:auto;border-radius:8px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <a href="index.html">← 返回合集</a>
+  <div class="t">观察筷子的折射</div>
+  <div class="hint">按住拖拽可旋转视角 · 设置中调节水位</div>
+</div>
+<div id="stage">
+  <canvas id="cv" width="1100" height="640"></canvas>
+  <div id="chip">🖱 按住拖拽可旋转视角</div>
+  <div id="toolbar">
+    <button id="btnRays">光路解释</button>
+    <button id="btnIntro">简介</button>
+    <button id="btnSettings">设置</button>
+    <button id="btnView">视角复位</button>
+    <button id="btnReset">重置</button>
+  </div>
+  <div id="panel" class="card hidden">
+    <h3>设置 <span class="x" id="panelX">×</span></h3>
+    <div class="row">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>水位高度</span><span id="wv">70%</span></div>
+      <input type="range" id="water" min="25" max="95" value="70">
+    </div>
+    <div class="row"><label><input type="checkbox" id="ghost" checked> 水下实际位置（暗色虚影）</label></div>
+    <div class="row"><label><input type="checkbox" id="labels" checked> 显示标注</label></div>
+    <div class="row note">水的折射率 n = 1.33<br>视深 h′ = h / n（近垂直观察近似）</div>
+  </div>
+  <div id="intro" class="overlay hidden">
+    <div class="card">
+      <h3>实验简介 <span class="x" id="introX">×</span></h3>
+      <p>把筷子斜插入盛水的玻璃杯，从侧面看，筷子在水面处像被"折断"了一样向上弯。这是因为筷尖反射的光从水中斜射入空气时，折射角大于入射角，光线远离法线偏折。人眼逆着折射光线看去，会觉得光来自更浅的位置，于是水下部分看起来整体上移。近垂直观察时，视深 h′=h/n（水的折射率 n≈1.33）。按住拖拽可旋转视角，在"设置"里调节水位，水位越低水下弯折段越短；点击"光路解释"可查看光路图。</p>
+    </div>
+  </div>
+  <div id="rays" class="overlay hidden">
+    <div class="card">
+      <h3>光路解释：筷子为什么看起来向上弯折 <span class="x" id="raysX">×</span></h3>
+      <canvas id="cv2" width="920" height="560"></canvas>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+/* ================= 基础 ================= */
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const W=1100,H=640;
+function fit(){const d=Math.min(window.devicePixelRatio||1,1.5);cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);}
+fit();window.addEventListener('resize',fit);
+
+/* ================= 3D 软渲染相机（透视投影 + 轨道旋转） ================= */
+const CX=550,CY=520,D=650,K=1.55;
+const DEF_YAW=0.35,DEF_PITCH=0.28;
+let yaw=DEF_YAW,pitch=DEF_PITCH;
+function proj(x,y,z){
+  const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const X=x*cy+z*sy, Z1=-x*sy+z*cy, Y=y*cp-Z1*sp, Z=y*sp+Z1*cp;
+  const s=D/(D+Z);
+  return [CX+K*X*s, CY-K*Y*s, s];
+}
+
+/* ================= 场景参数 ================= */
+const CUP_R=110,CUP_H=270,NREF=1.33;
+const TIP={x:25,y:8,z:0},TOP={x:-135,y:320,z:0}; // 筷尖（杯底）→ 筷尾（杯口外）
+let waterPct=70,showGhost=true,showLabels=true;
+const waterY=()=>waterPct/100*CUP_H;
+// 筷子与水面的交点 S
+function surfPoint(){const wy=waterY(),t=(wy-TIP.y)/(TOP.y-TIP.y);return{x:TIP.x+t*(TOP.x-TIP.x),y:wy,z:0};}
+// 视筷尖 A′：视深 = 实际深度 / n（近轴近似）
+function appTip(){const wy=waterY();return{x:TIP.x,y:wy-(wy-TIP.y)/NREF,z:0};}
+
+/* ================= 3D 绘图工具 ================= */
+function P3(p){return proj(p.x,p.y,p.z);}
+function stroke2(A,B){ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke();}
+function stick3(a,b,wo,co,wi,ci,glow){
+  const A=P3(a),B=P3(b);
+  ctx.save();ctx.lineCap='round';
+  if(glow){ctx.shadowBlur=12;ctx.shadowColor=glow;}
+  ctx.strokeStyle=co;ctx.lineWidth=wo;stroke2(A,B);
+  ctx.shadowBlur=0;ctx.strokeStyle=ci;ctx.lineWidth=wi;stroke2(A,B);
+  ctx.restore();
+}
+function ellipsePath(y,r,a0,a1){
+  const n=72;ctx.beginPath();
+  for(let i=0;i<=n;i++){const t=a0+(a1-a0)*i/n,p=proj(r*Math.cos(t),y,r*Math.sin(t));
+    if(i===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);}
+}
+function bandPath(y1,y2,r){
+  const n=64;ctx.beginPath();
+  for(let i=0;i<=n;i++){const t=i/n*Math.PI*2,p=proj(r*Math.cos(t),y1,r*Math.sin(t));
+    if(i===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);}
+  for(let i=n;i>=0;i--){const t=i/n*Math.PI*2,p=proj(r*Math.cos(t),y2,r*Math.sin(t));ctx.lineTo(p[0],p[1]);}
+  ctx.closePath();
+}
+function lab(pt,text,dx,dy,color){
+  const tx=pt[0]+dx,ty=pt[1]+dy;
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pt[0],pt[1]);ctx.lineTo(tx-(dx>0?7:-7),ty);ctx.stroke();
+  ctx.fillStyle=color;ctx.textAlign=dx>0?'left':'right';ctx.textBaseline='middle';
+  ctx.fillText(text,tx,ty);
+}
+
+/* ================= 主渲染 ================= */
+function render(now){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#252d3d');g.addColorStop(1,'#1a2130');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const wy=waterY(),S=surfPoint(),AP=appTip();
+  // 地面阴影
+  ctx.fillStyle='rgba(0,0,0,.28)';ellipsePath(-2,178,0,Math.PI*2);ctx.fill();
+  // 杯底
+  ctx.fillStyle='rgba(174,184,198,.05)';ellipsePath(0,CUP_R,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(174,184,198,.35)';ctx.lineWidth=1.5;ctx.stroke();
+  // 杯壁（半透明）
+  ctx.fillStyle='rgba(174,184,198,.045)';bandPath(CUP_H,0,CUP_R);ctx.fill();
+  // 水体（半透明淡蓝）
+  if(wy>2){ctx.fillStyle='rgba(150,200,255,.10)';bandPath(wy,0,CUP_R-2);ctx.fill();}
+  // 水下筷子实际位置（半透明暗色）
+  if(showGhost)stick3(TIP,S,9,'rgba(96,106,122,.55)',5,'rgba(135,145,160,.5)');
+  // 水面
+  ctx.fillStyle='rgba(150,200,255,.22)';ellipsePath(wy,CUP_R-2,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(190,225,255,.6)';ctx.lineWidth=1.5;ctx.stroke();
+  // 水面流动高光（动画）
+  const ph=(now*0.0009)%(Math.PI*2);
+  ctx.strokeStyle='rgba(235,246,255,.8)';ctx.lineWidth=2.2;ellipsePath(wy,CUP_R-2,ph,ph+1.15);ctx.stroke();
+  ctx.strokeStyle='rgba(235,246,255,.35)';ctx.lineWidth=1.6;ellipsePath(wy,CUP_R-2,ph+Math.PI,ph+Math.PI+0.7);ctx.stroke();
+  // 视筷（折射看起来上移的部分，实心亮色）
+  stick3(S,AP,11,'#a9772f',7,'#f4cd8a','rgba(244,205,138,.45)');
+  // 杯口与杯壁轮廓（按投影左右极值画轮廓线）
+  const n=72,rim=[],bot=[];
+  for(let i=0;i<=n;i++){const t=i/n*Math.PI*2;
+    rim.push(proj(CUP_R*Math.cos(t),CUP_H,CUP_R*Math.sin(t)));
+    bot.push(proj(CUP_R*Math.cos(t),0,CUP_R*Math.sin(t)));}
+  ctx.strokeStyle='rgba(200,212,228,.6)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(rim[0][0],rim[0][1]);for(let i=1;i<=n;i++)ctx.lineTo(rim[i][0],rim[i][1]);ctx.stroke();
+  let mi=0,ma=0;for(let i=1;i<=n;i++){if(rim[i][0]<rim[mi][0])mi=i;if(rim[i][0]>rim[ma][0])ma=i;}
+  ctx.strokeStyle='rgba(200,212,228,.35)';ctx.lineWidth=1.5;stroke2(rim[mi],bot[mi]);stroke2(rim[ma],bot[ma]);
+  // 水上筷子（真实直杆）
+  stick3(S,TOP,11,'#7c5122',7,'#d9a75c');
+  // 标注
+  if(showLabels){
+    ctx.save();ctx.font='12.5px "PingFang SC","Microsoft YaHei",sans-serif';
+    const SP=P3(S);
+    ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(SP[0],SP[1],3.6,0,Math.PI*2);ctx.fill();
+    lab(SP,'水面处向上弯折',18,-16,'#ffd34d');
+    lab(P3(TIP),'实际筷尖 A',18,30,'rgba(255,255,255,.75)');
+    lab(P3(AP),'看到的筷尖 A′（变浅）',18,-26,'#f4cd8a');
+    let wp=null;
+    for(let i=0;i<=72;i++){const t=i/72*Math.PI*2,p=proj((CUP_R-2)*Math.cos(t),wy,(CUP_R-2)*Math.sin(t));
+      if(!wp||p[0]>wp[0])wp=p;}
+    lab(wp,'水面',14,-12,'rgba(190,225,255,.95)');
+    ctx.restore();
+  }
+}
+/* ================= 主循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ================= */
+let rafId=null,lastRender=0,dirty=true;
+function loop(now){
+  rafId=requestAnimationFrame(loop);
+  now=now||0;
+  if(now-lastRender<33) return;   // 30 FPS 闸（水面高光为永续动画，播放中逐帧渲染）
+  lastRender=now; dirty=false;
+  render(now);
+}
+function startLoop(){ if(rafId===null){ dirty=true; rafId=requestAnimationFrame(loop); } }
+function stopLoop(){ if(rafId!==null){ cancelAnimationFrame(rafId); rafId=null; } }
+document.addEventListener('visibilitychange',()=>{ document.hidden?stopLoop():startLoop(); });
+['pointerdown','pointermove','input','change','click','keydown'].forEach(ev=>{
+  document.addEventListener(ev,()=>{ dirty=true; },true);
+});
+window.addEventListener('resize',()=>{ dirty=true; });
+startLoop();
+
+/* ================= 视角拖拽 ================= */
+let dragging=false,lx=0,ly=0;
+cv.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';e.preventDefault();});
+cv.addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  yaw+=(e.clientX-lx)*0.008;
+  pitch+=(e.clientY-ly)*0.008;
+  pitch=Math.max(-1.4,Math.min(1.4,pitch));
+  lx=e.clientX;ly=e.clientY;
+});
+function endDrag(){dragging=false;cv.style.cursor='grab';}
+cv.addEventListener('pointerup',endDrag);
+cv.addEventListener('pointercancel',endDrag);
+
+/* ================= 光路解释（2D 侧视图） ================= */
+const cv2=document.getElementById('cv2'),c2=cv2.getContext('2d');
+const W2=920,H2=560;
+function fit2(){const d=Math.min(window.devicePixelRatio||1,1.5);cv2.width=W2*d;cv2.height=H2*d;c2.setTransform(d,0,0,d,0,0);}
+fit2();window.addEventListener('resize',fit2);
+
+function drawRays(){
+  const N=1.33,sy=240;
+  const A={x:420,y:440},ST={x:250,y:60};                 // 筷尖 A、筷尾
+  const tS=(sy-ST.y)/(A.y-ST.y),S={x:ST.x+tS*(A.x-ST.x),y:sy}; // 筷子与水面交点
+  const E={x:520,y:90},Q1={x:505,y:97},Q2={x:535,y:83}; // 眼睛与瞳孔两边缘
+  // 数值求解折射点 P：使 n·sinθ1 = sinθ2（水→空气，光路 A→P→Q）
+  const solve=Q=>{
+    let lo=A.x+1,hi=Q.x-1;
+    const g=p=>N*(p-A.x)/Math.hypot(p-A.x,A.y-sy)-(Q.x-p)/Math.hypot(Q.x-p,sy-Q.y);
+    for(let i=0;i<80;i++){const m=(lo+hi)/2;if(g(m)>0)hi=m;else lo=m;}
+    return {x:(lo+hi)/2,y:sy};
+  };
+  const P1=solve(Q1),P2=solve(Q2);
+  const dir=(P,Q)=>{const dx=P.x-Q.x,dy=P.y-Q.y,l=Math.hypot(dx,dy);return{x:dx/l,y:dy/l};};
+  const d1=dir(P1,Q1),d2=dir(P2,Q2);
+  // 两条折射光线的反向延长线交点 → 像 A′
+  let AP=null;const den=d1.x*d2.y-d1.y*d2.x;
+  if(Math.abs(den)>1e-9){
+    const t=((P2.x-P1.x)*d2.y-(P2.y-P1.y)*d2.x)/den;
+    AP={x:P1.x+t*d1.x,y:P1.y+t*d1.y};
+  }
+  if(!AP||!(AP.y>sy+20&&AP.y<A.y))AP={x:A.x,y:sy+(A.y-sy)/N}; // 退化时取近轴解 h/n
+  const F='"PingFang SC","Microsoft YaHei",sans-serif';
+  c2.clearRect(0,0,W2,H2);
+  c2.fillStyle='#202a3c';c2.fillRect(0,0,W2,H2);
+  // 水区域
+  c2.fillStyle='rgba(150,200,255,.15)';c2.fillRect(40,sy,840,500-sy);
+  c2.strokeStyle='rgba(150,200,255,.3)';c2.lineWidth=1;c2.strokeRect(40,sy,840,500-sy);
+  c2.strokeStyle='rgba(190,225,255,.85)';c2.lineWidth=2;
+  c2.beginPath();c2.moveTo(40,sy);c2.lineTo(880,sy);c2.stroke();
+  c2.font='13px '+F;c2.textAlign='left';c2.textBaseline='middle';
+  c2.fillStyle='rgba(255,255,255,.85)';c2.fillText('空气  n ≈ 1.00',54,sy-20);
+  c2.fillStyle='rgba(190,225,255,.9)';c2.fillText('水  n = 1.33',54,sy+22);
+  c2.fillStyle='rgba(255,255,255,.55)';c2.font='12.5px '+F;
+  c2.fillText('侧视图：眼睛从近上方看向水中筷尖 A',54,30);
+  // 法线（白色虚线）
+  c2.save();c2.setLineDash([6,6]);c2.strokeStyle='rgba(255,255,255,.5)';c2.lineWidth=1.2;
+  [P1,P2].forEach(P=>{c2.beginPath();c2.moveTo(P.x,150);c2.lineTo(P.x,478);c2.stroke();});
+  c2.restore();
+  c2.fillStyle='rgba(255,255,255,.6)';c2.font='12px '+F;c2.fillText('法线',P1.x+7,164);
+  // 筷子：水上 / 水下实际（暗） / 视筷（亮）
+  const stick2=(a,b,wo,co,wi,ci)=>{
+    c2.lineCap='round';
+    c2.strokeStyle=co;c2.lineWidth=wo;c2.beginPath();c2.moveTo(a.x,a.y);c2.lineTo(b.x,b.y);c2.stroke();
+    c2.strokeStyle=ci;c2.lineWidth=wi;c2.beginPath();c2.moveTo(a.x,a.y);c2.lineTo(b.x,b.y);c2.stroke();
+  };
+  stick2(ST,S,10,'#7c5122',6,'#d9a75c');
+  stick2(S,A,9,'rgba(96,106,122,.6)',5,'rgba(135,145,160,.55)');
+  stick2(S,AP,10,'#a9772f',6,'#f4cd8a');
+  c2.fillStyle='rgba(255,255,255,.75)';c2.font='12px '+F;c2.textAlign='right';c2.fillText('筷子',ST.x-8,ST.y+4);
+  // 光线（黄色发光）与反向延长线（黄色虚线）
+  const ray=(a,b,dash)=>{
+    c2.save();if(dash)c2.setLineDash([5,5]);
+    c2.strokeStyle=dash?'rgba(255,211,77,.9)':'#ffd34d';c2.lineWidth=dash?1.6:2.2;
+    if(!dash){c2.shadowBlur=8;c2.shadowColor='rgba(255,211,77,.6)';}
+    c2.beginPath();c2.moveTo(a.x,a.y);c2.lineTo(b.x,b.y);c2.stroke();c2.restore();
+  };
+  const arrow=(a,b)=>{
+    const t=0.55,mx=a.x+(b.x-a.x)*t,my=a.y+(b.y-a.y)*t,an=Math.atan2(b.y-a.y,b.x-a.x);
+    c2.save();c2.fillStyle='#ffd34d';c2.translate(mx,my);c2.rotate(an);
+    c2.beginPath();c2.moveTo(7,0);c2.lineTo(-5,-4.5);c2.lineTo(-5,4.5);c2.closePath();c2.fill();c2.restore();
+  };
+  ray(A,P1);ray(A,P2);arrow(A,P1);arrow(A,P2);
+  ray(P1,Q1);ray(P2,Q2);arrow(P1,Q1);arrow(P2,Q2);
+  const ext=(P,d)=>{const t=(500-P.y)/d.y;return{x:P.x+d.x*t,y:500};};
+  ray(P1,ext(P1,d1),true);ray(P2,ext(P2,d2),true);
+  // 角度标注（黄色弧线）
+  const aDn=Math.PI/2,aA=Math.atan2(A.y-P1.y,A.x-P1.x),aUp=-Math.PI/2,aQ=Math.atan2(Q1.y-P1.y,Q1.x-P1.x);
+  c2.strokeStyle='#ffd34d';c2.lineWidth=1.8;
+  c2.beginPath();c2.arc(P1.x,P1.y,38,aDn,aA);c2.stroke();
+  c2.beginPath();c2.arc(P1.x,P1.y,38,aUp,aQ);c2.stroke();
+  const bis=(P,a1,a2,r,txt)=>{
+    const m=(a1+a2)/2;c2.fillStyle='#ffd34d';c2.font='13px '+F;c2.textAlign='center';
+    c2.fillText(txt,P.x+r*Math.cos(m),P.y+r*Math.sin(m));
+  };
+  bis(P1,aDn,aA,58,'θ1');bis(P1,aUp,aQ,58,'θ2');
+  c2.fillStyle='rgba(255,211,77,.9)';c2.font='12.5px '+F;c2.textAlign='left';
+  c2.fillText('θ1 < θ2，折射光线远离法线',596,210);
+  // 弯折点
+  c2.fillStyle='#ffd34d';c2.beginPath();c2.arc(S.x,S.y,3.4,0,Math.PI*2);c2.fill();
+  c2.font='12px '+F;c2.textAlign='right';c2.fillText('弯折点',S.x-10,S.y-12);
+  // A 与 A′
+  c2.fillStyle='#fff';c2.beginPath();c2.arc(A.x,A.y,3.6,0,Math.PI*2);c2.fill();
+  c2.textAlign='left';c2.fillStyle='#fff';c2.font='13px '+F;c2.fillText('A（筷尖）',A.x+11,A.y+5);
+  c2.fillStyle='#ffd34d';c2.beginPath();c2.arc(AP.x,AP.y,3.6,0,Math.PI*2);c2.fill();
+  c2.fillText('A′（看到的像）',AP.x+11,AP.y-4);
+  // 深度标注：实际深度 h 与 视深 h′=h/n
+  const dash=(x1,y1,x2,y2)=>{
+    c2.save();c2.setLineDash([4,4]);c2.strokeStyle='rgba(255,255,255,.4)';c2.lineWidth=1;
+    c2.beginPath();c2.moveTo(x1,y1);c2.lineTo(x2,y2);c2.stroke();c2.restore();
+  };
+  const bracket=(x,y1,y2)=>{
+    c2.strokeStyle='rgba(255,255,255,.75)';c2.lineWidth=1.4;
+    c2.beginPath();c2.moveTo(x,y1);c2.lineTo(x,y2);
+    c2.moveTo(x-5,y1);c2.lineTo(x+5,y1);c2.moveTo(x-5,y2);c2.lineTo(x+5,y2);c2.stroke();
+  };
+  bracket(498,sy,A.y);dash(A.x,A.y,498,A.y);
+  c2.fillStyle='#fff';c2.font='13px '+F;c2.textAlign='left';c2.fillText('实际深度 h',508,(sy+A.y)/2);
+  bracket(320,sy,AP.y);dash(AP.x,AP.y,320,AP.y);
+  c2.fillStyle='#ffd34d';c2.textAlign='right';c2.fillText('视深 h′ = h/n',310,(sy+AP.y)/2);
+  // 眼睛
+  c2.save();c2.translate(E.x,E.y);c2.rotate(-0.35);
+  c2.strokeStyle='#e8ecf3';c2.lineWidth=2.5;
+  c2.beginPath();c2.ellipse(0,0,36,21,0,0,Math.PI*2);c2.stroke();
+  c2.fillStyle='#e8ecf3';c2.beginPath();c2.arc(-7,0,8.5,0,Math.PI*2);c2.fill();
+  c2.fillStyle='#202a3c';c2.beginPath();c2.arc(-7,0,3.6,0,Math.PI*2);c2.fill();
+  c2.restore();
+  c2.fillStyle='rgba(255,255,255,.85)';c2.font='13px '+F;c2.textAlign='center';c2.fillText('眼睛',E.x,E.y-38);
+  // 图例
+  const legend=[['#f4cd8a',5,'看到的筷子（视筷）'],['rgba(140,150,165,.9)',5,'水下实际位置'],['#ffd34d',2.2,'光线（虚线为反向延长线）']];
+  c2.textAlign='left';c2.font='12px '+F;
+  legend.forEach((L,i)=>{
+    const y=26+i*20;
+    c2.strokeStyle=L[0];c2.lineWidth=L[1];c2.lineCap='round';
+    c2.beginPath();c2.moveTo(700,y);c2.lineTo(730,y);c2.stroke();
+    c2.fillStyle='rgba(255,255,255,.85)';c2.fillText(L[2],738,y);
+  });
+  // 结论
+  c2.fillStyle='rgba(255,255,255,.8)';c2.font='12.5px '+F;c2.textAlign='left';
+  c2.fillText('① 光从水中斜射入空气：折射角 θ2 > 入射角 θ1，光线远离法线偏折。',54,524);
+  c2.fillText('② 眼睛逆着折射光看去，认为光来自反向延长线交点 A′（比 A 浅）→ 筷子在水面处像向上弯折。',54,544);
+}
+
+/* ================= 界面交互 ================= */
+const $=id=>document.getElementById(id);
+function toggleOverlay(el,onOpen){
+  const was=el.classList.contains('hidden');
+  ['intro','rays','panel'].forEach(id=>$(id).classList.add('hidden'));
+  if(was){el.classList.remove('hidden');if(onOpen)onOpen();}
+}
+$('btnRays').onclick=()=>toggleOverlay($('rays'),drawRays);
+$('btnIntro').onclick=()=>toggleOverlay($('intro'));
+$('btnSettings').onclick=()=>toggleOverlay($('panel'));
+$('panelX').onclick=()=>$('panel').classList.add('hidden');
+$('introX').onclick=()=>$('intro').classList.add('hidden');
+$('raysX').onclick=()=>$('rays').classList.add('hidden');
+$('rays').addEventListener('click',e=>{if(e.target===$('rays'))$('rays').classList.add('hidden');});
+$('intro').addEventListener('click',e=>{if(e.target===$('intro'))$('intro').classList.add('hidden');});
+window.addEventListener('keydown',e=>{if(e.key==='Escape')['intro','rays','panel'].forEach(id=>$(id).classList.add('hidden'));});
+$('btnView').onclick=()=>{yaw=DEF_YAW;pitch=DEF_PITCH;};
+$('btnReset').onclick=()=>{
+  yaw=DEF_YAW;pitch=DEF_PITCH;waterPct=70;showGhost=true;showLabels=true;
+  $('water').value=70;$('wv').textContent='70%';$('ghost').checked=true;$('labels').checked=true;
+};
+$('water').addEventListener('input',e=>{waterPct=+e.target.value;$('wv').textContent=waterPct+'%';});
+$('ghost').addEventListener('change',e=>showGhost=e.target.checked);
+$('labels').addEventListener('change',e=>showLabels=e.target.checked);
+</script>
+</body>
+</html>

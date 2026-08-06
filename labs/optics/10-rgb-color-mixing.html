@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光的三原色 · 光学模拟仿真实验室</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:#0e131c;color:#e8ecf3;
+  font-family:'PingFang SC','Microsoft YaHei',sans-serif;
+  overflow-x:hidden;user-select:none;-webkit-user-select:none;
+}
+/* ---------- 顶栏 ---------- */
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:48px;z-index:50;
+  background:rgba(20,26,38,.9);border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;padding:0 18px;gap:12px;
+}
+#topbar .back{
+  color:#fff;text-decoration:none;font-size:14px;
+  padding:6px 10px;border-radius:8px;white-space:nowrap;
+}
+#topbar .back:hover{background:rgba(255,255,255,.08)}
+#topbar h1{flex:1;text-align:center;font-size:16px;font-weight:600;letter-spacing:2px}
+#topbar .hint{color:#8a93a6;font-size:12px;text-align:right;white-space:nowrap}
+/* ---------- 画布区 ---------- */
+#stage{padding:64px 12px 150px;display:flex;justify-content:center}
+#canvasWrap{width:min(1120px,100%)}
+#cv{
+  width:100%;height:auto;display:block;border-radius:14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.45);touch-action:none;
+}
+/* ---------- 模式A滑块条 ---------- */
+#panelA{
+  margin:14px auto 0;width:fit-content;max-width:100%;
+  display:flex;flex-direction:column;gap:10px;
+  background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:12px 24px;
+}
+.prow{display:flex;gap:26px;justify-content:center;align-items:center;flex-wrap:wrap}
+.sliderItem{display:flex;align-items:center;gap:10px;font-size:13px}
+.dot{width:12px;height:12px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.sliderItem input[type=range]{width:150px;cursor:pointer}
+#slR{accent-color:#ff3b3b}#slG{accent-color:#3ddc64}#slB{accent-color:#4d7dff}
+#slH{accent-color:#ffb84d}#slS{accent-color:#9ecbff}#slL{accent-color:#d9dee8}
+.val{width:46px;text-align:right;color:#cfd6e4;font-variant-numeric:tabular-nums}
+/* 清晰/柔光 切换 */
+.mini{
+  background:transparent;border:1px solid rgba(255,255,255,.16);
+  color:#cfd6e4;font-size:12px;padding:4px 11px;border-radius:999px;
+  cursor:pointer;font-family:inherit;
+}
+.mini:hover{background:rgba(255,255,255,.1)}
+.mini.active{background:rgba(90,140,220,.35);border-color:rgba(120,170,255,.5);color:#fff}
+/* 混合色读数行 */
+#mixRow{
+  justify-content:center;font-size:13px;color:#dfe5ef;
+  border-top:1px solid rgba(255,255,255,.07);padding-top:9px;
+  font-variant-numeric:tabular-nums;
+}
+#mixSwatch{
+  width:16px;height:16px;border-radius:5px;display:inline-block;
+  border:1px solid rgba(255,255,255,.25);vertical-align:-3px;margin-right:8px;
+}
+#mixName{color:#ffd34d;font-weight:600}
+/* ---------- 底部工具栏 ---------- */
+#toolbar{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:50;
+  display:flex;gap:8px;align-items:center;
+  background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;padding:8px 12px;backdrop-filter:blur(6px);
+}
+.tbtn{
+  background:transparent;border:1px solid rgba(255,255,255,.14);
+  color:#dfe5ef;font-size:13px;padding:7px 14px;border-radius:999px;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.tbtn:hover{background:rgba(255,255,255,.12)}
+.tbtn.mode.active{
+  background:rgba(90,140,220,.35);border-color:rgba(120,170,255,.5);color:#fff;
+}
+.sep{width:1px;height:20px;background:rgba(255,255,255,.12)}
+/* ---------- 设置面板 ---------- */
+#settingsPanel{
+  position:fixed;top:60px;right:14px;width:300px;z-index:60;display:none;
+  background:rgba(22,28,42,.96);border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:16px 18px;box-shadow:0 14px 40px rgba(0,0,0,.5);
+}
+#settingsPanel h3{font-size:14px;margin-bottom:8px;color:#aeb8c6;letter-spacing:1px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;font-size:13px}
+.srow input[type=range]{width:128px;cursor:pointer;accent-color:#7ea6e8}
+.srow input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#5a8ce0}
+/* ---------- 简介弹窗 ---------- */
+#introOverlay{
+  position:fixed;inset:0;z-index:70;display:none;
+  background:rgba(5,8,14,.6);align-items:center;justify-content:center;
+}
+#introCard{
+  width:min(540px,90vw);background:rgba(24,30,45,.98);
+  border:1px solid rgba(255,255,255,.12);border-radius:16px;
+  padding:24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+#introCard h2{font-size:17px;margin-bottom:14px;letter-spacing:1px}
+#introCard p{font-size:13.5px;line-height:1.95;color:#cdd5e3;margin-bottom:8px}
+#introCard b{color:#ffd34d;font-weight:600}
+#introClose{margin-top:12px;width:100%;padding:9px 0;font-size:14px}
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <a class="back" href="index.html">← 返回合集</a>
+  <h1>光的三原色</h1>
+  <span class="hint">模式A：拖动滑块调节色光强度 · 模式B：按住灯光拖拽改变间距</span>
+</header>
+
+<main id="stage">
+  <div id="canvasWrap">
+    <canvas id="cv"></canvas>
+    <div id="panelA">
+      <div class="prow">
+        <div class="sliderItem">
+          <span class="dot" style="background:#ff3b3b;color:#ff3b3b"></span>
+          <span style="color:#ff8a8a">红</span>
+          <input type="range" id="slR" min="0" max="100" value="100">
+          <span class="val" id="vR">100%</span>
+        </div>
+        <div class="sliderItem">
+          <span class="dot" style="background:#3ddc64;color:#3ddc64"></span>
+          <span style="color:#7fe0a0">绿</span>
+          <input type="range" id="slG" min="0" max="100" value="100">
+          <span class="val" id="vG">100%</span>
+        </div>
+        <div class="sliderItem">
+          <span class="dot" style="background:#4d7dff;color:#4d7dff"></span>
+          <span style="color:#8aadff">蓝</span>
+          <input type="range" id="slB" min="0" max="100" value="100">
+          <span class="val" id="vB">100%</span>
+        </div>
+        <div class="sliderItem" style="gap:6px">
+          <span style="color:#8a93a6">渲染</span>
+          <button id="btnCrisp" class="mini active">清晰</button>
+          <button id="btnSoft" class="mini">柔光</button>
+        </div>
+      </div>
+      <div class="prow">
+        <div class="sliderItem">
+          <span style="color:#ffb84d">色相 H</span>
+          <input type="range" id="slH" min="0" max="360" value="0">
+          <span class="val" id="vH">0°</span>
+        </div>
+        <div class="sliderItem">
+          <span style="color:#9ecbff">饱和 S</span>
+          <input type="range" id="slS" min="0" max="100" value="0">
+          <span class="val" id="vS">0%</span>
+        </div>
+        <div class="sliderItem">
+          <span style="color:#d9dee8">明度 L</span>
+          <input type="range" id="slL" min="0" max="100" value="100">
+          <span class="val" id="vL">100%</span>
+        </div>
+      </div>
+      <div class="prow" id="mixRow">
+        <span><span id="mixSwatch"></span><span id="mixReadout">RGB（255，255，255） · HSL（0°，0%，100%）</span> · <span id="mixName">白色</span></span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toolbar">
+  <button id="btnModeA" class="tbtn mode active">模式A · 色光混合圆图</button>
+  <button id="btnModeB" class="tbtn mode">模式B · 三灯照白屏</button>
+  <span class="sep"></span>
+  <button id="btnIntro" class="tbtn">简介</button>
+  <button id="btnSettings" class="tbtn">设置</button>
+  <button id="btnReset" class="tbtn">重置</button>
+</div>
+
+<div id="settingsPanel">
+  <h3>设置</h3>
+  <div id="settingsBody"></div>
+</div>
+
+<div id="introOverlay">
+  <div id="introCard">
+    <h2>光的三原色 · 实验简介</h2>
+    <p><b>原理：</b>红、绿、蓝是色光的三原色。三种色光按不同比例混合，可以得到自然界中几乎所有颜色的光，这种混合方式称为「加色混合」。</p>
+    <p><b>规律：</b>红 + 绿 = 黄，绿 + 蓝 = 青，红 + 蓝 = 品红；三种色光等比例混合即成白光。</p>
+    <p><b>应用：</b>电视机、手机和电脑屏幕的每个像素都由红、绿、蓝三个子像素组成，通过调节各自亮度呈现出丰富多彩的画面。</p>
+    <p><b>操作：</b>模式A 拖动下方滑块，独立调节红 / 绿 / 蓝三色光的强度（0~100%），观察圆图混色与中央读数；模式B 按住灯光拖拽，改变三个光斑的位置与间距，观察白屏上的混色规律。</p>
+    <button id="introClose" class="tbtn">关 闭</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= 基础 ================= */
+const W=1100,H=640;
+const DPR=Math.min(window.devicePixelRatio||1,1.5);
+const cv=document.getElementById('cv');
+cv.width=W*DPR;cv.height=H*DPR;
+const ctx=cv.getContext('2d');
+const mix=document.createElement('canvas');
+mix.width=W*DPR;mix.height=H*DPR;
+const mctx=mix.getContext('2d');
+
+/* 物理原色（加色混合严格三原色）与界面显示用的亮色 */
+const PURE={r:[255,0,0],g:[0,255,0],b:[0,0,255]};
+const DISP={r:[255,95,95],g:[130,235,150],b:[125,165,255]};
+const CHNAME={r:'红',g:'绿',b:'蓝'};
+const FONT='"PingFang SC","Microsoft YaHei",sans-serif';
+
+let mode='A';
+const stateA={r:100,g:100,b:100,h:0,s:0,l:100,crisp:true,showLabels:true,showReadout:true};
+const defLights=()=>[{x:370,y:505},{x:550,y:525},{x:730,y:505}];
+const stateB={ri:100,gi:100,bi:100,spread:1,showBeam:true,lights:defLights()};
+
+/* ================= 工具函数 ================= */
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function rgba(c,a){return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';}
+function rr(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+function sample(x,y){
+  const px=clamp(Math.round(x*DPR),0,mix.width-1);
+  const py=clamp(Math.round(y*DPR),0,mix.height-1);
+  const d=mctx.getImageData(px,py,1,1).data;
+  return [d[0],d[1],d[2]];
+}
+function lum(c){return 0.299*c[0]+0.587*c[1]+0.114*c[2];}
+/* ---- HSL ↔ RGB 标准换算（h:0~360, s/l:0~100；rgb:0~255） ---- */
+function hslToRgb(h,s,l){
+  s/=100;l/=100;
+  const c=(1-Math.abs(2*l-1))*s;
+  const hp=(((h%360)+360)%360)/60;
+  const x=c*(1-Math.abs(hp%2-1));
+  let r1,g1,b1;
+  if(hp<1){r1=c;g1=x;b1=0;}
+  else if(hp<2){r1=x;g1=c;b1=0;}
+  else if(hp<3){r1=0;g1=c;b1=x;}
+  else if(hp<4){r1=0;g1=x;b1=c;}
+  else if(hp<5){r1=x;g1=0;b1=c;}
+  else{r1=c;g1=0;b1=x;}
+  const m=l-c/2;
+  return [Math.round((r1+m)*255),Math.round((g1+m)*255),Math.round((b1+m)*255)];
+}
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  const l=(mx+mn)/2,d=mx-mn;
+  let h=0,s=0;
+  if(d>1e-9){
+    s=d/(1-Math.abs(2*l-1));
+    if(mx===r)h=60*(((g-b)/d)%6);
+    else if(mx===g)h=60*((b-r)/d+2);
+    else h=60*((r-g)/d+4);
+    if(h<0)h+=360;
+  }
+  return [Math.round(h),Math.round(s*100),Math.round(l*100)];
+}
+/* 由 RGB 数值推断中文颜色名称 */
+function colorName(r,g,b){
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  if(mx<25)return '黑色（无光）';
+  const l=(mx+mn)/510,d=mx-mn;
+  if(d<28)return l>0.75?'白色':(l>0.4?'灰色':'深灰色');
+  let h;
+  if(mx===r)h=((g-b)/d)%6;
+  else if(mx===g)h=(b-r)/d+2;
+  else h=(r-g)/d+4;
+  h*=60;if(h<0)h+=360;
+  let name;
+  if(h<15||h>=345)name='红色';
+  else if(h<45)name='橙色';
+  else if(h<75)name='黄色';
+  else if(h<105)name='黄绿色';
+  else if(h<165)name='绿色';
+  else if(h<195)name='青色';
+  else if(h<255)name='蓝色';
+  else if(h<285)name='紫色';
+  else name='品红色';
+  return (mx<110?'暗':'')+name;
+}
+function bg(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#252d3d');g.addColorStop(1,'#1a2130');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+
+/* ================= 模式A：色光混合圆图 ================= */
+const diag={x:550,y:296,R:150,d:95};
+const centers={
+  r:{x:diag.x+diag.d*Math.cos(-Math.PI/2),  y:diag.y+diag.d*Math.sin(-Math.PI/2)},
+  g:{x:diag.x+diag.d*Math.cos(Math.PI*5/6), y:diag.y+diag.d*Math.sin(Math.PI*5/6)},
+  b:{x:diag.x+diag.d*Math.cos(Math.PI/6),   y:diag.y+diag.d*Math.sin(Math.PI/6)}
+};
+function drawA(){
+  bg();
+  /* 背景氛围光 */
+  const gl=ctx.createRadialGradient(diag.x,diag.y,0,diag.x,diag.y,380);
+  gl.addColorStop(0,'rgba(255,255,255,.05)');
+  gl.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=gl;ctx.fillRect(0,0,W,H);
+
+  /* 离屏画布上以 lighter 叠加三色圆（加色混合） */
+  mctx.setTransform(DPR,0,0,DPR,0,0);
+  mctx.clearRect(0,0,W,H);
+  mctx.globalCompositeOperation='lighter';
+  const ints={r:stateA.r/100,g:stateA.g/100,b:stateA.b/100};
+  for(const k of ['r','g','b']){
+    const a=ints[k];if(a<=0)continue;
+    const c=centers[k],col=PURE[k];
+    if(stateA.crisp){
+      /* 清晰模式：实心纯色圆，硬边（画布自带约1px抗锯齿），教科书 RGB 维恩图风格 */
+      mctx.fillStyle=rgba(col,a);
+    }else{
+      /* 柔光模式：径向渐变，边缘柔和朦胧 */
+      const g=mctx.createRadialGradient(c.x,c.y,0,c.x,c.y,diag.R);
+      g.addColorStop(0,rgba(col,a));
+      g.addColorStop(0.72,rgba(col,a));
+      g.addColorStop(1,rgba(col,0));
+      mctx.fillStyle=g;
+    }
+    mctx.beginPath();mctx.arc(c.x,c.y,diag.R,0,Math.PI*2);mctx.fill();
+  }
+  mctx.globalCompositeOperation='source-over';
+  ctx.drawImage(mix,0,0,W,H);
+
+  /* 清晰模式：细描边勾勒圆轮廓 */
+  if(stateA.crisp){
+    ctx.lineWidth=1.5;
+    for(const k of ['r','g','b']){
+      if(ints[k]<=0)continue;
+      const c=centers[k];
+      ctx.strokeStyle=rgba(DISP[k],0.55);
+      ctx.beginPath();ctx.arc(c.x,c.y,diag.R,0,Math.PI*2);ctx.stroke();
+    }
+  }
+
+  /* 三原色名称标签 */
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const k of ['r','g','b']){
+    const c=centers[k];
+    const dx=c.x-diag.x,dy=c.y-diag.y,L=Math.hypot(dx,dy);
+    const lx=c.x+dx/L*(diag.R+20),ly=c.y+dy/L*(diag.R+20);
+    ctx.font='600 16px '+FONT;
+    ctx.fillStyle=ints[k]>0.02?rgba(DISP[k],0.95):'rgba(160,168,182,.5)';
+    ctx.fillText(CHNAME[k],lx,ly);
+  }
+
+  /* 两两重叠区名称：黄 / 青 / 品红 */
+  if(stateA.showLabels){
+    const pairs=[['r','g','黄'],['g','b','青'],['r','b','品红']];
+    for(const pr of pairs){
+      const k1=pr[0],k2=pr[1],name=pr[2];
+      if(ints[k1]<0.08||ints[k2]<0.08)continue;
+      const c1=centers[k1],c2=centers[k2];
+      const mx=(c1.x+c2.x)/2,my=(c1.y+c2.y)/2;
+      const px=diag.x+(mx-diag.x)*1.35,py=diag.y+(my-diag.y)*1.35;
+      const sc=sample(px,py);
+      ctx.font='700 15px '+FONT;
+      ctx.fillStyle=lum(sc)>135?'rgba(20,26,38,.85)':'rgba(255,255,255,.92)';
+      ctx.fillText(name,px,py);
+    }
+  }
+
+  /* 中央读数（实时采样混色结果） */
+  const cc=sample(diag.x,diag.y);
+  if(stateA.showReadout){
+    const tc=lum(cc)>135?'rgba(20,26,38,.9)':'rgba(255,255,255,.95)';
+    ctx.fillStyle=tc;
+    ctx.font='700 17px '+FONT;
+    ctx.fillText('R '+cc[0]+'  G '+cc[1]+'  B '+cc[2],diag.x,diag.y-10);
+    ctx.font='600 15px '+FONT;
+    ctx.fillText(colorName(cc[0],cc[1],cc[2]),diag.x,diag.y+14);
+  }
+
+  /* 左上读数卡片 */
+  const chsl=rgbToHsl(cc[0],cc[1],cc[2]);
+  rr(ctx,26,26,244,142,12);
+  ctx.fillStyle='rgba(15,20,30,.72)';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.stroke();
+  ctx.textAlign='left';
+  ctx.fillStyle='#aeb8c6';ctx.font='600 13px '+FONT;
+  ctx.fillText('中央混合色读数',44,52);
+  rr(ctx,44,66,42,42,8);
+  ctx.fillStyle='rgb('+cc[0]+','+cc[1]+','+cc[2]+')';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.stroke();
+  ctx.fillStyle='#e8ecf3';ctx.font='13px '+FONT;
+  ctx.fillText('RGB（'+cc[0]+'，'+cc[1]+'，'+cc[2]+'）',100,82);
+  ctx.fillText('HSL（'+chsl[0]+'°，'+chsl[1]+'%，'+chsl[2]+'%）',100,104);
+  ctx.fillText('颜色：'+colorName(cc[0],cc[1],cc[2]),100,126);
+  ctx.textAlign='center';
+
+  ctx.fillStyle='rgba(180,190,205,.55)';ctx.font='12px '+FONT;
+  ctx.fillText('拖动下方滑块，独立调节红、绿、蓝三色光的强度（0~100%）',550,618);
+}
+
+/* ================= 模式B：三灯照白屏 ================= */
+const scr={x:250,y:78,w:600,h:252};
+function spotOf(L){
+  const sx=clamp(scr.x+scr.w/2+(L.x-W/2)*0.62,scr.x+26,scr.x+scr.w-26);
+  const sy=clamp(scr.y+scr.h/2+(L.y-510)*0.16,scr.y+26,scr.y+scr.h-26);
+  const dist=Math.max(L.y-(scr.y+scr.h),40);
+  const rad=(44+dist*0.15)*stateB.spread;
+  return {x:sx,y:sy,r:rad};
+}
+function drawB(now){
+  bg();
+  const keys=['r','g','b'];
+  const ints=[stateB.ri/100,stateB.gi/100,stateB.bi/100];
+  const lights=stateB.lights;
+  const spots=lights.map(spotOf);
+
+  /* 白屏支架 */
+  ctx.fillStyle='#232a38';
+  ctx.fillRect(scr.x+scr.w/2-8,scr.y+scr.h,16,26);
+  rr(ctx,scr.x+scr.w/2-70,scr.y+scr.h+24,140,10,5);ctx.fill();
+  /* 白屏边框与屏面 */
+  rr(ctx,scr.x-8,scr.y-8,scr.w+16,scr.h+16,10);
+  ctx.fillStyle='#2a3140';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.stroke();
+  rr(ctx,scr.x,scr.y,scr.w,scr.h,5);
+  ctx.fillStyle='#f4f4f0';ctx.fill();
+  ctx.fillStyle='rgba(190,198,212,.7)';ctx.font='12px '+FONT;ctx.textAlign='center';
+  ctx.fillText('白  屏',scr.x+scr.w/2,scr.y-18);
+
+  /* 光束（lighter 叠加，越过白屏时自然不可见） */
+  if(stateB.showBeam){
+    ctx.globalCompositeOperation='lighter';
+    lights.forEach(function(L,i){
+      const ii=ints[i];if(ii<=0.01)return;
+      const col=PURE[keys[i]],sp=spots[i];
+      const ang=Math.atan2(sp.y-L.y,sp.x-L.x);
+      const hx=L.x+Math.cos(ang)*26,hy=L.y+Math.sin(ang)*26;
+      const nx=-Math.sin(ang),ny=Math.cos(ang);
+      const grad=ctx.createLinearGradient(hx,hy,sp.x,sp.y);
+      grad.addColorStop(0,rgba(col,0.10*ii));
+      grad.addColorStop(1,rgba(col,0.03*ii));
+      ctx.fillStyle=grad;
+      ctx.beginPath();
+      ctx.moveTo(hx+nx*7,hy+ny*7);
+      ctx.lineTo(sp.x+nx*sp.r*0.8,sp.y+ny*sp.r*0.8);
+      ctx.lineTo(sp.x-nx*sp.r*0.8,sp.y-ny*sp.r*0.8);
+      ctx.lineTo(hx-nx*7,hy-ny*7);
+      ctx.closePath();ctx.fill();
+      /* 沿光束流动的光点 */
+      for(let k=0;k<4;k++){
+        const tt=(now*0.5+k/4)%1;
+        const px=hx+(sp.x-hx)*tt,py=hy+(sp.y-hy)*tt;
+        ctx.beginPath();
+        ctx.fillStyle=rgba(col,0.85*(1-tt*0.6)*ii);
+        ctx.shadowColor=rgba(col,0.9);ctx.shadowBlur=8;
+        ctx.arc(px,py,2.4,0,Math.PI*2);ctx.fill();
+        ctx.shadowBlur=0;
+      }
+    });
+    ctx.globalCompositeOperation='source-over';
+  }
+
+  /* 白屏上的光斑：离屏 lighter 混色后贴回（重叠区实时混色） */
+  mctx.setTransform(DPR,0,0,DPR,0,0);
+  mctx.clearRect(0,0,W,H);
+  mctx.save();
+  rr(mctx,scr.x,scr.y,scr.w,scr.h,5);mctx.clip();
+  mctx.globalCompositeOperation='lighter';
+  lights.forEach(function(L,i){
+    const ii=ints[i];if(ii<=0.001)return;
+    const col=PURE[keys[i]],sp=spots[i];
+    const g=mctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,sp.r);
+    g.addColorStop(0,rgba(col,ii));
+    g.addColorStop(0.72,rgba(col,ii*0.92));
+    g.addColorStop(1,rgba(col,0));
+    mctx.fillStyle=g;
+    mctx.beginPath();mctx.arc(sp.x,sp.y,sp.r,0,Math.PI*2);mctx.fill();
+  });
+  mctx.restore();
+  mctx.globalCompositeOperation='source-over';
+  ctx.drawImage(mix,0,0,W,H);
+
+  /* 屏中央混色读数 */
+  const cc=sample(scr.x+scr.w/2,scr.y+scr.h/2);
+  ctx.fillStyle='rgba(180,190,205,.6)';ctx.font='12px '+FONT;
+  ctx.fillText('屏中央混合色  RGB（'+cc[0]+'，'+cc[1]+'，'+cc[2]+'）  '+colorName(cc[0],cc[1],cc[2]),
+    scr.x+scr.w/2,scr.y+scr.h+52);
+
+  /* 三盏聚光灯（金属圆柱 + 彩色按钮，可拖拽） */
+  lights.forEach(function(L,i){
+    const col=PURE[keys[i]],sp=spots[i];
+    const ang=Math.atan2(sp.y-L.y,sp.x-L.x);
+    ctx.beginPath();ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.ellipse(L.x,L.y+16,26,7,0,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.translate(L.x,L.y);ctx.rotate(ang);
+    const bg2=ctx.createLinearGradient(0,-11,0,11);
+    bg2.addColorStop(0,'#3a3f4b');
+    bg2.addColorStop(0.5,'#2b303b');
+    bg2.addColorStop(1,'#20242e');
+    rr(ctx,-28,-10,46,20,7);
+    ctx.fillStyle=bg2;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.stroke();
+    rr(ctx,14,-12,11,24,4);
+    ctx.fillStyle='#171b23';ctx.fill();
+    /* 灯头镜片发光 */
+    const lg=ctx.createRadialGradient(19,0,1,19,0,9);
+    lg.addColorStop(0,'rgba(255,255,255,.95)');
+    lg.addColorStop(0.4,rgba(col,0.9*Math.max(ints[i],0.06)));
+    lg.addColorStop(1,rgba(col,0.15));
+    ctx.beginPath();ctx.fillStyle=lg;
+    ctx.shadowColor=rgba(col,0.8);ctx.shadowBlur=12*ints[i];
+    ctx.arc(19,0,7.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    /* 彩色按钮 */
+    rr(ctx,-10,-15,12,6,3);
+    ctx.fillStyle=rgba(col,0.9);ctx.fill();
+    ctx.restore();
+    ctx.fillStyle=rgba(DISP[keys[i]],0.9);ctx.font='12px '+FONT;
+    ctx.fillText(CHNAME[keys[i]]+'灯',L.x,L.y+34);
+  });
+
+  ctx.fillStyle='rgba(180,190,205,.55)';ctx.font='12px '+FONT;
+  ctx.fillText('按住灯光拖拽，改变光斑的位置与间距；光斑重叠处自动按加色混合呈色',550,618);
+}
+
+/* ================= 主循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ================= */
+let rafId=null,lastRender=0,dirty=true;
+function animating(){ return mode==='B'&&stateB.showBeam; } // B 模式光束流动光点逐帧渲染；其余静止仅交互触发重绘
+function frame(now){
+  rafId=requestAnimationFrame(frame);
+  now=now||0;
+  if(!animating()&&!dirty) return;   // 静止且画面已最新：本帧跳过
+  if(now-lastRender<33) return;      // 30 FPS 闸（dirty 保持到下一帧）
+  lastRender=now; dirty=false;
+  const t=performance.now()/1000;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(mode==='A')drawA();else drawB(t);
+}
+function startLoop(){ if(rafId===null){ dirty=true; rafId=requestAnimationFrame(frame); } }
+function stopLoop(){ if(rafId!==null){ cancelAnimationFrame(rafId); rafId=null; } }
+document.addEventListener('visibilitychange',function(){ document.hidden?stopLoop():startLoop(); });
+['pointerdown','pointermove','input','change','click','keydown'].forEach(function(ev){
+  document.addEventListener(ev,function(){ dirty=true; },true);
+});
+window.addEventListener('resize',function(){ dirty=true; });
+
+/* ================= 交互 ================= */
+const $=function(id){return document.getElementById(id);};
+const slA={r:$('slR'),g:$('slG'),b:$('slB')};
+const slH=$('slH'),slS=$('slS'),slL=$('slL');
+
+/* ---- 模式A 混合色读数与 RGB↔HSL 双向同步 ---- */
+/* 加色混合中心色 = 三通道强度之和（逐通道封顶 255） */
+function centerRGB(){
+  return [Math.min(255,Math.round(stateA.r*2.55)),
+          Math.min(255,Math.round(stateA.g*2.55)),
+          Math.min(255,Math.round(stateA.b*2.55))];
+}
+function refreshMixRow(){
+  const c=centerRGB(),hsl=rgbToHsl(c[0],c[1],c[2]);
+  $('mixSwatch').style.background='rgb('+c[0]+','+c[1]+','+c[2]+')';
+  $('mixReadout').textContent='RGB（'+c[0]+'，'+c[1]+'，'+c[2]+'） · HSL（'+hsl[0]+'°，'+hsl[1]+'%，'+hsl[2]+'%）';
+  $('mixName').textContent=colorName(c[0],c[1],c[2]);
+}
+/* 拖 RGB → 重算混合色的 HSL，同步 HSL 滑块位置与读数 */
+function syncHSLFromRGB(){
+  const c=centerRGB(),hsl=rgbToHsl(c[0],c[1],c[2]);
+  stateA.h=hsl[0];stateA.s=hsl[1];stateA.l=hsl[2];
+  slH.value=hsl[0];slS.value=hsl[1];slL.value=hsl[2];
+  $('vH').textContent=hsl[0]+'°';
+  $('vS').textContent=hsl[1]+'%';
+  $('vL').textContent=hsl[2]+'%';
+  refreshMixRow();
+}
+/* 拖 HSL → 标准公式转 RGB，写回三个通道强度（中心混合色=所选颜色） */
+function syncRGBFromHSL(){
+  const rgb=hslToRgb(stateA.h,stateA.s,stateA.l);
+  stateA.r=Math.round(rgb[0]/255*100);
+  stateA.g=Math.round(rgb[1]/255*100);
+  stateA.b=Math.round(rgb[2]/255*100);
+  slA.r.value=stateA.r;slA.g.value=stateA.g;slA.b.value=stateA.b;
+  $('vR').textContent=stateA.r+'%';
+  $('vG').textContent=stateA.g+'%';
+  $('vB').textContent=stateA.b+'%';
+  refreshMixRow();
+}
+for(const k of ['r','g','b']){
+  slA[k].addEventListener('input',function(e){
+    stateA[k]=+e.target.value;
+    $('v'+k.toUpperCase()).textContent=e.target.value+'%';
+    syncHSLFromRGB();
+  });
+}
+slH.addEventListener('input',function(e){
+  stateA.h=+e.target.value;$('vH').textContent=e.target.value+'°';
+  syncRGBFromHSL();
+});
+slS.addEventListener('input',function(e){
+  stateA.s=+e.target.value;$('vS').textContent=e.target.value+'%';
+  syncRGBFromHSL();
+});
+slL.addEventListener('input',function(e){
+  stateA.l=+e.target.value;$('vL').textContent=e.target.value+'%';
+  syncRGBFromHSL();
+});
+/* 清晰 / 柔光 渲染切换（默认清晰） */
+function setCrisp(crisp){
+  stateA.crisp=crisp;
+  $('btnCrisp').classList.toggle('active',crisp);
+  $('btnSoft').classList.toggle('active',!crisp);
+}
+$('btnCrisp').addEventListener('click',function(){setCrisp(true);});
+$('btnSoft').addEventListener('click',function(){setCrisp(false);});
+function setMode(m){
+  mode=m;
+  $('btnModeA').classList.toggle('active',m==='A');
+  $('btnModeB').classList.toggle('active',m==='B');
+  $('panelA').style.display=(m==='A')?'flex':'none';
+  cv.style.cursor='default';
+  buildSettings();
+}
+$('btnModeA').addEventListener('click',function(){setMode('A');});
+$('btnModeB').addEventListener('click',function(){setMode('B');});
+
+function buildSettings(){
+  const p=$('settingsBody');
+  if(mode==='A'){
+    p.innerHTML=
+      '<label class="srow"><span>显示混色名称标签（黄 / 青 / 品红）</span>'+
+      '<input type="checkbox" id="ckLabels"'+(stateA.showLabels?' checked':'')+'></label>'+
+      '<label class="srow"><span>显示中央读数</span>'+
+      '<input type="checkbox" id="ckRead"'+(stateA.showReadout?' checked':'')+'></label>';
+    $('ckLabels').onchange=function(e){stateA.showLabels=e.target.checked;};
+    $('ckRead').onchange=function(e){stateA.showReadout=e.target.checked;};
+  }else{
+    p.innerHTML=
+      '<div class="srow"><span style="color:#ff8a8a">红灯强度</span>'+
+      '<input type="range" id="sRi" min="0" max="100" value="'+stateB.ri+'">'+
+      '<span class="val" id="sRiV">'+stateB.ri+'%</span></div>'+
+      '<div class="srow"><span style="color:#7fe0a0">绿灯强度</span>'+
+      '<input type="range" id="sGi" min="0" max="100" value="'+stateB.gi+'">'+
+      '<span class="val" id="sGiV">'+stateB.gi+'%</span></div>'+
+      '<div class="srow"><span style="color:#8aadff">蓝灯强度</span>'+
+      '<input type="range" id="sBi" min="0" max="100" value="'+stateB.bi+'">'+
+      '<span class="val" id="sBiV">'+stateB.bi+'%</span></div>'+
+      '<div class="srow"><span>光斑大小</span>'+
+      '<input type="range" id="sSp" min="60" max="160" value="'+Math.round(stateB.spread*100)+'">'+
+      '<span class="val" id="sSpV">'+Math.round(stateB.spread*100)+'%</span></div>'+
+      '<label class="srow"><span>显示光束动画</span>'+
+      '<input type="checkbox" id="ckBeam"'+(stateB.showBeam?' checked':'')+'></label>';
+    $('sRi').oninput=function(e){stateB.ri=+e.target.value;$('sRiV').textContent=e.target.value+'%';};
+    $('sGi').oninput=function(e){stateB.gi=+e.target.value;$('sGiV').textContent=e.target.value+'%';};
+    $('sBi').oninput=function(e){stateB.bi=+e.target.value;$('sBiV').textContent=e.target.value+'%';};
+    $('sSp').oninput=function(e){stateB.spread=+e.target.value/100;$('sSpV').textContent=e.target.value+'%';};
+    $('ckBeam').onchange=function(e){stateB.showBeam=e.target.checked;};
+  }
+}
+$('btnSettings').addEventListener('click',function(){
+  const p=$('settingsPanel');
+  p.style.display=(p.style.display==='block')?'none':'block';
+});
+$('btnIntro').addEventListener('click',function(){
+  $('introOverlay').style.display='flex';
+});
+$('introClose').addEventListener('click',function(){
+  $('introOverlay').style.display='none';
+});
+$('introOverlay').addEventListener('click',function(e){
+  if(e.target===$('introOverlay'))$('introOverlay').style.display='none';
+});
+$('btnReset').addEventListener('click',function(){
+  if(mode==='A'){
+    stateA.r=stateA.g=stateA.b=100;
+    for(const k of ['r','g','b']){
+      slA[k].value=100;
+      $('v'+k.toUpperCase()).textContent='100%';
+    }
+    syncHSLFromRGB();
+    setCrisp(true);
+  }else{
+    stateB.ri=stateB.gi=stateB.bi=100;
+    stateB.spread=1;stateB.showBeam=true;
+    stateB.lights=defLights();
+  }
+  buildSettings();
+});
+
+/* 灯光拖拽（Pointer Events，兼容鼠标与触摸） */
+let dragIdx=-1;
+function getP(e){
+  const r=cv.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
+}
+cv.addEventListener('pointerdown',function(e){
+  if(mode!=='B')return;
+  const p=getP(e);
+  for(let i=stateB.lights.length-1;i>=0;i--){
+    const L=stateB.lights[i];
+    if(Math.hypot(p.x-L.x,p.y-L.y)<34){
+      dragIdx=i;
+      cv.setPointerCapture(e.pointerId);
+      cv.style.cursor='grabbing';
+      e.preventDefault();
+      break;
+    }
+  }
+});
+cv.addEventListener('pointermove',function(e){
+  const p=getP(e);
+  if(dragIdx>=0){
+    const L=stateB.lights[dragIdx];
+    L.x=clamp(p.x,110,990);
+    L.y=clamp(p.y,420,585);
+    return;
+  }
+  if(mode==='B'){
+    let hov=false;
+    for(const L of stateB.lights){
+      if(Math.hypot(p.x-L.x,p.y-L.y)<34){hov=true;break;}
+    }
+    cv.style.cursor=hov?'grab':'default';
+  }else{
+    cv.style.cursor='default';
+  }
+});
+window.addEventListener('pointerup',function(){
+  dragIdx=-1;
+  cv.style.cursor='default';
+});
+
+syncHSLFromRGB();
+buildSettings();
+startLoop();
+</script>
+</body>
+</html>

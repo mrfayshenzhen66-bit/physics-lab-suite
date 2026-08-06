@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交流变直流实验室 · 高中生一站式自学</title>
+<style>
+:root{
+  --bg-primary:#0A0A0F; --bg-secondary:#12121A; --bg-tertiary:#1A1A26;
+  --glass:rgba(18,18,26,.78); --border:rgba(255,255,255,.07); --border-active:rgba(255,255,255,.16);
+  --cyan:#00F0FF; --magenta:#FF2D8F; --lime:#C8FF00; --amber:#FFB800; --violet:#9B4DFF; --emerald:#00E5A0; --orange:#FF6B35;
+  --text:#FFF; --text2:rgba(255,255,255,.68); --text3:rgba(255,255,255,.38);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 50% -10%,rgba(0,240,255,.09),transparent 55%),
+             radial-gradient(ellipse at 90% 110%,rgba(155,77,255,.06),transparent 50%);}
+header{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.82);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.hwrap{max-width:1380px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+.logo small{color:var(--text3);font-weight:500;font-size:11px;display:block;letter-spacing:.14em}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+nav.tabs button{background:transparent;border:1px solid transparent;color:var(--text2);font-size:13px;padding:8px 14px;border-radius:100px;cursor:pointer;transition:all .22s;font-family:inherit;white-space:nowrap}
+nav.tabs button:hover{color:#fff;background:rgba(255,255,255,.05)}
+nav.tabs button.on{color:#06121a;font-weight:700;background:var(--ac,#00F0FF);box-shadow:0 0 18px 2px color-mix(in srgb,var(--ac,#00F0FF) 45%,transparent)}
+main{max-width:1380px;margin:0 auto;padding:26px 28px 80px;position:relative;z-index:1}
+section.tab{display:none;animation:fadeUp .5s cubic-bezier(.22,.9,.3,1)}
+section.tab.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.stitle{display:flex;align-items:baseline;gap:14px;margin:6px 0 4px;flex-wrap:wrap}
+.stitle h2{font-size:clamp(22px,3vw,30px);font-weight:800}
+.stitle .step{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 40%,transparent);padding:3px 10px;border-radius:100px;letter-spacing:.1em}
+.sdesc{color:var(--text2);font-size:14.5px;line-height:1.8;max-width:960px;margin-bottom:18px}
+.sdesc b{color:var(--ac);font-weight:600}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+@media(max-width:980px){.lab{grid-template-columns:1fr}}
+.panel{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:22px;padding:18px;position:relative;overflow:hidden}
+.panel::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ac,#00F0FF) 55%,transparent),transparent)}
+.panel h4{font-size:12px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase;margin-bottom:12px;font-weight:700}
+canvas.stage{width:100%;display:block;border-radius:16px;background:#0c0c13;border:1px solid var(--border)}
+.ctrl{margin-bottom:16px}.ctrl:last-child{margin-bottom:0}
+.ctrl label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);margin-bottom:7px}
+.ctrl label output{font-family:"JetBrains Mono",monospace;color:var(--ac);font-weight:600}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:var(--bg-tertiary);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--ac,#00F0FF);box-shadow:0 0 12px color-mix(in srgb,var(--ac,#00F0FF) 55%,transparent);cursor:pointer}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--border-active);background:transparent;color:var(--text2);padding:9px 18px;border-radius:100px;font-size:13px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{border-color:var(--ac);color:#fff}
+.btn.primary{background:var(--ac);color:#06121a;font-weight:700;border-color:transparent}
+.btn.mini{padding:6px 13px;font-size:12px}
+.btn.sel{background:color-mix(in srgb,var(--ac) 18%,transparent);border-color:var(--ac);color:#fff}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.ro{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:9px 12px}
+.ro .k{font-size:11px;color:var(--text3)}
+.ro .v{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:600;color:var(--ac);margin-top:2px}
+.knote{margin-top:14px;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent);border:1px solid var(--border);border-left:3px solid var(--ac);border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.85;color:var(--text2)}
+.knote b{color:#fff}
+.knote .f{font-family:"JetBrains Mono",monospace;color:var(--ac);background:rgba(0,0,0,.35);padding:1px 7px;border-radius:6px;font-size:12.5px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;color:var(--text2);margin-top:10px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:20px;height:4px;border-radius:2px;display:inline-block}
+footer{border-top:1px solid var(--border);padding:26px;text-align:center;color:var(--text3);font-size:12px;letter-spacing:.08em}
+.badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:100px;border:1px solid var(--border-active);color:var(--text3);margin-left:8px;vertical-align:middle}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border-active),transparent);margin:14px 0}
+.dstep{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.9;color:var(--text2);opacity:.32;transform:translateX(8px);transition:all .5s;margin-bottom:8px}
+.dstep.show{opacity:1;transform:none;border-color:color-mix(in srgb,var(--ac) 45%,transparent)}
+.dstep .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ac);color:#06121a;font-weight:800;font-size:11px;margin-right:8px}
+.appcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+.appcard{background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:14px 16px;transition:all .25s}
+.appcard:hover{border-color:color-mix(in srgb,var(--ac) 40%,transparent);transform:translateY(-3px)}
+.appcard .ic{font-size:22px;margin-bottom:8px}
+.appcard h5{font-size:13.5px;font-weight:700;margin-bottom:5px;color:#fff}
+.appcard p{font-size:12px;color:var(--text2);line-height:1.7}
+.bpcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px;margin-top:16px}
+table.matrix{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px}
+table.matrix th,table.matrix td{border:1px solid var(--border);padding:8px 10px;text-align:center;color:var(--text2)}
+table.matrix th{background:var(--bg-tertiary);color:#fff;font-weight:600}
+table.matrix td:first-child{text-align:left;color:#fff;font-weight:600}
+table.matrix td.hit{color:var(--ac);font-weight:800;background:color-mix(in srgb,var(--ac) 10%,transparent)}
+table.matrix tr:hover td{border-color:color-mix(in srgb,var(--ac) 35%,transparent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <a href="../../index.html" style="flex:none;color:#9DB2CE;text-decoration:none;font-size:13px;padding:6px 13px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:rgba(255,255,255,.04);transition:.2s" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,184,0,.5)'" onmouseout="this.style.color='#9DB2CE';this.style.borderColor='rgba(255,255,255,.16)'">⌂ 合集</a>
+    <div class="logo"><div>⚡ 交流变直流实验室<small>AC → DC · 高中物理一站式自学</small></div></div>
+    <div class="btnrow" id="spdbar" title="动画速度">
+      <button class="btn mini sel" data-sp="1">▶ 常速</button>
+      <button class="btn mini" data-sp="0.15">🐢 慢动作</button>
+      <button class="btn mini" data-sp="0">⏸ 暂停</button>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+<main id="main"></main>
+<footer>交流变直流 · 交互式教学仿真 · 固定标尺图象 · 人教版选必二衔接</footer>
+
+<script>
+/* ========== 全局动画速度（1=常速 0.15=慢动作 0=暂停） ========== */
+let SPEED=1;
+document.querySelectorAll('#spdbar [data-sp]').forEach(b=>b.onclick=()=>{
+  SPEED=+b.dataset.sp;
+  document.querySelectorAll('#spdbar [data-sp]').forEach(x=>x.classList.toggle('sel',x===b));
+});
+/* ========== 分区注册 ========== */
+const SECTIONS=[
+  {id:'z1',num:'01',name:'交流电是什么',color:'#00F0FF'},
+  {id:'z2',num:'02',name:'单相与三相',color:'#9B4DFF'},
+  {id:'z3',num:'03',name:'半波整流',color:'#FFB800'},
+  {id:'z4',num:'04',name:'桥式全波整流',color:'#C8FF00'},
+  {id:'z5',num:'05',name:'滤波与稳压',color:'#00E5A0'},
+  {id:'z6',num:'06',name:'特高压直流输电',color:'#FF6B35'},
+  {id:'z7',num:'07',name:'生活工业全景',color:'#FF2D8F'},
+];
+const main=document.getElementById('main'),tabsEl=document.getElementById('tabs');
+const loops={};
+SECTIONS.forEach(s=>{
+  const b=document.createElement('button');
+  b.textContent=`${s.num} ${s.name}`;b.style.setProperty('--ac',s.color);
+  b.onclick=()=>showTab(s.id);b.dataset.id=s.id;tabsEl.appendChild(b);
+  const sec=document.createElement('section');
+  sec.className='tab';sec.id='sec-'+s.id;sec.style.setProperty('--ac',s.color);
+  main.appendChild(sec);
+});
+function showTab(id){
+  SECTIONS.forEach(s=>{
+    document.getElementById('sec-'+s.id).classList.toggle('on',s.id===id);
+    document.querySelector(`nav.tabs button[data-id="${s.id}"]`).classList.toggle('on',s.id===id);
+    if(loops[s.id]){s.id===id?loops[s.id].start():loops[s.id].stop();}
+  });
+  window.scrollTo({top:0});
+}
+/* ========== Canvas 基础工具 ========== */
+const TAU=Math.PI*2;
+function fitCanvas(cv){
+  const dpr=Math.min(window.devicePixelRatio||1,1.5),r=cv.getBoundingClientRect();
+  cv.width=Math.max(2,r.width*dpr);cv.height=Math.max(2,r.height*dpr);
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {w:r.width,h:r.height,ctx};
+}
+function makeLoop(id,draw){
+  let raf=null,last=performance.now(),lastDraw=0,dirty=true;
+  const tick=(now)=>{
+    raf=requestAnimationFrame(tick);
+    if(now-lastDraw<33)return;              /* 帧率上限 30 FPS */
+    if(SPEED===0&&!dirty)return;            /* 暂停且状态未变：零重画 */
+    dirty=false;lastDraw=now;
+    const dt=Math.min(.05,(now-last)/1000);last=now;draw(now/1000,dt);
+  };
+  loops[id]={start(){if(!raf){last=performance.now();lastDraw=0;dirty=true;raf=requestAnimationFrame(tick);}},
+             stop(){if(raf){cancelAnimationFrame(raf);raf=null;}},
+             poke(){dirty=true;}};
+}
+/* 按需重绘：暂停(SPEED=0)时，滑杆/按钮/拖拽/resize 等交互触发一次重画 */
+function pokeActive(){
+  const on=document.querySelector('section.tab.on');
+  if(on&&loops[on.id.slice(4)])loops[on.id.slice(4)].poke();
+}
+['input','change','click'].forEach(ev=>document.addEventListener(ev,pokeActive,true));
+document.addEventListener('pointermove',e=>{if(e.buttons)pokeActive();},true);
+window.addEventListener('resize',pokeActive);
+/* 切后台自动暂停所有 rAF，回前台仅恢复当前可见分区 */
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){Object.keys(loops).forEach(k=>loops[k].stop());}
+  else{const on=document.querySelector('section.tab.on');if(on&&loops[on.id.slice(4)])loops[on.id.slice(4)].start();}
+});
+function glow(ctx,c,b=10){ctx.shadowColor=c;ctx.shadowBlur=b;}
+function noGlow(ctx){ctx.shadowBlur=0;}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function arrow(ctx,x1,y1,x2,y2,color,lw=2,head=7){
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-head*Math.cos(a-.45),y2-head*Math.sin(a-.45));
+  ctx.lineTo(x2-head*Math.cos(a+.45),y2-head*Math.sin(a+.45));
+  ctx.closePath();ctx.fill();
+}
+function text(ctx,str,x,y,{size=12,color='rgba(255,255,255,.75)',align='left',weight=500,mono=false}={}){
+  ctx.fillStyle=color;ctx.font=`${weight} ${size}px ${mono?'"JetBrains Mono",monospace':'"PingFang SC","Microsoft YaHei",sans-serif'}`;
+  ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(str,x,y);
+}
+function wireSeg(ctx,x1,y1,x2,y2,color='#9aa5b8',lw=3){
+  ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+}
+function termDot(ctx,x,y){ctx.fillStyle='#c8ccd6';ctx.beginPath();ctx.arc(x,y,3.2,0,TAU);ctx.fill();}
+/* 路径粒子：pts 折线，s 为弧长 */
+function pathLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);return L;}
+function posAt(pts,s){
+  let acc=0;
+  for(let i=1;i<pts.length;i++){
+    const dx=pts[i][0]-pts[i-1][0],dy=pts[i][1]-pts[i-1][1],L=Math.hypot(dx,dy);
+    if(s<=acc+L)return [pts[i-1][0]+dx*(s-acc)/L,pts[i-1][1]+dy*(s-acc)/L];
+    acc+=L;
+  }
+  return pts[pts.length-1];
+}
+function drawParticles(ctx,pts,s0,gap,n,color,r=3){
+  const L=pathLen(pts);
+  for(let i=0;i<n;i++){
+    let s=(s0+i*gap)%L; if(s<0)s+=L;
+    const p=posAt(pts,s);
+    glow(ctx,color,8);ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(p[0],p[1],r,0,TAU);ctx.fill();noGlow(ctx);
+  }
+}
+/* ========== 拟物元件库 ========== */
+function drawBulb(ctx,x,y,r,bright){
+  bright=Math.max(0,Math.min(1,bright));
+  const g=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);
+  g.addColorStop(0,`rgba(255,${230-60*bright|0},${150+80*(1-bright)|0},${.25+.75*bright})`);
+  g.addColorStop(1,`rgba(255,190,60,${.06+.2*bright})`);
+  if(bright>.03){glow(ctx,'#FFB800',34*bright);}
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();noGlow(ctx);
+  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.stroke();
+  ctx.strokeStyle=bright>.03?'#FFE9B0':'rgba(255,255,255,.5)';ctx.lineWidth=1.4;ctx.beginPath();
+  ctx.moveTo(x-r*.45,y+r*.6);ctx.lineTo(x-r*.18,y+r*.1);
+  for(let i=0;i<=8;i++){ctx.lineTo(x-r*.18+i/8*r*.36,y+r*.1+((i%2)?-1:1)*r*.12);}
+  ctx.lineTo(x+r*.45,y+r*.6);ctx.stroke();
+  ctx.fillStyle='#8a8f9a';roundRect(ctx,x-r*.32,y+r*.62,r*.64,r*.5,3);ctx.fill();
+}
+function drawMeter(ctx,x,y,r,val,label,color='#00F0FF'){
+  const g=ctx.createRadialGradient(x-r*.3,y-r*.3,2,x,y,r);
+  g.addColorStop(0,'#1c2230');g.addColorStop(1,'#0e1119');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=2;glow(ctx,color,7);ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.stroke();noGlow(ctx);
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1;
+  for(let i=-2;i<=2;i++){const a=-Math.PI/2+i*.45;ctx.beginPath();
+    ctx.moveTo(x+(r-6)*Math.cos(a),y+(r-6)*Math.sin(a));ctx.lineTo(x+(r-2)*Math.cos(a),y+(r-2)*Math.sin(a));ctx.stroke();}
+  const na=-Math.PI/2+Math.max(-1.1,Math.min(1.1,val))*.9;
+  arrow(ctx,x,y,x+(r-8)*Math.cos(na),y+(r-8)*Math.sin(na),'#FF2D8F',2,4);
+  text(ctx,label,x,y+r*.55,{size:9.5,color:'rgba(255,255,255,.65)',align:'center',weight:700});
+}
+function drawACBox(ctx,x,y,t){
+  ctx.fillStyle='#20242e';roundRect(ctx,x-24,y-22,48,44,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,107,53,.55)';ctx.lineWidth=1.6;ctx.stroke();
+  ctx.fillStyle='#0a0e14';roundRect(ctx,x-19,y-16,38,26,4);ctx.fill();
+  glow(ctx,'#FF6B35',6);ctx.strokeStyle='#FF6B35';ctx.lineWidth=1.8;ctx.beginPath();
+  for(let i=0;i<=30;i++){const xx=x-16+i/30*32;const yy=y-3+Math.sin(i/30*TAU*2+t*5)*8;i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}
+  ctx.stroke();noGlow(ctx);
+  text(ctx,'AC',x,y+16,{size:10,color:'#FFB79A',align:'center',weight:800});
+}
+function drawCapacitor(ctx,x,y,q){
+  ctx.strokeStyle='#c8ccd6';ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.moveTo(x-6,y-34);ctx.lineTo(x-6,y-20);ctx.moveTo(x+6,y-34);ctx.lineTo(x+6,y-20);ctx.stroke();
+  const g=ctx.createLinearGradient(x-16,0,x+16,0);
+  g.addColorStop(0,'#12233d');g.addColorStop(.45,'#2c5b9e');g.addColorStop(.6,'#3d74c4');g.addColorStop(1,'#12233d');
+  const gl=Math.abs(q);
+  if(gl>.05){glow(ctx,'#3d74c4',20*gl);}
+  ctx.fillStyle=g;roundRect(ctx,x-16,y-20,32,44,7);ctx.fill();noGlow(ctx);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillRect(x+9,y-18,4,40);
+  ctx.fillStyle='#b9c0cd';ctx.beginPath();ctx.ellipse(x,y-20,16,5,0,0,TAU);ctx.fill();
+  text(ctx,'C',x,y+8,{size:13,color:'#fff',align:'center',weight:800});
+}
+/* 叠片铁芯电感（平波电抗器等用），active 控制辉光 */
+function drawInductor(ctx,x,y,active){
+  const g=ctx.createLinearGradient(x,y-16,x,y+16);
+  g.addColorStop(0,'#4a5060');g.addColorStop(.5,'#79839b');g.addColorStop(1,'#3a4050');
+  ctx.fillStyle=g;roundRect(ctx,x-42,y-10,84,20,6);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,.35)';
+  for(let i=-38;i<=38;i+=6){ctx.beginPath();ctx.moveTo(x+i,y-10);ctx.lineTo(x+i,y+10);ctx.stroke();}
+  for(let i=-3;i<=3;i++){
+    const lx=x+i*11;
+    const cg=ctx.createLinearGradient(lx-5,0,lx+5,0);
+    cg.addColorStop(0,'#8a4b1d');cg.addColorStop(.5,'#e89a54');cg.addColorStop(1,'#8a4b1d');
+    ctx.strokeStyle=cg;ctx.lineWidth=7;glow(ctx,'#E88B4D',active?7:2);
+    ctx.beginPath();ctx.arc(lx,y,15,-Math.PI*0.55,Math.PI*0.55);ctx.stroke();
+  }
+  noGlow(ctx);
+}
+/* 二极管（1N4007 拟物）：angle 弧度旋转，on 导通辉光，band 端为阴极 */
+function drawDiode(ctx,x,y,on,{angle=0,color='#C8FF00',label=''}={}){
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+  ctx.strokeStyle='#c8ccd6';ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.moveTo(-34,0);ctx.lineTo(-16,0);ctx.moveTo(16,0);ctx.lineTo(34,0);ctx.stroke();
+  const g=ctx.createLinearGradient(0,-8,0,8);
+  g.addColorStop(0,'#3d4048');g.addColorStop(.5,'#17181d');g.addColorStop(1,'#33363e');
+  if(on)glow(ctx,color,14);
+  ctx.fillStyle=g;roundRect(ctx,-16,-8,32,16,6);ctx.fill();
+  ctx.strokeStyle=on?color:'rgba(255,255,255,.25)';ctx.lineWidth=on?1.8:1;ctx.stroke();noGlow(ctx);
+  ctx.fillStyle='#b9c0cd';ctx.fillRect(9,-8,5,16);
+  ctx.restore();
+  if(label)text(ctx,label,x,y-20,{size:10.5,color:'rgba(255,255,255,.65)',align:'center',weight:700});
+}
+/* EI 叠片变压器：x,y 中心；n1/n2 视觉匝数 */
+function drawTransformer(ctx,x,y,s,n1,n2){
+  const w=74*s,hh=64*s;
+  const g=ctx.createLinearGradient(x,y-hh/2,x,y+hh/2);
+  g.addColorStop(0,'#4a5060');g.addColorStop(.5,'#79839b');g.addColorStop(1,'#3a4050');
+  ctx.fillStyle=g;roundRect(ctx,x-w/2,y-hh/2,w,hh,6);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1;
+  for(let i=-w/2+4;i<w/2;i+=5){ctx.beginPath();ctx.moveTo(x+i,y-hh/2);ctx.lineTo(x+i,y+hh/2);ctx.stroke();}
+  ctx.fillStyle='#0c0c13';roundRect(ctx,x-w/2+14*s,y-hh/2+12*s,w-28*s,hh-24*s,4);ctx.fill();
+  function coil(cx,n){
+    for(let i=0;i<n;i++){
+      const ly=y-hh/2+16*s+i*(hh-32*s)/Math.max(1,n-1);
+      const cg=ctx.createLinearGradient(cx-8*s,0,cx+8*s,0);
+      cg.addColorStop(0,'#8a4b1d');cg.addColorStop(.5,'#e89a54');cg.addColorStop(1,'#8a4b1d');
+      ctx.strokeStyle=cg;ctx.lineWidth=4.5*s;glow(ctx,'#E88B4D',4);
+      ctx.beginPath();ctx.arc(cx,ly,9*s,-Math.PI*.5,Math.PI*.5);ctx.stroke();
+    }
+    noGlow(ctx);
+  }
+  coil(x-w/2+8*s,Math.max(2,Math.round(n1)));
+  coil(x+w/2-8*s,Math.max(2,Math.round(n2)));
+}
+/* 桁架输电塔：x 底中心，yB 底部 y，h 高度 */
+function drawTower(ctx,x,yB,h,color='#8fa0bd'){
+  const bw=h*.34,tw=h*.10,yT=yB-h;
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineCap='round';
+  wireSeg(ctx,x-bw/2,yB,x-tw/2,yT,color,2.2);
+  wireSeg(ctx,x+bw/2,yB,x+tw/2,yT,color,2.2);
+  for(let i=1;i<6;i++){
+    const yy=yB-h*i/6,w1=(bw+(tw-bw)*i/6)/2;
+    wireSeg(ctx,x-w1,yy,x+w1,yy,color,1.2);
+    wireSeg(ctx,x-w1,yy,x+(bw+(tw-bw)*(i-1)/6)/2,yB-h*(i-1)/6,color,1);
+    wireSeg(ctx,x+w1,yy,x-(bw+(tw-bw)*(i-1)/6)/2,yB-h*(i-1)/6,color,1);
+  }
+  const ay1=yT+h*.12,ay2=yT+h*.30,aw=h*.42;
+  wireSeg(ctx,x-aw/2,ay1,x+aw/2,ay1,color,2.6);
+  wireSeg(ctx,x-aw/2,ay2,x+aw/2,ay2,color,2.6);
+  wireSeg(ctx,x,yT-10,x,ay2,color,2);
+  wireSeg(ctx,x,yT-10,x-aw/2,ay1,color,1.4);
+  wireSeg(ctx,x,yT-10,x+aw/2,ay1,color,1.4);
+  [[x-aw/2,ay1],[x+aw/2,ay1],[x-aw/2,ay2],[x+aw/2,ay2]].forEach(p=>{
+    for(let k=1;k<=3;k++){ctx.fillStyle='#d8e2f2';ctx.beginPath();ctx.arc(p[0],p[1]+k*5,2.4,0,TAU);ctx.fill();}
+  });
+  return {up:[x-aw/2,ay1+18,x+aw/2,ay1+18],dn:[x-aw/2,ay2+18,x+aw/2,ay2+18]};
+}
+/* 换流站阀厅 */
+function drawConverter(ctx,x,y,label,sub,color){
+  const g=ctx.createLinearGradient(x,y-30,x,y+30);
+  g.addColorStop(0,'#2a2f3c');g.addColorStop(1,'#1a1d26');
+  ctx.fillStyle=g;roundRect(ctx,x-52,y-30,104,60,8);ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=1.6;glow(ctx,color,6);ctx.stroke();noGlow(ctx);
+  text(ctx,'⊟ ⊟ ⊟',x,y-8,{size:13,color,align:'center',weight:700});
+  text(ctx,label,x,y+9,{size:11.5,color:'#fff',align:'center',weight:700});
+  text(ctx,sub,x,y+24,{size:9.5,color:'rgba(255,255,255,.55)',align:'center'});
+}
+/* ========== 固定标尺示波器 ========== */
+/* cfg: {x,y,w,h,vUp,vDn,tWin,tDiv(s),vDiv,unit} 零线位置按比例 vUp:vDn */
+function drawScope(ctx,c){
+  const yzero=c.y+c.h*c.vUp/(c.vUp+c.vDn);
+  ctx.fillStyle='#0a0d14';roundRect(ctx,c.x,c.y,c.w,c.h,10);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.07)';
+  for(let t=c.tDiv;t<c.tWin;t+=c.tDiv){
+    const xx=c.x+c.w*t/c.tWin;
+    ctx.beginPath();ctx.moveTo(xx,c.y);ctx.lineTo(xx,c.y+c.h);ctx.stroke();
+    text(ctx,(t*1000)+'',xx,c.y+c.h+12,{size:9.5,color:'rgba(255,255,255,.4)',align:'center',mono:true});
+  }
+  for(let v=c.vDiv;v<=c.vUp;v+=c.vDiv){
+    const yy=yzero-c.h*v/(c.vUp+c.vDn);
+    ctx.beginPath();ctx.moveTo(c.x,yy);ctx.lineTo(c.x+c.w,yy);ctx.stroke();
+    text(ctx,'+'+v,c.x-8,yy,{size:9.5,color:'rgba(255,255,255,.4)',align:'right',mono:true});
+  }
+  for(let v=c.vDiv;v<=c.vDn;v+=c.vDiv){
+    const yy=yzero+c.h*v/(c.vUp+c.vDn);
+    ctx.beginPath();ctx.moveTo(c.x,yy);ctx.lineTo(c.x+c.w,yy);ctx.stroke();
+    text(ctx,'−'+v,c.x-8,yy,{size:9.5,color:'rgba(255,255,255,.4)',align:'right',mono:true});
+  }
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(c.x,yzero);ctx.lineTo(c.x+c.w,yzero);ctx.stroke();
+  text(ctx,'0',c.x-8,yzero,{size:9.5,color:'rgba(255,255,255,.5)',align:'right',mono:true});
+  text(ctx,c.unit+' / 格',c.x+6,c.y+13,{size:10,color:'rgba(255,255,255,.45)',mono:true});
+  text(ctx,(c.tDiv*1000)+' ms / 格',c.x+c.w-6,c.y+13,{size:10,color:'rgba(255,255,255,.45)',align:'right',mono:true});
+  return yzero;
+}
+/* 画迹线：fn(t) t∈[0,tWin]，返回是否削顶 */
+function trace(ctx,c,yzero,fn,color,{lw=2.4,dash=null}={}){
+  let clip=false;
+  ctx.strokeStyle=color;ctx.lineWidth=lw;
+  if(dash)ctx.setLineDash(dash);
+  glow(ctx,color,5);ctx.beginPath();
+  for(let px=0;px<=c.w;px+=2){
+    const t=px/c.w*c.tWin;
+    let v=fn(t);
+    if(v>c.vUp){clip=true;v=c.vUp;}if(v<-c.vDn){clip=true;v=-c.vDn;}
+    const yy=yzero-c.h*v/(c.vUp+c.vDn);
+    px===0?ctx.moveTo(c.x+px,yy):ctx.lineTo(c.x+px,yy);
+  }
+  ctx.stroke();ctx.setLineDash([]);noGlow(ctx);
+  if(clip)text(ctx,'⚠ 超量程削顶',c.x+70,c.y+13,{size:10.5,color:'#FF3B30',weight:700});
+  return clip;
+}
+/* 当前时刻光点：tNow 映射进窗口 */
+function scopeDot(ctx,c,yzero,val,tNow,color){
+  const px=(tNow%c.tWin)/c.tWin*c.w;
+  let v=Math.max(-c.vDn,Math.min(c.vUp,val));
+  const yy=yzero-c.h*v/(c.vUp+c.vDn);
+  glow(ctx,color,10);ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(c.x+px,yy,3.6,0,TAU);ctx.fill();noGlow(ctx);
+}
+/* 状态牌（canvas 内胶囊） */
+function pill(ctx,x,y,str,ok,color){
+  const w=ctx.measureText(str).width+26;
+  ctx.fillStyle=ok?color+'22':'rgba(255,60,60,.14)';
+  roundRect(ctx,x-w/2,y-12,w,24,12);ctx.fill();
+  ctx.strokeStyle=ok?color:'#FF3B30';ctx.lineWidth=1.2;ctx.stroke();
+  text(ctx,str,x,y,{size:11.5,color:ok?color:'#FF6B60',align:'center',weight:700});
+}
+</script>
+
+<script>
+/* ========== ZONE 01 交流电是什么 ========== */
+(function(){
+const sec=document.getElementById('sec-z1');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 01</span><h2>交流电是什么：大小方向都在变</h2><span class="badge">人教版选必二 §3.1 交变电流</span></div>
+<p class="sdesc">线圈在磁场中转动，只有<b>垂直于磁感线的速度分量 v⊥ 切割磁感线</b>才产生电动势，所以电动势随时间按正弦规律变化。观察：线圈转到<b>中性面</b>（半透明水平面，v 完全平行于 B）时电动势恰好为零。我们说的"220V"是<b>有效值</b>，峰值其实是 311V。① 为可旋转的 3D 模型：<b>拖到正对面看截面、拖到侧后方看整机</b>，v⊥ 琥珀箭头越长电动势越大，与 ② 波形光点严格同一时刻。<i style="color:var(--text3)">（为便于观察，线圈转动已放慢 25 倍，图象仍按真实 50Hz 标尺）</i></p>
+<div class="lab">
+  <div class="panel"><h4>① 交流发电机 3D 模型（🖱 拖拽旋转 · 双击复位）→ ② 电动势波形（与线圈严格同相 · 固定标尺）</h4>
+    <canvas class="stage" id="cv1d" style="aspect-ratio:16/8.8;cursor:grab;touch-action:none"></canvas>
+    <div class="legend">
+      <span><i style="background:#E88B4D"></i>旋转线圈（铜，越亮=e越大）</span>
+      <span><i style="background:rgba(120,200,255,.7)"></i>磁感线 B（N→S）</span>
+      <span><i style="background:#FFB800"></i>v⊥ 切割磁感线（产生 e）</span>
+      <span><i style="background:rgba(255,255,255,.45)"></i>v∥ 平行 B（不切割）</span>
+      <span><i style="background:#d4af6a"></i>滑环 + 电刷</span>
+      <span><i style="background:#00F0FF"></i>电动势 e（示波器）</span>
+    </div>
+    <canvas class="stage" id="cv1" style="aspect-ratio:16/4.6;margin-top:10px"></canvas>
+  </div>
+  <div class="panel"><h4>控制台</h4>
+    <div class="ctrl"><div class="btnrow">
+      <button class="btn mini" data-u="110">110V 美日</button>
+      <button class="btn mini sel" data-u="220">220V 中国</button>
+      <button class="btn mini" data-u="380">380V 动力</button>
+    </div></div>
+    <div class="ctrl"><label>电压有效值 U<output id="z1uv">220 V</output></label><input type="range" id="z1u" min="50" max="400" value="220" step="5"></div>
+    <div class="ctrl"><label>频率 f<output id="z1fv">50 Hz</output></label><input type="range" id="z1f" min="20" max="100" value="50" step="5"></div>
+    <div class="readout">
+      <div class="ro"><div class="k">峰值 Um = √2·U</div><div class="v" id="z1um">—</div></div>
+      <div class="ro"><div class="k">有效值 U</div><div class="v" id="z1ur">—</div></div>
+      <div class="ro"><div class="k">周期 T = 1/f</div><div class="v" id="z1t">—</div></div>
+      <div class="ro"><div class="k">瞬时值 e</div><div class="v" id="z1e">—</div></div>
+    </div>
+    <div class="knote"><b>推导卡 · 有效值为什么是 Um/√2？</b>
+      <div style="margin-top:10px" id="z1steps"></div>
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn mini primary" id="z1next">下一步 ▸</button>
+        <button class="btn mini" id="z1reset">重置</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="appcards">
+  <div class="appcard"><div class="ic">🔌</div><h5>墙上的插座</h5><p>我国市电 220V / 50Hz。"220V"是有效值，插头实际承受的电压在 −311V ~ +311V 之间每秒往复 50 次。</p></div>
+  <div class="appcard"><div class="ic">🏷️</div><h5>电器铭牌</h5><p>铭牌上"220V~ 50Hz"的"~"就是交流符号。耐压设计必须按峰值 311V 以上考虑，而不是 220V。</p></div>
+  <div class="appcard"><div class="ic">🏭</div><h5>为什么电网用交流？</h5><p>交流可以方便地用变压器升压、降压（电磁感应只对变化的电流起作用），发电、输电、用电各环节都灵活。</p></div>
+  <div class="appcard"><div class="ic">🔥</div><h5>有效值的意义</h5><p>保险丝发热、电热水壶功率，都按有效值算：220V 交流的发热效果 = 220V 直流。</p></div>
+</div>`;
+const cv=sec.querySelector('#cv1'),cv1d=sec.querySelector('#cv1d');
+let U=220,f=50,stepN=0;
+const STEPS=[
+ '① 让交流电和直流电分别通过<b>同一个电阻 R</b>，比较它们的发热。',
+ '② 交流一个周期 T 内发热：Q<sub>交</sub> = ∫(u²/R)dt，u=Um·sin(ωt)，sin² 的平均值是 ½ → Q<sub>交</sub> = <span class="f">Um²·T / (2R)</span>',
+ '③ 直流在同样时间 T 发热：Q<sub>直</sub> = <span class="f">U²·T / R</span>',
+ '④ "有效"= 发热效果相同：令 Q<sub>交</sub> = Q<sub>直</sub>，约去 T 和 R → Um²/2 = U²',
+ '⑤ ∴ <span class="f">U = Um/√2 ≈ 0.707·Um</span>，代入：311V ÷ √2 = <b>220V</b> ✓'
+];
+function renderSteps(){
+  const box=sec.querySelector('#z1steps');
+  box.innerHTML=STEPS.map((s,i)=>`<div class="dstep ${i<stepN?'show':''}"><span class="n">${i+1}</span>${s}</div>`).join('');
+}
+renderSteps();
+sec.querySelector('#z1next').onclick=()=>{stepN=Math.min(5,stepN+1);renderSteps();};
+sec.querySelector('#z1reset').onclick=()=>{stepN=0;renderSteps();};
+const uS=sec.querySelector('#z1u'),fS=sec.querySelector('#z1f');
+uS.oninput=()=>{U=+uS.value;sec.querySelector('#z1uv').textContent=U+' V';markPreset();};
+fS.oninput=()=>{f=+fS.value;sec.querySelector('#z1fv').textContent=f+' Hz';};
+function markPreset(){sec.querySelectorAll('[data-u]').forEach(b=>b.classList.toggle('sel',+b.dataset.u===U));}
+sec.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{U=+b.dataset.u;uS.value=U;sec.querySelector('#z1uv').textContent=U+' V';markPreset();});
+const SLOW=0.04; // 机械转动放慢倍数（图象标尺不变）
+/* ===== 3D 视角拖拽（双击复位） ===== */
+let yaw=0.55,pitch=0.30,dragging=false,lx=0,ly=0;
+cv1d.addEventListener('pointerdown',e2=>{dragging=true;lx=e2.clientX;ly=e2.clientY;cv1d.setPointerCapture(e2.pointerId);cv1d.style.cursor='grabbing';});
+cv1d.addEventListener('pointermove',e2=>{if(!dragging)return;yaw+=(e2.clientX-lx)*0.008;pitch=Math.max(-1.25,Math.min(1.25,pitch+(e2.clientY-ly)*0.008));lx=e2.clientX;ly=e2.clientY;});
+cv1d.addEventListener('pointerup',()=>{dragging=false;cv1d.style.cursor='grab';});
+cv1d.addEventListener('pointercancel',()=>{dragging=false;cv1d.style.cursor='grab';});
+cv1d.addEventListener('dblclick',()=>{yaw=0.55;pitch=0.30;});
+function draw(t){
+  const te=t*SLOW*SPEED, th=TAU*f*te; // 线圈角（c1 从正上方起，顺时针）
+  const e=Math.SQRT2*U*Math.cos(th);
+  drawGen1(th,e);
+  drawScope1(te,e);
+}
+/* ===== ① 交流发电机 3D 模型（与 ZONE 02 同款轻量 3D 引擎，画家算法） ===== */
+function drawGen1(th,e){
+  const {w,h,ctx}=fitCanvas(cv1d);
+  ctx.clearRect(0,0,w,h);
+  const cx=w*0.38,cy=h*0.52,S=Math.min(w,h)*0.20,PERSP=6;
+  const cyw=Math.cos(yaw),syw=Math.sin(yaw),cpt=Math.cos(pitch),spt=Math.sin(pitch);
+  const view=p=>{
+    const x= p[0]*cyw+p[2]*syw;
+    const z1=-p[0]*syw+p[2]*cyw;
+    return [x,p[1]*cpt-z1*spt,p[1]*spt+z1*cpt];
+  };
+  const proj=p=>{const v=view(p),fp=PERSP/(PERSP+v[2]);return [cx+v[0]*fp*S,cy-v[1]*fp*S];};
+  const items=[];
+  const dep=pts=>pts.reduce((a,p)=>a+view(p)[2],0)/pts.length;
+  function poly(pts,fill,stroke,lw=1){
+    items.push({d:dep(pts),fn(){
+      ctx.beginPath();
+      pts.forEach((p,i)=>{const q=proj(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});
+      ctx.closePath();
+      if(fill){ctx.fillStyle=fill;ctx.fill();}
+      if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
+    }});
+  }
+  function line3(pts,color,lw=1.5,gl=null,dash=null){
+    items.push({d:dep(pts),fn(){
+      ctx.beginPath();
+      pts.forEach((p,i)=>{const q=proj(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});
+      if(dash)ctx.setLineDash(dash);if(gl)glow(ctx,gl.c,gl.b);
+      ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+      ctx.setLineDash([]);noGlow(ctx);
+    }});
+  }
+  function arrow3(p0,p1,color,lw=1.6){
+    items.push({d:dep([p0,p1]),fn(){
+      const a=proj(p0),b=proj(p1);
+      arrow(ctx,a[0],a[1],b[0],b[1],color,lw,6);
+    }});
+  }
+  const LV=[-0.42,0.72,-0.56],ln=Math.hypot(-0.42,0.72,-0.56);LV[0]/=ln;LV[1]/=ln;LV[2]/=ln;
+  function sh(c,n,k=1){
+    const v=view(n);
+    let d=Math.max(0,v[0]*LV[0]+v[1]*LV[1]+v[2]*LV[2]);
+    d=(0.48+0.52*d)*k;
+    return `rgb(${Math.min(255,c[0]*d)|0},${Math.min(255,c[1]*d)|0},${Math.min(255,c[2]*d)|0})`;
+  }
+  const Um=Math.SQRT2*U,hot=Math.abs(e)/(Um||1);
+  /* ---- 机座 ---- */
+  poly([[-1.60,-1.97,-0.95],[1.60,-1.97,-0.95],[1.60,-1.97,0.95],[-1.60,-1.97,0.95]],sh([52,58,72],[0,1,0],1.15),null);
+  poly([[-1.60,-2.30,0.95],[1.60,-2.30,0.95],[1.60,-1.97,0.95],[-1.60,-1.97,0.95]],sh([52,58,72],[0,0,1]),null);
+  poly([[-1.60,-2.30,-0.95],[-1.60,-2.30,0.95],[-1.60,-1.97,0.95],[-1.60,-1.97,-0.95]],sh([52,58,72],[-1,0,0]),null);
+  poly([[1.60,-2.30,-0.95],[1.60,-2.30,0.95],[1.60,-1.97,0.95],[1.60,-1.97,-0.95]],sh([52,58,72],[1,0,0]),null);
+  /* ---- 磁极：N 上（红）/ S 下（蓝），各 6 面 ---- */
+  function box(x0,x1,y0,y1,z0,z1,base){
+    poly([[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],sh(base,[0,1,0],1.12),null);
+    poly([[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]],sh(base,[0,-1,0]),null);
+    poly([[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],sh(base,[0,0,1]),'rgba(0,0,0,.25)',0.6);
+    poly([[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0]],sh(base,[0,0,-1]),null);
+    poly([[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0]],sh(base,[-1,0,0]),null);
+    poly([[x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0]],sh(base,[1,0,0]),null);
+  }
+  box(-1.45,1.45,1.53,1.97,-0.85,0.85,[201,42,42]);
+  box(-1.45,1.45,-1.97,-1.53,-0.85,0.85,[28,109,217]);
+  /* ---- 磁感线（N→S 向下，8 束） ---- */
+  for(const fx of [-1.05,-0.35,0.35,1.05])for(const fz of [-0.45,0.45])
+    arrow3([fx,1.50,fz],[fx,-1.50,fz],'rgba(120,200,255,.45)',1.3);
+  /* ---- 中性面（水平半透明面：线圈边到左右时 v∥B，e=0） ---- */
+  poly([[-1.55,0,-0.95],[1.55,0,-0.95],[1.55,0,0.95],[-1.55,0,0.95]],'rgba(255,255,255,0.05)','rgba(255,255,255,0.22)',1);
+  /* ---- 转轴（⊥ B，沿 z） ---- */
+  for(let i=0;i<12;i++){
+    const b0=i/12*TAU,b1=(i+1)/12*TAU,bm=(b0+b1)/2;
+    poly([[0.12*Math.cos(b0),0.12*Math.sin(b0),-0.95],[0.12*Math.cos(b1),0.12*Math.sin(b1),-0.95],[0.12*Math.cos(b1),0.12*Math.sin(b1),1.55],[0.12*Math.cos(b0),0.12*Math.sin(b0),1.55]],sh([121,131,155],[Math.cos(bm),Math.sin(bm),0]),null);
+  }
+  for(const zz of [-0.95,1.55]){
+    for(let i=0;i<6;i++){
+      const b0=i/6*TAU,b1=(i+1)/6*TAU;
+      poly([[0,0,zz],[0.12*Math.cos(b0),0.12*Math.sin(b0),zz],[0.12*Math.cos(b1),0.12*Math.sin(b1),zz]],sh([150,160,185],[0,0,Math.sign(zz)],1.1),null);
+    }
+  }
+  /* ---- 滑环（黄铜）+ 电刷（碳块 + 接线柱） ---- */
+  for(const rz of [1.05,1.35]){
+    const ring=[];
+    for(let j=0;j<=24;j++){const a=j/24*TAU;ring.push([0.26*Math.cos(a),0.26*Math.sin(a),rz]);}
+    line3(ring,'#d4af6a',4.5);
+    poly([[-0.07,0.26,rz-0.07],[0.07,0.26,rz-0.07],[0.07,0.26,rz+0.07],[-0.07,0.26,rz+0.07]],sh([40,42,48],[0,-1,0]),null);
+    poly([[-0.07,0.44,rz-0.07],[0.07,0.44,rz-0.07],[0.07,0.44,rz+0.07],[-0.07,0.44,rz+0.07]],sh([58,60,68],[0,1,0],1.1),null);
+    poly([[-0.07,0.26,rz+0.07],[0.07,0.26,rz+0.07],[0.07,0.44,rz+0.07],[-0.07,0.44,rz+0.07]],sh([40,42,48],[0,0,1]),null);
+    poly([[-0.07,0.26,rz-0.07],[0.07,0.26,rz-0.07],[0.07,0.44,rz-0.07],[-0.07,0.44,rz-0.07]],sh([40,42,48],[0,0,-1]),null);
+    line3([[0,0.44,rz],[0,0.62,rz]],'#9aa5b8',2.5);
+  }
+  /* ---- 旋转线圈（铜）：c1/c2 两条边 + 两端横边，e 越大越亮 ---- */
+  const c1=[Math.sin(th),Math.cos(th)],c2=[-Math.sin(th),-Math.cos(th)];
+  const gl=hot>0.10?{c:'#FFB800',b:6+22*hot}:null;
+  const lwC=6+3*hot;
+  line3([[c1[0],c1[1],-0.75],[c1[0],c1[1],0.75]],'#E88B4D',lwC,gl);
+  line3([[c2[0],c2[1],-0.75],[c2[0],c2[1],0.75]],'#E88B4D',lwC,gl);
+  line3([[c1[0],c1[1],0.75],[c2[0],c2[1],0.75]],'#d8913f',lwC-1,gl);
+  line3([[c1[0],c1[1],-0.75],[c2[0],c2[1],-0.75]],'#c97f33',lwC-1,gl);
+  // 线圈 → 滑环引线（随线圈一起转）
+  line3([[c1[0],c1[1],0.75],[0.26*Math.sin(th),0.26*Math.cos(th),1.05]],'#E88B4D',2.2);
+  line3([[c2[0],c2[1],0.75],[-0.26*Math.sin(th),-0.26*Math.cos(th),1.35]],'#E88B4D',2.2);
+  /* ---- 电流方向箭头（e≥0：c1 电流流向 +z） ---- */
+  const dir=e>=0?1:-1;
+  arrow3([c1[0],c1[1],-0.28*dir],[c1[0],c1[1],0.28*dir],'rgba(255,243,191,.9)',2);
+  arrow3([c2[0],c2[1],0.28*dir],[c2[0],c2[1],-0.28*dir],'rgba(255,243,191,.9)',2);
+  /* ---- v 分解：v⊥（切割，琥珀粗箭）/ v∥（平行 B，灰虚线）/ v 合速度（白细箭） ---- */
+  const vx=Math.cos(th)*0.85,vy=-Math.sin(th)*0.85;
+  arrow3([c1[0],c1[1],0],[c1[0]+vx,c1[1]+vy,0],'rgba(255,255,255,.85)',1.4);
+  arrow3([c1[0],c1[1],0],[c1[0]+vx,c1[1],0],'#FFB800',2.6);
+  line3([[c1[0],c1[1],0],[c1[0],c1[1]+vy,0]],'rgba(255,255,255,.45)',1.4,null,[4,4]);
+  /* ---- 旋转方向 ω（轴前端） ---- */
+  const arcW=[];
+  for(let j=0;j<=10;j++){
+    const a=(130-6*j)*Math.PI/180;
+    arcW.push([0.55*Math.cos(a),0.55*Math.sin(a),1.72]);
+  }
+  line3(arcW,'rgba(255,255,255,.55)',1.6);
+  arrow3(arcW[7],arcW[10],'rgba(255,255,255,.55)',1.6);
+  /* ---- 深度排序渲染 ---- */
+  items.sort((a,b)=>b.d-a.d);
+  items.forEach(it=>it.fn());
+  /* ---- 标注层 ---- */
+  text(ctx,'① 交流发电机 3D 模型（拖拽旋转 · 双击复位）',18,22,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const qN=proj([0,1.75,0.87]);
+  text(ctx,'N',qN[0],qN[1],{size:16,color:'#fff',align:'center',weight:800});
+  const qS=proj([0,-1.75,0.87]);
+  text(ctx,'S',qS[0],qS[1],{size:16,color:'#fff',align:'center',weight:800});
+  const qB=proj([-1.32,1.30,0.45]);
+  text(ctx,'B',qB[0],qB[1],{size:13,color:'rgba(120,200,255,.9)',weight:800});
+  const qNP=proj([1.58,0,0.2]);
+  text(ctx,'中性面（v∥B，e=0）',qNP[0]+6,qNP[1],{size:10.5,color:'rgba(255,255,255,.5)'});
+  const qSR=proj([0,0.70,1.20]);
+  text(ctx,'滑环+电刷',qSR[0],qSR[1],{size:10,color:'#d4af6a',align:'center'});
+  const qAx=proj([0,0,1.62]);
+  text(ctx,'转轴 ⊥ B',qAx[0]+8,qAx[1]+12,{size:9.5,color:'rgba(255,255,255,.45)'});
+  if(Math.abs(vx)>0.15){
+    const qV=proj([c1[0]+vx*0.6,c1[1]+0.14,0]);
+    text(ctx,'v⊥',qV[0],qV[1],{size:11,color:'#FFB800',align:'center',weight:700});
+  }
+  const pk=Math.abs(e)>Um*0.985;
+  if(pk)glow(ctx,'#00F0FF',10);
+  text(ctx,'e = '+(e>=0?'+':'')+e.toFixed(0)+' V'+(pk?' ⚡峰值':''),18,66,{size:13,color:'#00F0FF',mono:true,weight:800});
+  noGlow(ctx);
+  /* ---- 外电路：电刷 → 灯泡（2D 走线接到 3D 投影点） ---- */
+  const pB1=proj([0,0.62,1.05]),pB2=proj([0,0.62,1.35]);
+  const bx=w*0.80,by=h*0.34;
+  wireSeg(ctx,pB1[0],pB1[1],pB1[0]+34,pB1[1]+14,'#9aa5b8',2.4);
+  wireSeg(ctx,pB1[0]+34,pB1[1]+14,bx,by-30,'#9aa5b8',2.4);
+  wireSeg(ctx,pB2[0],pB2[1],pB2[0]+50,pB2[1]+30,'#9aa5b8',2.4);
+  wireSeg(ctx,pB2[0]+50,pB2[1]+30,bx,by+34,'#9aa5b8',2.4);
+  termDot(ctx,pB1[0]+34,pB1[1]+14);termDot(ctx,pB2[0]+50,pB2[1]+30);
+  termDot(ctx,bx,by-30);termDot(ctx,bx,by+34);
+  const bright=(e/(Math.SQRT2*400))**2*3;
+  drawBulb(ctx,bx,by,24,bright);
+  text(ctx,'灯泡亮度 ∝ 实际功率 ∝ e²',bx,by+48,{size:10.5,color:'rgba(255,255,255,.5)',align:'center'});
+  drawMeter(ctx,bx,h*0.66,30,U/400*0.95,'V~ 有效值','#00F0FF');
+}
+function drawScope1(te,e){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const sc={x:70,y:h*0.18,w:w-115,h:h*0.58,vUp:400,vDn:400,vDiv:100,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'② 电动势 e(t) 波形 — 与 ① 线圈共用同一转角 θ — 固定标尺',sc.x,sc.y-9,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const yz=drawScope(ctx,sc);
+  const Um=Math.SQRT2*U,om=TAU*f;
+  trace(ctx,sc,yz,tt=>Um*Math.cos(om*tt),'#00F0FF');
+  scopeDot(ctx,sc,yz,e,te,'#00F0FF');
+  if(Math.abs(e)>Um*0.985){
+    const px=sc.x+(te%sc.tWin)/sc.tWin*sc.w;
+    const vv=Math.max(-sc.vDn,Math.min(sc.vUp,e));
+    const yy=yz-sc.h*vv/(sc.vUp+sc.vDn);
+    text(ctx,e>0?'▲ 正向峰值':'▼ 负向峰值',Math.max(sc.x+44,Math.min(sc.x+sc.w-44,px)),yy+(e>0?-13:13),{size:10.5,color:'#00F0FF',align:'center',weight:800});
+  }
+  // 读数
+  sec.querySelector('#z1um').textContent=Um.toFixed(0)+' V';
+  sec.querySelector('#z1ur').textContent=U+' V';
+  sec.querySelector('#z1t').textContent=(1/f*1000).toFixed(1)+' ms';
+  sec.querySelector('#z1e').textContent=(e>=0?'+':'')+e.toFixed(0)+' V';
+}
+makeLoop('z1',draw);
+})();
+</script>
+
+<script>
+/* ========== ZONE 02 三相电是怎么产生的 ========== */
+(function(){
+const sec=document.getElementById('sec-z2');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 02</span><h2>三相电是怎么产生的？</h2><span class="badge">人教版选必二 §3.1 拓展 · 三相交流</span></div>
+<p class="sdesc">三相电不是三份独立的电，而是<b>一台发电机里三个空间互差 120° 的绕组</b>同时发出的。观察舞台：转子磁极旋转，<b>N 极轴线垂直对准哪个绕组，那个绕组的电动势恰好冲到最大</b>（此时磁通变化最快）；磁极依次扫过 A→B→C 三个绕组，三路电动势就在<b>时间上也互差 120°</b>——这就是下方三条波形的来源。绕组上的 · 和 × 是该导体电流流出/流入纸面的方向。① 为可旋转的 3D 模型：<b>拖到正对面看剖面、拖到侧后方看整机结构</b>；绕组越亮电动势越大，与 ② 波形上的光点严格同一时刻。<b>外部接法</b>：绕组引线接到机座上的端子排（L1/L2/L3/N），右侧示意两种负载——每盏灯泡只接一相火线+零线（220V 单相），三相电机三根火线全接（380V）。<b>380V 哪来的？</b>在 ② 中叠加的白色虚线就是线电压 u12 = uL1 − uL2：两相相差 120°，矢量差幅值变为 √3 倍，峰值 539V，有效值即 380V。</p>
+<div class="lab">
+  <div class="panel"><h4>① 三相发电机 3D 模型（🖱 拖拽旋转 · 双击复位）→ ② ③ 图象与转子严格同相（固定标尺）</h4>
+    <canvas class="stage" id="cv3d" style="aspect-ratio:16/8.6;cursor:grab;touch-action:none"></canvas>
+    <div class="legend">
+      <span><i style="background:#FFD43B"></i>A 相绕组</span>
+      <span><i style="background:#69DB7C"></i>B 相绕组</span>
+      <span><i style="background:#FF6B6B"></i>C 相绕组</span>
+      <span><i style="background:#d8913f"></i>铜绕组（越亮=电动势越大）</span>
+      <span><i style="background:#FFA94D"></i>磁感线方向</span>
+      <span><i style="background:rgba(255,255,255,.85)"></i>线电压 u12（白虚线）= 380V 来源</span>
+      <span><i style="background:#74C0FC"></i>N 零线（中性点）</span>
+      <span><i style="background:rgba(255,255,255,.6)"></i>单相功率（脉动）</span>
+      <span><i style="background:#C8FF00"></i>三相总功率（恒定）</span>
+    </div>
+    <canvas class="stage" id="cv2" style="aspect-ratio:16/5.8;margin-top:10px"></canvas>
+  </div>
+  <div class="panel"><h4>控制台</h4>
+    <div class="ctrl"><label>负载功率 P（对比用）<output id="z2pv">4 kW</output></label><input type="range" id="z2p" min="1" max="9" value="4" step="0.5"></div>
+    <div class="ctrl"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="z2line" checked> 在 ② 中叠加线电压 u₁₂ = uL1 − uL2（为什么是 380V）</label></div>
+    <div class="readout">
+      <div class="ro"><div class="k">相电压（火—零）</div><div class="v">220 V</div></div>
+      <div class="ro"><div class="k">线电压（火—火）</div><div class="v">380 V</div></div>
+      <div class="ro"><div class="k">u12 瞬时值（L1−L2）</div><div class="v" id="z2u12">—</div></div>
+      <div class="ro"><div class="k">绕组空间夹角</div><div class="v">120°</div></div>
+      <div class="ro"><div class="k">三相总瞬时功率</div><div class="v" id="z2pt">—</div></div>
+    </div>
+    <div class="knote"><b>为什么恰好互差 120°？</b><br>三个绕组在定子圆周上<b>空间互差 120°</b>，磁极每转过 120° 就扫到下一个绕组，于是三相电动势到达最大值的时刻依次晚 1/3 个周期——<b>空间的 120° 变成时间的 120°</b>。</div>
+    <div class="knote"><b>为什么线电压是 380V？</b><br>火线间电压是两相电压的<b>矢量差</b>，相位差 120°：<span class="f">U<sub>线</sub> = √3 × U<sub>相</sub> = 1.732 × 220 ≈ 380V</span>。交流有效值不能直接相加！</div>
+    <div class="knote"><b>从发电机到你家</b><br>发电机出口就是三相，升压、输电、配电全程三相；到小区后物业把三相<b>轮流分给各单元</b>，你家只接其中一相的火线 + 零线，所以是 220V 单相。三相电通入电机还能自动产生<b>旋转磁场</b>。</div>
+  </div>
+</div>
+<div class="panel" style="margin-top:16px"><h4>单相 vs 三相 对照表</h4>
+<table class="matrix">
+  <tr><th></th><th>单相电</th><th>三相电</th></tr>
+  <tr><td>怎么产生</td><td>取三相中的一相 + 零线</td><td class="hit">一台发电机，三个绕组空间互差 120°</td></tr>
+  <tr><td>导线</td><td>1 火线 + 1 零线（+地线）</td><td>3 火线（+零线，三相四线制）</td></tr>
+  <tr><td>电压</td><td class="hit">220 V</td><td class="hit">相电压 220V / 线电压 380V</td></tr>
+  <tr><td>瞬时功率</td><td>0 ~ 2P 之间脉动，有"死点"</td><td class="hit">恒定 = P，运转平稳</td></tr>
+  <tr><td>典型负载</td><td>照明、电视、冰箱、插座</td><td>机床、电梯、水泵、中央空调</td></tr>
+</table>
+</div>
+<div class="appcards">
+  <div class="appcard"><div class="ic">🏠</div><h5>家庭配电箱</h5><p>小区变压器输出三相，物业把三相<b>轮流分配</b>给各楼层（A 栋用 L1，B 栋用 L2……），尽量让三相负载均衡。你家只接其中一相，所以是 220V 单相。</p></div>
+  <div class="appcard"><div class="ic">⚙️</div><h5>三相异步电机</h5><p>三相绕组互差 120° 通入三相电，自动产生旋转磁场，转子跟着转——结构简单、无需电刷，工厂 90% 的动力来自它。</p></div>
+  <div class="appcard"><div class="ic">🚗</div><h5>直流快充桩</h5><p>大功率充电桩用三相 380V 进线，内部整流成直流直接充进电池，功率可达上百千瓦——单相 220V 带不动。</p></div>
+  <div class="appcard"><div class="ic">🛗</div><h5>电梯与水泵</h5><p>凡是需要平稳大转矩的场合都用三相：功率恒定意味着不抖、不吵、效率高。</p></div>
+</div>`;
+const cv3d=sec.querySelector('#cv3d'),cv=sec.querySelector('#cv2');
+let P=4;
+const PCOL=['#FFD43B','#69DB7C','#FF6B6B'],PN=['A','B','C'];
+const pS=sec.querySelector('#z2p');
+pS.oninput=()=>{P=+pS.value;sec.querySelector('#z2pv').textContent=P+' kW';};
+let showLine=true;
+sec.querySelector('#z2line').onchange=e2=>{showLine=e2.target.checked;};
+const SLOW=0.04;
+/* ===== 3D 视角拖拽（双击复位） ===== */
+let yaw=0.55,pitch=0.30,dragging=false,lx=0,ly=0;
+cv3d.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;cv3d.setPointerCapture(e.pointerId);cv3d.style.cursor='grabbing';});
+cv3d.addEventListener('pointermove',e=>{if(!dragging)return;yaw+=(e.clientX-lx)*0.008;pitch=Math.max(-1.25,Math.min(1.25,pitch+(e.clientY-ly)*0.008));lx=e.clientX;ly=e.clientY;});
+cv3d.addEventListener('pointerup',()=>{dragging=false;cv3d.style.cursor='grab';});
+cv3d.addEventListener('pointercancel',()=>{dragging=false;cv3d.style.cursor='grab';});
+cv3d.addEventListener('dblclick',()=>{yaw=0.55;pitch=0.30;});
+function draw(t){
+  const te=t*SLOW*SPEED,ph=TAU*50*te;
+  const emf=[0,1,2].map(k=>311*Math.sin(ph-k*TAU/3));
+  drawGen(ph,emf);
+  drawScopes(te,emf);
+}
+/* ===== ① 三相发电机 3D 模型：自制轻量 3D 渲染（无外部库），画家算法深度排序 ===== */
+function drawGen(ph,emf){
+  const {w,h,ctx}=fitCanvas(cv3d);
+  ctx.clearRect(0,0,w,h);
+  const cx=w*0.40,cy=h*0.53,S=Math.min(w,h)*0.235,PERSP=6;
+  const cyw=Math.cos(yaw),syw=Math.sin(yaw),cpt=Math.cos(pitch),spt=Math.sin(pitch);
+  const view=p=>{
+    const x= p[0]*cyw+p[2]*syw;
+    const z1=-p[0]*syw+p[2]*cyw;
+    return [x,p[1]*cpt-z1*spt,p[1]*spt+z1*cpt];
+  };
+  const proj=p=>{const v=view(p),f=PERSP/(PERSP+v[2]);return [cx+v[0]*f*S,cy-v[1]*f*S];};
+  const items=[];
+  const dep=pts=>pts.reduce((a,p)=>a+view(p)[2],0)/pts.length;
+  function poly(pts,fill,stroke,lw=1){
+    items.push({d:dep(pts),fn(){
+      ctx.beginPath();
+      pts.forEach((p,i)=>{const q=proj(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});
+      ctx.closePath();
+      if(fill){ctx.fillStyle=fill;ctx.fill();}
+      if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
+    }});
+  }
+  function line3(pts,color,lw=1.5,gl=null){
+    items.push({d:dep(pts),fn(){
+      ctx.beginPath();
+      pts.forEach((p,i)=>{const q=proj(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});
+      if(gl)glow(ctx,gl.c,gl.b);
+      ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+      noGlow(ctx);
+    }});
+  }
+  function arrow3(p0,p1,color,lw=1.6){
+    items.push({d:dep([p0,p1]),fn(){
+      const a=proj(p0),b=proj(p1);
+      arrow(ctx,a[0],a[1],b[0],b[1],color,lw,6);
+    }});
+  }
+  /* 光照方向（视图空间） */
+  const LV=[-0.42,0.72,-0.56],ln=Math.hypot(-0.42,0.72,-0.56);LV[0]/=ln;LV[1]/=ln;LV[2]/=ln;
+  function sh(c,n,k=1){
+    const v=view(n);
+    let d=Math.max(0,v[0]*LV[0]+v[1]*LV[1]+v[2]*LV[2]);
+    d=(0.48+0.52*d)*k;
+    return `rgb(${Math.min(255,c[0]*d)|0},${Math.min(255,c[1]*d)|0},${Math.min(255,c[2]*d)|0})`;
+  }
+  const SEG=36,Ri=1.30,Ro=1.60,Zf=0.80,Zb=-0.80;
+  const thr2=Math.PI/2-ph;                 // N 极指向（数学坐标 y 向上）
+  const M=[Math.cos(thr2),Math.sin(thr2),0];
+  /* ---- 机座 ---- */
+  const BY=-1.60,BD=-1.94;
+  poly([[-1.35,BY,-1.05],[1.35,BY,-1.05],[1.35,BY,1.05],[-1.35,BY,1.05]],sh([52,58,72],[0,1,0],1.15),null);
+  poly([[-1.35,BD,1.05],[1.35,BD,1.05],[1.35,BY,1.05],[-1.35,BY,1.05]],sh([52,58,72],[0,0,1]),null);
+  poly([[-1.35,BD,-1.05],[-1.35,BD,1.05],[-1.35,BY,1.05],[-1.35,BY,-1.05]],sh([52,58,72],[-1,0,0]),null);
+  poly([[1.35,BD,-1.05],[1.35,BD,1.05],[1.35,BY,1.05],[1.35,BY,-1.05]],sh([52,58,72],[1,0,0]),null);
+  /* ---- 定子：后端环 + 内壁 + 透明外壳 + 前端环（叠片纹 + 螺栓） ---- */
+  for(let i=0;i<SEG;i++){
+    const a0=i/SEG*TAU,a1=(i+1)/SEG*TAU;
+    const c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1);
+    poly([[Ri*c0,Ri*s0,Zb],[Ro*c0,Ro*s0,Zb],[Ro*c1,Ro*s1,Zb],[Ri*c1,Ri*s1,Zb]],sh([64,72,90],[0,0,-1]),'rgba(0,0,0,.30)',0.6);
+    poly([[Ri*c0,Ri*s0,Zb],[Ri*c1,Ri*s1,Zb],[Ri*c1,Ri*s1,Zf],[Ri*c0,Ri*s0,Zf]],'rgba(130,142,168,0.14)',null);
+    poly([[Ro*c0,Ro*s0,Zb],[Ro*c1,Ro*s1,Zb],[Ro*c1,Ro*s1,Zf],[Ro*c0,Ro*s0,Zf]],'rgba(150,165,195,0.09)','rgba(255,255,255,0.05)',0.5);
+    poly([[Ri*c0,Ri*s0,Zf],[Ro*c0,Ro*s0,Zf],[Ro*c1,Ro*s1,Zf],[Ri*c1,Ri*s1,Zf]],sh([86,95,117],[0,0,1]),'rgba(0,0,0,.35)',0.6);
+  }
+  for(let i=0;i<SEG;i++){
+    const a=(i+0.5)/SEG*TAU,c0=Math.cos(a),s0=Math.sin(a);
+    line3([[(Ri+0.05)*c0,(Ri+0.05)*s0,Zf+0.005],[(Ro-0.05)*c0,(Ro-0.05)*s0,Zf+0.005]],'rgba(0,0,0,.28)',0.7);
+  }
+  for(let i=0;i<4;i++){
+    const a=Math.PI/4+i*Math.PI/2,bx0=(Ro-0.18)*Math.cos(a),by0=(Ro-0.18)*Math.sin(a);
+    items.push({d:dep([[bx0,by0,Zf+0.02]]),fn(){
+      const q=proj([bx0,by0,Zf+0.02]);
+      ctx.fillStyle='#39414f';ctx.beginPath();ctx.arc(q[0],q[1],3.4,0,TAU);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1;ctx.stroke();
+    }});
+  }
+  /* ---- 转轴（两段，止于磁铁端面，不穿模） ---- */
+  const SR=0.13;
+  for(const [zs,ze] of [[-1.55,-0.75],[0.75,1.55]]){
+    for(let i=0;i<12;i++){
+      const b0=i/12*TAU,b1=(i+1)/12*TAU,bm=(b0+b1)/2;
+      poly([[SR*Math.cos(b0),SR*Math.sin(b0),zs],[SR*Math.cos(b1),SR*Math.sin(b1),zs],[SR*Math.cos(b1),SR*Math.sin(b1),ze],[SR*Math.cos(b0),SR*Math.sin(b0),ze]],sh([121,131,155],[Math.cos(bm),Math.sin(bm),0]),null);
+    }
+  }
+  for(const zz of [-1.55,1.55]){
+    for(let i=0;i<6;i++){
+      const b0=i/6*TAU,b1=(i+1)/6*TAU;
+      poly([[0,0,zz],[SR*Math.cos(b0),SR*Math.sin(b0),zz],[SR*Math.cos(b1),SR*Math.sin(b1),zz]],sh([150,160,185],[0,0,Math.sign(zz)],1.1),null);
+    }
+  }
+  /* ---- 转子条形磁铁（N 红 / S 蓝，随 ph 旋转） ---- */
+  const RM=0.55,MZ=0.75,MS=24;
+  for(let i=0;i<MS;i++){
+    const b0=i/MS*TAU,b1=(i+1)/MS*TAU,bm=(b0+b1)/2;
+    const base=Math.cos(bm-thr2)>0?[201,42,42]:[28,109,217];
+    poly([[RM*Math.cos(b0),RM*Math.sin(b0),-MZ],[RM*Math.cos(b1),RM*Math.sin(b1),-MZ],[RM*Math.cos(b1),RM*Math.sin(b1),MZ],[RM*Math.cos(b0),RM*Math.sin(b0),MZ]],sh(base,[Math.cos(bm),Math.sin(bm),0]),'rgba(0,0,0,.20)',0.5);
+    for(const zz of [-MZ,MZ]){
+      poly([[0,0,zz],[RM*Math.cos(b0),RM*Math.sin(b0),zz],[RM*Math.cos(b1),RM*Math.sin(b1),zz]],sh(base,[0,0,Math.sign(zz)],1.08),null);
+    }
+  }
+  /* ---- 磁感线箭头：N 极射出 / S 极汇入（随转子旋转） ---- */
+  for(const zz of [-0.45,0,0.45]){
+    arrow3([0.60*M[0],0.60*M[1],zz],[1.22*M[0],1.22*M[1],zz],'rgba(255,169,77,.85)',1.6);
+    arrow3([1.22*-M[0],1.22*-M[1],zz],[0.60*-M[0],0.60*-M[1],zz],'rgba(255,169,77,.85)',1.6);
+  }
+  /* ---- 三相铜绕组（A 上 / B 右下 / C 左下，电动势越大越亮越粗） ---- */
+  const ZE=0.98;
+  for(let k=0;k<3;k++){
+    const al=Math.PI/2-k*TAU/3,aL=al-0.14,aR=al+0.14,rw=1.22;
+    const hot=Math.abs(emf[k])/311;
+    const gl=hot>0.12?{c:PCOL[k],b:6+26*hot}:null;
+    const lwB=5+4*hot;
+    line3([[rw*Math.cos(aL),rw*Math.sin(aL),-ZE],[rw*Math.cos(aL),rw*Math.sin(aL),ZE]],'#d8913f',lwB,gl);
+    line3([[rw*Math.cos(aR),rw*Math.sin(aR),-ZE],[rw*Math.cos(aR),rw*Math.sin(aR),ZE]],'#d8913f',lwB,gl);
+    const arcF=[],arcB=[];
+    for(let j=0;j<=8;j++){
+      const a=aL+(aR-aL)*j/8;
+      arcF.push([rw*Math.cos(a),rw*Math.sin(a),ZE]);
+      arcB.push([rw*Math.cos(a),rw*Math.sin(a),-ZE]);
+    }
+    line3(arcF,'#e8b06a',lwB-1,gl);
+    line3(arcB,'#c97f33',lwB-1,gl);
+    line3(arcF.slice(2,7),PCOL[k],2.4,hot>0.12?{c:PCOL[k],b:16}:null);
+  }
+  /* ---- 星形中性点：三绕组尾端汇于中点 → N ---- */
+  for(let k=0;k<3;k++){
+    const al=Math.PI/2-k*TAU/3;
+    line3([[1.22*Math.cos(al-0.14),1.22*Math.sin(al-0.14),-ZE],[0,0,-1.12]],PCOL[k]+'66',1.2);
+  }
+  items.push({d:dep([[0,0,-1.12]]),fn(){
+    const q=proj([0,0,-1.12]);
+    glow(ctx,'#74C0FC',8);ctx.fillStyle='#74C0FC';ctx.beginPath();ctx.arc(q[0],q[1],3.5,0,TAU);ctx.fill();noGlow(ctx);
+  }});
+  /* ---- 输出端子排（3D，立在机座右端）+ 绕组引线 ---- */
+  const TX=1.14,TY=-1.22,TZS=[0.42,0.14,-0.14,-0.42];
+  poly([[1.00,-1.60,-0.55],[1.28,-1.60,-0.55],[1.28,-1.60,0.55],[1.00,-1.60,0.55]],sh([30,35,46],[0,-1,0]),null);
+  poly([[1.00,-1.24,-0.55],[1.28,-1.24,-0.55],[1.28,-1.24,0.55],[1.00,-1.24,0.55]],sh([44,50,64],[0,1,0],1.15),'rgba(0,0,0,.3)',0.6);
+  poly([[1.00,-1.60,0.55],[1.28,-1.60,0.55],[1.28,-1.24,0.55],[1.00,-1.24,0.55]],sh([30,35,46],[0,0,1]),null);
+  poly([[1.28,-1.60,-0.55],[1.28,-1.60,0.55],[1.28,-1.24,0.55],[1.28,-1.24,-0.55]],sh([30,35,46],[1,0,0]),null);
+  const tcol=[...PCOL,'#74C0FC'];
+  for(let k=0;k<4;k++){
+    const tp=[TX,TY,TZS[k]];
+    items.push({d:dep([tp]),fn(){
+      const q=proj(tp);
+      glow(ctx,tcol[k],7);ctx.fillStyle=tcol[k];ctx.beginPath();ctx.arc(q[0],q[1],4,0,TAU);ctx.fill();noGlow(ctx);
+      ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1;ctx.stroke();
+    }});
+  }
+  // 绕组 → 端子排引线：沿机壳外缘的同心圆弧线槽（像卡在机壳上的电缆，整齐不凌乱）
+  function crCurve(pts,seg=10){
+    const out=[],P=[pts[0],...pts,pts[pts.length-1]];
+    for(let i=1;i<P.length-2;i++){
+      for(let j=0;j<seg;j++){
+        const t=j/seg,t2=t*t,t3=t2*t;
+        out.push([0,1,2].map(ax=>0.5*((2*P[i][ax])+(-P[i-1][ax]+P[i+1][ax])*t+(2*P[i-1][ax]-5*P[i][ax]+4*P[i+1][ax]-P[i+2][ax])*t2+(-P[i-1][ax]+3*P[i][ax]-3*P[i+1][ax]+P[i+2][ax])*t3)));
+      }
+    }
+    out.push(pts[pts.length-1]);
+    return out;
+  }
+  const stripA=Math.atan2(TY,TX); // 端子排方向角（约 -47°）
+  for(let k=0;k<3;k++){
+    const al=Math.PI/2-k*TAU/3;
+    const pts=[[1.22*Math.cos(al),1.22*Math.sin(al),ZE],[1.68*Math.cos(al),1.68*Math.sin(al),0.95]];
+    const da=Math.atan2(Math.sin(stripA-al),Math.cos(stripA-al)); // 较短走向（A 走右侧、C 走底部）
+    const steps=Math.max(3,Math.round(Math.abs(da)/0.09));
+    for(let j=1;j<=steps;j++){
+      const a=al+da*j/steps;
+      pts.push([1.68*Math.cos(a),1.68*Math.sin(a),0.95-0.10*j/steps]);
+    }
+    pts.push([TX,TY+0.02,TZS[k]]);
+    line3(pts,'rgba(0,0,0,.45)',3.8);
+    line3(pts,PCOL[k],2.0);
+  }
+  // 中性点 → N 端子引线（短弧线，沿机壳下方汇入）
+  const nPath=crCurve([[0,0,-1.12],[0.85,-0.72,-0.95],[1.35,-1.05,-0.55],[TX,TY+0.02,TZS[3]]],12);
+  line3(nPath,'rgba(0,0,0,.45)',3.2);
+  line3(nPath,'#74C0FC',1.8);
+  /* ---- 旋转方向 ω（前轴端） ---- */
+  const arcW=[];
+  for(let j=0;j<=10;j++){
+    const a=(130-6*j)*Math.PI/180;
+    arcW.push([0.60*Math.cos(a),0.60*Math.sin(a),1.18]);
+  }
+  line3(arcW,'rgba(255,255,255,.55)',1.6);
+  arrow3(arcW[7],arcW[10],'rgba(255,255,255,.55)',1.6);
+  /* ---- 深度排序渲染 ---- */
+  items.sort((a,b)=>b.d-a.d);
+  items.forEach(it=>it.fn());
+  /* ---- 标注层（始终在最上方） ---- */
+  text(ctx,'① 三相发电机 3D 模型（透明剖视外壳 · 橙箭头=磁感线）',18,22,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  text(ctx,'🖱 拖拽旋转视角 · 双击复位',18,42,{size:10.5,color:'rgba(255,255,255,.42)'});
+  const qN=proj([0.30*M[0],0.30*M[1],MZ+0.06]);
+  text(ctx,'N',qN[0],qN[1],{size:12.5,color:'#fff',align:'center',weight:800});
+  const qS=proj([-0.30*M[0],-0.30*M[1],MZ+0.06]);
+  text(ctx,'S',qS[0],qS[1],{size:12.5,color:'#fff',align:'center',weight:800});
+  const qW=proj([0.60*Math.cos(100*Math.PI/180),0.60*Math.sin(100*Math.PI/180),1.18]);
+  text(ctx,'ω',qW[0]+10,qW[1]-10,{size:11,color:'rgba(255,255,255,.6)',weight:700});
+  const qAx=proj([0,0,1.62]);
+  text(ctx,'转轴',qAx[0]+6,qAx[1]+10,{size:9.5,color:'rgba(255,255,255,.45)'});
+  const qSt=proj([-1.72*Math.cos(0.9),-1.72*Math.sin(0.9),0.5]);
+  text(ctx,'定子铁芯（叠片）',qSt[0],qSt[1],{size:9.5,color:'rgba(255,255,255,.45)',align:'center'});
+  const qNt=proj([0,0,-1.28]);
+  text(ctx,'中性点→N',qNt[0],qNt[1]-12,{size:9.5,color:'#74C0FC',align:'center'});
+  /* 绕组实时电压标签 + 冲顶/磁通最大 状态标记 */
+  for(let k=0;k<3;k++){
+    const al=Math.PI/2-k*TAU/3;
+    const q=proj([1.98*Math.cos(al),1.98*Math.sin(al),0.25]);
+    const pk=emf[k]>295?1:(emf[k]<-295?-1:0);
+    const dAng=Math.abs(Math.atan2(Math.sin(thr2-al),Math.cos(thr2-al)));
+    const tag=pk>0?' ⚡冲顶':(pk<0?' ⚡负向峰值':(dAng<0.30?' ·磁通最大 e≈0':''));
+    if(pk)glow(ctx,PCOL[k],12);
+    text(ctx,'u'+PN[k],q[0],q[1]-9,{size:13,color:PCOL[k],align:'center',weight:800});
+    noGlow(ctx);
+    text(ctx,(emf[k]>=0?'+':'')+emf[k].toFixed(0)+' V'+tag,q[0],q[1]+8,{size:10,color:pk?'#fff':PCOL[k],align:'center',mono:true,weight:pk?800:500});
+  }
+  /* 端子排标注（3D 投影位置） */
+  const tname=['L1','L2','L3','N'];
+  for(let k=0;k<4;k++){
+    const q=proj([TX,TY,TZS[k]]);
+    text(ctx,tname[k],q[0]+13,q[1],{size:11,color:tcol[k],weight:800});
+  }
+  const qTB=proj([1.14,-1.10,0.62]);
+  text(ctx,'输出端子排',qTB[0],qTB[1],{size:9.5,color:'rgba(255,255,255,.55)',align:'center',weight:700});
+  /* ---- 外部负载怎么接（2D 示意：接在端子排 L1/L2/L3/N 上） ---- */
+  const lx0=w-176;
+  text(ctx,'外部负载怎么接',lx0,h*0.105,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  for(let k=0;k<3;k++){
+    const yb=h*(0.195+k*0.125);
+    // 左：Lk 端子 + 下：N 端子，各引一小段线到灯泡
+    ctx.fillStyle=PCOL[k];ctx.beginPath();ctx.arc(lx0+8,yb-13,4,0,TAU);ctx.fill();
+    text(ctx,'L'+(k+1),lx0+17,yb-13,{size:9.5,color:PCOL[k],weight:800});
+    ctx.fillStyle='#74C0FC';ctx.beginPath();ctx.arc(lx0+8,yb+13,4,0,TAU);ctx.fill();
+    text(ctx,'N',lx0+17,yb+13,{size:9.5,color:'#74C0FC',weight:800});
+    wireSeg(ctx,lx0+12,yb-13,lx0+40,yb-13,'#9aa5b8',1.6);
+    wireSeg(ctx,lx0+40,yb-13,lx0+40,yb+13,'#9aa5b8',1.6);
+    wireSeg(ctx,lx0+12,yb+13,lx0+40,yb+13,'#9aa5b8',1.6);
+    const bright=(emf[k]/311)**2;
+    drawBulb(ctx,lx0+62,yb,15,bright*2.2);
+    text(ctx,'220V 单相',lx0+86,yb,{size:9.5,color:'rgba(255,255,255,.55)'});
+  }
+  text(ctx,'↑ 每盏灯亮度随该相电压实时变化',lx0,h*0.57,{size:9.5,color:'rgba(255,255,255,.4)'});
+  /* 三相电机（三根火线全接 → 380V） */
+  const my=h*0.635;
+  ctx.fillStyle='#141821';roundRect(ctx,lx0,my,168,84,10);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1.2;ctx.stroke();
+  for(let k=0;k<3;k++){
+    ctx.fillStyle=PCOL[k];ctx.beginPath();ctx.arc(lx0+66+k*22,my,4,0,TAU);ctx.fill();
+    wireSeg(ctx,lx0+66+k*22,my+4,lx0+66+k*22,my+12,PCOL[k],1.8);
+  }
+  text(ctx,'L1 L2 L3 全接',lx0+132,my+8,{size:9,color:'rgba(255,255,255,.5)',align:'center'});
+  // 风扇（随转子一起转）
+  const fx=lx0+34,fy=my+50;
+  ctx.strokeStyle='#79839b';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(fx,fy,17,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=3;ctx.lineCap='round';
+  for(let j=0;j<3;j++){
+    const a=-ph+j*TAU/3;
+    ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(fx+13*Math.cos(a),fy+13*Math.sin(a));ctx.stroke();
+  }
+  ctx.fillStyle='#565f75';ctx.beginPath();ctx.arc(fx,fy,4,0,TAU);ctx.fill();
+  text(ctx,'三相异步电机',lx0+60,fy-12,{size:10.5,color:'#fff',weight:700});
+  text(ctx,'380V · 旋转磁场驱动',lx0+60,fy+4,{size:9.5,color:'rgba(255,255,255,.55)'});
+  text(ctx,'风扇与发电机转子同步转',lx0+60,fy+18,{size:9,color:'rgba(255,255,255,.4)'});
+  /* 电压结论 */
+  text(ctx,'相电压（任一火线—零线）= 220V',w-14,h*0.855,{size:11,color:'#fff',weight:700,align:'right'});
+  text(ctx,'线电压（火线—火线）= 380V ← 为什么是 380？看 ② 白虚线',w-14,h*0.885,{size:11,color:'#fff',weight:700,align:'right'});
+  text(ctx,'家庭：接 L1/L2/L3 任一 + N → 单相 220V',w-14,h*0.925,{size:10,color:'rgba(255,255,255,.55)',align:'right'});
+  text(ctx,'工厂：L1+L2+L3 全接 → 三相 380V',w-14,h*0.955,{size:10,color:'rgba(255,255,255,.55)',align:'right'});
+}
+function drawScopes(te,emf){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  /* ===== ② 三相电压波形（与 ① 转子共用同一相位变量 ph） ===== */
+  const sc1={x:70,y:h*0.10,w:w-115,h:h*0.33,vUp:600,vDn:600,vDiv:200,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'② 三相电压波形：磁极扫过 A→B→C，电动势依次晚 1/3 周期（120°）— 固定标尺',sc1.x,sc1.y-8,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const yz1=drawScope(ctx,sc1);
+  for(let k=0;k<3;k++){
+    trace(ctx,sc1,yz1,tt=>311*Math.sin(TAU*50*tt-k*TAU/3),PCOL[k],{lw:2});
+    scopeDot(ctx,sc1,yz1,emf[k],te,PCOL[k]);
+    if(Math.abs(emf[k])>295){
+      const px=sc1.x+(te%sc1.tWin)/sc1.tWin*sc1.w;
+      const vv=Math.max(-sc1.vDn,Math.min(sc1.vUp,emf[k]));
+      const yy=yz1-sc1.h*vv/(sc1.vUp+sc1.vDn);
+      text(ctx,emf[k]>0?('▲ '+PN[k]+' 相冲顶'):('▼ '+PN[k]+' 相负向峰值'),Math.max(sc1.x+48,Math.min(sc1.x+sc1.w-48,px)),yy+(emf[k]>0?-14:14),{size:10.5,color:PCOL[k],align:'center',weight:800});
+    }
+  }
+  /* 线电压 u12 = uL1 − uL2：峰值 √3×311 = 539V → 有效值 380V */
+  if(showLine){
+    trace(ctx,sc1,yz1,tt=>311*(Math.sin(TAU*50*tt)-Math.sin(TAU*50*tt-TAU/3)),'rgba(255,255,255,.85)',{lw:1.8,dash:[7,5]});
+    scopeDot(ctx,sc1,yz1,emf[0]-emf[1],te,'#fff');
+    text(ctx,'白虚线 u12 = uL1−uL2：两相相位差 120°，矢量差幅值 ×√3 → 峰值 539V，有效值 = 539/√2 = 380V',sc1.x+sc1.w-10,sc1.y+28,{size:10.5,color:'rgba(255,255,255,.8)',align:'right',weight:700});
+  }
+  const u12=emf[0]-emf[1];
+  sec.querySelector('#z2u12').textContent=(u12>=0?'+':'')+u12.toFixed(0)+' V';
+  /* ===== ③ 瞬时功率对比 ===== */
+  const sc2={x:70,y:h*0.63,w:w-115,h:h*0.27,vUp:20,vDn:4,vDiv:5,tWin:0.04,tDiv:0.01,unit:'kW'};
+  text(ctx,'③ 瞬时功率对比：为什么三相电机更稳 — 固定标尺',sc2.x,sc2.y-8,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const yz2=drawScope(ctx,sc2);
+  trace(ctx,sc2,yz2,tt=>P*(1-Math.cos(2*TAU*50*tt)),'rgba(255,255,255,.65)',{lw:2});
+  trace(ctx,sc2,yz2,()=>P,'#C8FF00',{lw:2.8});
+  text(ctx,'单相：0 ~ 2P 脉动',sc2.x+sc2.w*0.375,yz2-2*P*(sc2.h/24)-14,{size:10,color:'rgba(255,255,255,.65)',align:'center'});
+  text(ctx,'三相合成：恒等于 P',sc2.x+sc2.w-10,yz2-P*(sc2.h/24)-12,{size:10,color:'#C8FF00',align:'right'});
+  sec.querySelector('#z2pt').textContent=P.toFixed(1)+' kW（恒定）';
+}
+makeLoop('z2',draw);
+})();
+</script>
+
+<script>
+/* ========== ZONE 03 半波整流 ========== */
+(function(){
+const sec=document.getElementById('sec-z3');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 03</span><h2>半波整流：二极管"砍掉"负半周</h2><span class="badge">人教版选必二 §5.1 传感器 · 二极管单向导电性</span></div>
+<p class="sdesc">二极管像一扇<b>单向阀门</b>：正向电压导通，反向电压截止。把它串进交流电路，<b>正半周电流通过，负半周被"砍掉"</b>，负载上就得到方向不变、但忽有忽无的脉动直流。观察：负半周二极管截止时，灯泡熄灭、导线中粒子停止流动。代价是<b>浪费了一半的电能</b>。右侧透视窗把二极管放大成一扇<b>单向阀</b>：正向电压把阀板冲开（电流通过），反向电压把阀板压死（电流阻断）——这就是单向导电性。</p>
+<div class="lab">
+  <div class="panel"><h4>半波整流电路 + 二极管单向阀透视 + 波形（固定标尺）</h4>
+    <canvas class="stage" id="cv3" style="aspect-ratio:16/11.8"></canvas>
+    <div class="legend">
+      <span><i style="background:rgba(255,255,255,.55)"></i>输入交流 u</span>
+      <span><i style="background:#FFB800"></i>输出脉动直流 uR（只有正半周）</span>
+      <span><i style="background:#FFB800"></i>电流粒子与流动箭头（导通时）</span>
+      <span><i style="background:rgba(255,80,80,.5)"></i>被砍掉的负半周</span>
+    </div>
+  </div>
+  <div class="panel"><h4>控制台</h4>
+    <div class="ctrl"><label>输入电压有效值 U<output id="z3uv">220 V</output></label><input type="range" id="z3u" min="50" max="400" value="220" step="5"></div>
+    <div class="readout">
+      <div class="ro"><div class="k">输入峰值 Um</div><div class="v" id="z3um">—</div></div>
+      <div class="ro"><div class="k">输出平均值 ≈0.45U</div><div class="v" id="z3avg">—</div></div>
+      <div class="ro"><div class="k">输出脉动频率</div><div class="v">50 Hz</div></div>
+      <div class="ro"><div class="k">二极管当前状态</div><div class="v" id="z3st">—</div></div>
+    </div>
+    <div class="knote"><b>二极管怎么看方向？</b><br>实物上一端有<b>银色环带</b>，那是<b>负极（阴极）</b>。电流只能从另一端（阳极）流入、环带端流出——舞台里环带朝右，所以正半周（上端为 +）导通。</div>
+    <div class="knote"><b>输出平均值怎么算？</b><br>正弦正半周的平均高度是 <span class="f">2Um/π</span>，负半周为 0，整周期平均：<span class="f">U<sub>avg</sub> = Um/π ≈ 0.45·U<sub>有效</sub></span>。剩下一半周期负载完全断电——这就是半波整流效率低的原因。</div>
+  </div>
+</div>
+<div class="appcards">
+  <div class="appcard"><div class="ic">🔦</div><h5>老式手电充电器</h5><p>最便宜的充电电路就是一只二极管半波整流：结构简单、成本低，代价是充电慢、效率低。</p></div>
+  <div class="appcard"><div class="ic">🌡️</div><h5>电热毯调温档</h5><p>部分电热毯的"低档"就是串一只二极管：只用半波加热，功率大约减半——成本不到一元钱。</p></div>
+  <div class="appcard"><div class="ic">🔋</div><h5>电池涓流充电</h5><p>对充电速度无要求的场合（应急灯电池），半波整流 + 限流电阻就能胜任。</p></div>
+  <div class="appcard"><div class="ic">📏</div><h5>信号检波</h5><p>收音机把高频调幅信号"切掉一半"取出声音信号，用的也是二极管单向导电的原理。</p></div>
+</div>`;
+const cv=sec.querySelector('#cv3');
+let U=220;
+const uS=sec.querySelector('#z3u');
+uS.oninput=()=>{U=+uS.value;sec.querySelector('#z3uv').textContent=U+' V';};
+const SLOW=0.04;
+/* 沿路径的流动箭头（电流方向可视化） */
+function flowChevrons(ctx,pts,s0,gap,color){
+  const L=pathLen(pts);
+  for(let s=(s0%gap);s<L;s+=gap){
+    const p1=posAt(pts,s),p2=posAt(pts,Math.min(L,s+4));
+    const a=Math.atan2(p2[1]-p1[1],p2[0]-p1[0]);
+    ctx.save();ctx.translate(p1[0],p1[1]);ctx.rotate(a);
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-3,-4);ctx.lineTo(3,0);ctx.lineTo(-3,4);ctx.stroke();
+    ctx.restore();
+  }
+}
+function draw(t){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const te=t*SLOW*SPEED, stm=t*SPEED, ph=TAU*50*te;
+  const Um=Math.SQRT2*U, u=Um*Math.sin(ph);
+  const on=u>0;
+  /* ================= 左侧：半波整流电路 ================= */
+  const x0=90,x1=w*0.585,y0=64,y1=h*0.475,cy=(y0+y1)/2;
+  const dx=(x0+x1)/2;
+  const wc='#9aa5b8', ac='#FFB800'; // 导线基色 / 导通高亮色
+  const cur=on?ac:wc;
+  // 左竖线（留 AC 盒口）
+  wireSeg(ctx,x0,y0,x0,cy-24,cur);wireSeg(ctx,x0,cy+24,x0,y1,wc);
+  // 顶线（留二极管口）
+  wireSeg(ctx,x0,y0,dx-38,y0,cur);wireSeg(ctx,dx+38,y0,x1,y0,cur);
+  // 右竖线（留灯泡口）
+  wireSeg(ctx,x1,y0,x1,cy-30,cur);wireSeg(ctx,x1,cy+34,x1,y1,cur);
+  // 底线
+  wireSeg(ctx,x1,y1,x0,y1,cur);
+  termDot(ctx,x0,y0);termDot(ctx,x1,y0);termDot(ctx,x1,y1);termDot(ctx,x0,y1);
+  // AC 电源盒 + 瞬时极性
+  drawACBox(ctx,x0,cy,te*2);
+  text(ctx,u>0?'+':'−',x0+16,cy-30,{size:14,color:u>0?'#FF8B8B':'#8BB8FF',weight:800});
+  text(ctx,u>0?'−':'+',x0+16,cy+32,{size:14,color:u>0?'#8BB8FF':'#FF8B8B',weight:800});
+  text(ctx,'~ 50Hz',x0-2,cy+46,{size:9.5,color:'rgba(255,255,255,.4)',align:'center'});
+  // 二极管（顶线中点，环带=阴极朝右）
+  drawDiode(ctx,dx,y0,on,{color:'#FFB800',label:'D（1N4007）'});
+  pill(ctx,dx,y0-40,on?'✓ 正向导通':'✗ 反向截止',on,'#FFB800');
+  // 灯泡（右竖线）
+  drawBulb(ctx,x1,cy,24,on?(u/311)*(u/311):0);
+  text(ctx,'负载 R',x1+16,cy+44,{size:10.5,color:'rgba(255,255,255,.5)',align:'center'});
+  // 电流：导通时粒子+流动箭头；截止时粒子堵在二极管前
+  if(on){
+    const pts=[[x0,cy-26],[x0,y0],[dx-40,y0],[dx+40,y0],[x1,y0],[x1,cy-32],[x1,cy+36],[x1,y1],[x0,y1],[x0,cy+26]];
+    drawParticles(ctx,pts,(stm*160*(u/Um))%pathLen(pts),26,Math.round(pathLen(pts)/26),ac,3);
+    flowChevrons(ctx,pts,(stm*160*(u/Um))%70,70,'rgba(255,184,0,.9)');
+  }else{
+    for(let i=0;i<4;i++){
+      glow(ctx,'#FF6B60',6);ctx.fillStyle='#FF6B60';
+      ctx.beginPath();ctx.arc(dx-46-i*12,y0,3,0,TAU);ctx.fill();noGlow(ctx);
+    }
+    text(ctx,'✗',dx-32,y0-14,{size:13,color:'#FF6B60',weight:800,align:'center'});
+    text(ctx,'负半周：阀门关闭，全路无电流',(x0+x1)/2,y1+22,{size:11,color:'#FF6B60',align:'center'});
+  }
+  /* ================= 右侧：二极管单向阀透视窗 ================= */
+  const vx0=w*0.655,vx1=w-24,vy0=64,vy1=h*0.475;
+  ctx.fillStyle='#10131b';roundRect(ctx,vx0,vy0,vx1-vx0,vy1-vy0,14);ctx.fill();
+  ctx.strokeStyle=on?'rgba(255,184,0,.5)':'rgba(255,80,80,.45)';ctx.lineWidth=1.4;ctx.stroke();
+  const vmx=(vx0+vx1)/2;
+  text(ctx,'二极管 = 单向阀门（放大透视）',vmx,vy0+20,{size:11.5,color:'rgba(255,255,255,.65)',align:'center',weight:700});
+  // 大二极管外形（银环=阴极）
+  const dw=(vx1-vx0)*0.34,dy=vy0+64;
+  wireSeg(ctx,vx0+14,dy,vmx-dw,dy,'#c8ccd6',2.6);
+  wireSeg(ctx,vmx+dw,dy,vx1-14,dy,'#c8ccd6',2.6);
+  const dg=ctx.createLinearGradient(0,dy-15,0,dy+15);
+  dg.addColorStop(0,'#3d4048');dg.addColorStop(.5,'#17181d');dg.addColorStop(1,'#33363e');
+  if(on)glow(ctx,'#FFB800',14);
+  ctx.fillStyle=dg;roundRect(ctx,vmx-dw,dy-15,dw*2,30,8);ctx.fill();
+  ctx.strokeStyle=on?'#FFB800':'rgba(255,255,255,.3)';ctx.lineWidth=1.4;ctx.stroke();noGlow(ctx);
+  ctx.fillStyle='#b9c0cd';ctx.fillRect(vmx+dw-14,dy-15,9,30);
+  text(ctx,'银环',vmx+dw-9,dy-27,{size:9.5,color:'#b9c0cd',align:'center'});
+  text(ctx,'阳极 A',vmx-dw,dy+31,{size:10.5,color:'#FF8B8B',align:'center',weight:700});
+  text(ctx,'阴极 K',vmx+dw-9,dy+31,{size:10.5,color:'#8BB8FF',align:'center',weight:700});
+  // 阀室：通道 + 铰链挡板
+  const gy=vy0+158,gw2=(vx1-vx0)*0.36,gh=46;
+  ctx.fillStyle='#0a0d14';roundRect(ctx,vmx-gw2,gy-gh/2,gw2*2,gh,8);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.save();ctx.translate(vmx,gy-gh/2+3);
+  ctx.rotate(on?-1.35:0.06); // 导通：挡板被冲开贴顶；截止：垂下关死
+  const fg=ctx.createLinearGradient(0,0,0,gh-8);
+  fg.addColorStop(0,'#79839b');fg.addColorStop(1,'#4a5060');
+  ctx.fillStyle=fg;roundRect(ctx,-4,0,8,gh-10,3);ctx.fill();
+  ctx.strokeStyle=on?'#FFB800':'#FF6B60';ctx.lineWidth=1.4;ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#565f75';ctx.beginPath();ctx.arc(vmx,gy-gh/2+3,3.5,0,TAU);ctx.fill();
+  if(on){
+    for(let i=0;i<8;i++){
+      const px=vmx-gw2+((stm*130+i*34)%(gw2*2));
+      glow(ctx,'#FFB800',7);ctx.fillStyle='#FFB800';
+      ctx.beginPath();ctx.arc(px,gy,3,0,TAU);ctx.fill();noGlow(ctx);
+    }
+    arrow(ctx,vmx-gw2+14,gy-gh/2-13,vmx+gw2-14,gy-gh/2-13,'#FFB800',2,6);
+    text(ctx,'正向电压 → 阀板被冲开，电流通过',vmx,gy+gh/2+18,{size:10.5,color:'#C8FF00',align:'center',weight:700});
+  }else{
+    for(let i=0;i<5;i++){
+      glow(ctx,'#FF6B60',6);ctx.fillStyle='#FF6B60';
+      ctx.beginPath();ctx.arc(vmx-11-(i%3)*11,gy-7+Math.floor(i/3)*14,3,0,TAU);ctx.fill();noGlow(ctx);
+    }
+    text(ctx,'反向电压 → 阀板被压死，电流阻断',vmx,gy+gh/2+18,{size:10.5,color:'#FF6B60',align:'center',weight:700});
+  }
+  text(ctx,'电流只允许 A → K（阳极进、银环端出）',vmx,vy1-12,{size:9.5,color:'rgba(255,255,255,.45)',align:'center'});
+  /* ================= 下部：示波器 ================= */
+  const sc={x:70,y:h*0.56,w:w-115,h:h*0.35,vUp:400,vDn:400,vDiv:100,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'输入 u（灰）与输出 uR（橙）— 红色区域 = 被砍掉的负半周（浪费一半电能）— 固定标尺',sc.x,sc.y-9,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const yz=drawScope(ctx,sc);
+  // 被砍掉的负半周区域填充
+  ctx.fillStyle='rgba(255,80,80,.10)';
+  ctx.beginPath();ctx.moveTo(sc.x,yz);
+  for(let px=0;px<=sc.w;px+=2){
+    const tt=px/sc.w*sc.tWin,v=Math.min(0,Um*Math.sin(TAU*50*tt));
+    ctx.lineTo(sc.x+px,yz-sc.h*v/(sc.vUp+sc.vDn));
+  }
+  ctx.lineTo(sc.x+sc.w,yz);ctx.closePath();ctx.fill();
+  trace(ctx,sc,yz,tt=>Um*Math.sin(TAU*50*tt),'rgba(255,255,255,.55)',{lw:1.8});
+  trace(ctx,sc,yz,tt=>Math.max(0,Um*Math.sin(TAU*50*tt)),'#FFB800',{lw:2.6});
+  scopeDot(ctx,sc,yz,u,te,'rgba(255,255,255,.8)');
+  scopeDot(ctx,sc,yz,Math.max(0,u),te,'#FFB800');
+  sec.querySelector('#z3um').textContent=Um.toFixed(0)+' V';
+  sec.querySelector('#z3avg').textContent=(0.45*U).toFixed(0)+' V';
+  const st=sec.querySelector('#z3st');
+  st.textContent=on?'导通 ✓':'截止 ✗';st.style.color=on?'#C8FF00':'#FF6B60';
+}
+makeLoop('z3',draw);
+})();
+</script>
+
+<script>
+/* ========== ZONE 04 桥式全波整流 ========== */
+(function(){
+const sec=document.getElementById('sec-z4');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 04</span><h2>桥式全波整流：四只二极管"翻转"负半周</h2><span class="badge">人教版选必二 §5.1 应用 · 全波整流</span></div>
+<p class="sdesc">四只二极管搭成电桥：<b>正半周 D1、D4 导通，负半周 D2、D3 导通</b>，两班轮流上岗。神奇的是：无论输入是正半周还是负半周，<b>流过灯泡的电流方向始终不变</b>（从上往下）——负半周被"翻转"了上来，输出是连续的全波脉动直流，电能利用率翻倍，脉动频率变成 <b>100Hz</b>。每条桥臂上的<b>白色小箭头</b>标出那只二极管唯一允许的电流方向：导通的发光（✓）、粒子流过，截止的打 ⊘。跟着箭头走一遍，就明白负半周为什么能被"翻转"。</p>
+<div class="lab">
+  <div class="panel"><h4>桥式整流电路（放大版 · 臂上小箭头=各二极管唯一允许的电流方向）+ 波形（固定标尺）</h4>
+    <canvas class="stage" id="cv4" style="aspect-ratio:16/13"></canvas>
+    <div class="legend">
+      <span><i style="background:#C8FF00"></i>正半周电流路径（D1·D4）</span>
+      <span><i style="background:#00F0FF"></i>负半周电流路径（D2·D3）</span>
+      <span><i style="background:rgba(255,255,255,.55)"></i>输入交流</span>
+      <span><i style="background:#C8FF00"></i>输出全波脉动直流</span>
+      <span><i style="background:rgba(255,255,255,.7)"></i>臂上小箭头 = 二极管允许方向</span>
+      <span><i style="background:rgba(0,240,255,.5)"></i>被翻转的负半周</span>
+    </div>
+  </div>
+  <div class="panel"><h4>控制台</h4>
+    <div class="ctrl"><label>输入电压有效值 U<output id="z4uv">220 V</output></label><input type="range" id="z4u" min="50" max="400" value="220" step="5"></div>
+    <div class="readout">
+      <div class="ro"><div class="k">输出平均值 ≈0.9U</div><div class="v" id="z4avg">—</div></div>
+      <div class="ro"><div class="k">输出脉动频率</div><div class="v">100 Hz</div></div>
+      <div class="ro"><div class="k">当前导通二极管</div><div class="v" id="z4st">—</div></div>
+      <div class="ro"><div class="k">负载电流方向</div><div class="v">始终向下 ↓</div></div>
+    </div>
+    <div class="knote"><b>怎么记导通组合？</b><br>电流从"<b>+</b>"角出发，总是沿"<b>能上则上</b>"的二极管爬到输出 + 端；从输出 − 端再沿"<b>能回则回</b>"的二极管回到"−"角。对角线上的两只同时导通：<span class="f">正半周 D1·D4，负半周 D2·D3</span>。</div>
+    <div class="knote"><b>输出平均值</b>：负半周被完整翻转上来，平均值翻倍：<span class="f">U<sub>avg</sub> = 2Um/π ≈ 0.90·U<sub>有效</sub></span>。实物里四只二极管常封装成一颗"整流桥堆"，四个引脚：两个 ~ 接交流，+ − 出直流。</div>
+  </div>
+</div>
+<div class="appcards">
+  <div class="appcard"><div class="ic">📱</div><h5>手机充电器前端</h5><p>充电器拆开，220V 进来第一关就是整流桥堆：先把交流变成脉动直流，再交给后面的电路处理。</p></div>
+  <div class="appcard"><div class="ic">🚗</div><h5>电动车充电桩</h5><p>直流快充桩的核心就是把三相交流整流成可调直流，功率可达几十到几百千瓦。</p></div>
+  <div class="appcard"><div class="ic">⚡</div><h5>电焊机</h5><p>直流电焊机电弧稳定、飞溅小，靠的就是整流桥把交流变成直流再供给焊枪。</p></div>
+  <div class="appcard"><div class="ic">💡</div><h5>LED 驱动电源</h5><p>LED 灯珠只吃直流，家用 LED 灯泡内部都有一块微型整流滤波电路板。</p></div>
+</div>`;
+const cv=sec.querySelector('#cv4');
+let U=220;
+const uS=sec.querySelector('#z4u');
+uS.oninput=()=>{U=+uS.value;sec.querySelector('#z4uv').textContent=U+' V';};
+const SLOW=0.04;
+/* 沿路径的流动箭头（电流方向可视化） */
+function flowChevrons(ctx,pts,s0,gap,color){
+  const L=pathLen(pts);
+  for(let s=(s0%gap);s<L;s+=gap){
+    const p1=posAt(pts,s),p2=posAt(pts,Math.min(L,s+4));
+    const a=Math.atan2(p2[1]-p1[1],p2[0]-p1[0]);
+    ctx.save();ctx.translate(p1[0],p1[1]);ctx.rotate(a);
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-3,-4);ctx.lineTo(3,0);ctx.lineTo(-3,4);ctx.stroke();
+    ctx.restore();
+  }
+}
+function draw(t){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const te=t*SLOW*SPEED, stm=t*SPEED, ph=TAU*50*te;
+  const Um=Math.SQRT2*U, u=Um*Math.sin(ph);
+  const pos=u>0, neg=u<0;
+  const C1='#C8FF00',C2='#00F0FF',WC='rgba(154,165,184,.55)';
+  /* ---- 几何（放大版菱形桥） ---- */
+  const mx=w*0.35,my=h*0.315;
+  const Lx=mx-150,Rx=mx+150,Ty=my-125,By=my+125;
+  const top=my-172,bot=my+172,acB=my+198,bulbX=mx+310,bx=mx-255;
+  const on=pos?C1:C2;
+  /* ---- 全部导线（灰底） ---- */
+  // 四条桥臂（留二极管口：30%~70%）
+  const arms=[[Lx,my,mx,Ty],[Rx,my,mx,Ty],[mx,By,Lx,my],[mx,By,Rx,my]];
+  arms.forEach(([ax,ay,bx2,by2])=>{
+    wireSeg(ctx,ax,ay,ax+(bx2-ax)*0.30,ay+(by2-ay)*0.30,WC);
+    wireSeg(ctx,ax+(bx2-ax)*0.70,ay+(by2-ay)*0.70,bx2,by2,WC);
+  });
+  // 输出侧：T 上→顶轨→灯泡→底回→B
+  wireSeg(ctx,mx,Ty,mx,top,WC);wireSeg(ctx,mx,top,bulbX,top,WC);
+  wireSeg(ctx,bulbX,top,bulbX,my-30,WC);wireSeg(ctx,bulbX,my+34,bulbX,bot,WC);
+  wireSeg(ctx,bulbX,bot,mx,bot,WC);wireSeg(ctx,mx,bot,mx,By,WC);
+  // AC 侧：盒→L；盒→下→右→R
+  wireSeg(ctx,bx+24,my-10,Lx,my-2,WC);
+  wireSeg(ctx,bx+24,my+12,bx+44,my+12,WC);wireSeg(ctx,bx+44,my+12,bx+44,acB,WC);
+  wireSeg(ctx,bx+44,acB,Rx,acB,WC);wireSeg(ctx,Rx,acB,Rx,my+2,WC);
+  /* ---- 臂上常显小箭头 = 该二极管唯一允许的电流方向 ---- */
+  arms.forEach(([ax,ay,bx2,by2])=>{
+    const a=Math.atan2(by2-ay,bx2-ax);
+    for(const f of [0.17,0.83]){
+      const px=ax+(bx2-ax)*f,py=ay+(by2-ay)*f;
+      ctx.save();ctx.translate(px,py);ctx.rotate(a);
+      ctx.strokeStyle='rgba(255,255,255,.42)';ctx.lineWidth=1.7;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-3,-4.5);ctx.lineTo(3.5,0);ctx.lineTo(-3,4.5);ctx.stroke();
+      ctx.restore();
+    }
+  });
+  /* ---- 激活路径高亮 + 粒子 + 流动箭头 ---- */
+  const pPos=[[bx+24,my-10],[Lx,my-2],[Lx,my],[mx,Ty],[mx,top],[bulbX,top],[bulbX,my-30],[bulbX,my+34],[bulbX,bot],[mx,bot],[mx,By],[Rx,my],[Rx,acB],[bx+44,acB],[bx+44,my+12],[bx+24,my+12]];
+  const pNeg=[[bx+24,my+12],[bx+44,my+12],[bx+44,acB],[Rx,acB],[Rx,my],[mx,Ty],[mx,top],[bulbX,top],[bulbX,my-30],[bulbX,my+34],[bulbX,bot],[mx,bot],[mx,By],[Lx,my],[bx+24,my-10]];
+  if(u!==0){
+    const P=pos?pPos:pNeg;
+    for(let i=1;i<P.length;i++)wireSeg(ctx,P[i-1][0],P[i-1][1],P[i][0],P[i][1],on,3.4);
+    drawParticles(ctx,P,(stm*170*Math.abs(u)/Um)%pathLen(P),30,Math.round(pathLen(P)/30),on,3);
+    flowChevrons(ctx,P,(stm*170*Math.abs(u)/Um)%72,72,on);
+  }
+  /* ---- 元件 ---- */
+  drawACBox(ctx,bx,my,te*2);
+  text(ctx,pos?'+':'−',bx-16,my-14,{size:13,color:pos?'#FF8B8B':'#8BB8FF',weight:800});
+  text(ctx,pos?'−':'+',bx-16,my+16,{size:13,color:pos?'#8BB8FF':'#FF8B8B',weight:800});
+  text(ctx,'~ 50Hz',bx,my+40,{size:9.5,color:'rgba(255,255,255,.4)',align:'center'});
+  // 四只二极管（臂中点）+ 导通 ✓ / 截止 ⊘
+  const DS=[
+    {x:mx-75,y:my-62.5,a:Math.atan2(-125,150), on:pos,c:C1,n:'D1'},
+    {x:mx+75,y:my-62.5,a:Math.atan2(-125,-150),on:neg,c:C2,n:'D2'},
+    {x:mx-75,y:my+62.5,a:Math.atan2(-125,-150),on:neg,c:C2,n:'D3'},
+    {x:mx+75,y:my+62.5,a:Math.atan2(-125,150), on:pos,c:C1,n:'D4'}
+  ];
+  DS.forEach(d=>{
+    drawDiode(ctx,d.x,d.y,d.on,{angle:d.a,color:d.c,label:d.n});
+    const ox=d.x+24*Math.cos(d.a-Math.PI/2),oy=d.y+24*Math.sin(d.a-Math.PI/2);
+    text(ctx,d.on?'✓':'⊘',ox,oy,{size:12,color:d.on?'#C8FF00':'rgba(255,107,96,.85)',align:'center',weight:800});
+  });
+  // 状态牌
+  pill(ctx,mx,top-16,u===0?'—':(pos?'正半周：D1、D4 导通（绿路径）':'负半周：D2、D3 导通（蓝路径）'),true,on);
+  // 灯泡 + 负载电流方向恒定
+  drawBulb(ctx,bulbX,my,24,(u/311)*(u/311));
+  text(ctx,'负载 R',bulbX+16,my+44,{size:10.5,color:'rgba(255,255,255,.5)',align:'center'});
+  arrow(ctx,bulbX-16,my-48,bulbX-16,my-6,'#fff',2.4,7);
+  text(ctx,'电流方向始终向下 ↓',bulbX+62,my-48,{size:11,color:'#fff',weight:700});
+  text(ctx,'+ 输出（T 角）',mx+10,top+4,{size:10.5,color:C1,weight:700});
+  text(ctx,'− 输出（B 角）',mx+10,bot+4,{size:10.5,color:'#8BB8FF',weight:700});
+  // 端子点
+  [[Lx,my],[Rx,my],[mx,Ty],[mx,By],[mx,top],[bulbX,top],[bulbX,bot],[mx,bot]].forEach(p=>termDot(ctx,p[0],p[1]));
+  /* ---- 下部：示波器 ---- */
+  const sc={x:70,y:h*0.705,w:w-115,h:h*0.245,vUp:400,vDn:400,vDiv:100,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'输入 u（灰）与输出 uR＝|u|（绿）— 蓝色区域 = 被"翻转"上来的负半周 — 固定标尺',sc.x,sc.y-9,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const yz=drawScope(ctx,sc);
+  // 被翻转的负半周区域填充
+  ctx.fillStyle='rgba(0,240,255,.10)';
+  ctx.beginPath();ctx.moveTo(sc.x,yz);
+  for(let px=0;px<=sc.w;px+=2){
+    const tt=px/sc.w*sc.tWin,v=Um*Math.sin(TAU*50*tt);
+    ctx.lineTo(sc.x+px,yz-(v<0?sc.h*Math.abs(v)/(sc.vUp+sc.vDn):0));
+  }
+  ctx.lineTo(sc.x+sc.w,yz);ctx.closePath();ctx.fill();
+  text(ctx,'← 负半周翻转上来',sc.x+sc.w*0.25,yz-sc.h*0.13,{size:10,color:'#00F0FF',align:'center',weight:700});
+  trace(ctx,sc,yz,tt=>Um*Math.sin(TAU*50*tt),'rgba(255,255,255,.55)',{lw:1.8});
+  trace(ctx,sc,yz,tt=>Math.abs(Um*Math.sin(TAU*50*tt)),'#C8FF00',{lw:2.6});
+  scopeDot(ctx,sc,yz,u,te,'rgba(255,255,255,.8)');
+  scopeDot(ctx,sc,yz,Math.abs(u),te,'#C8FF00');
+  sec.querySelector('#z4avg').textContent=(0.9*U).toFixed(0)+' V';
+  const st=sec.querySelector('#z4st');
+  st.textContent=pos?'D1 · D4':(neg?'D2 · D3':'—');
+  st.style.color=pos?C1:C2;
+}
+makeLoop('z4',draw);
+})();
+</script>
+
+<script>
+/* ========== ZONE 05 滤波与稳压（二极管级细节版） ========== */
+(function(){
+const sec=document.getElementById('sec-z5');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 05</span><h2>整流→滤波→稳压：一颗 5V 电源的完整诞生</h2><span class="badge">必修三 §10.4 电容器 · 选必二综合</span></div>
+<p class="sdesc">用一套<b>真实的低压电源</b>把三步全部拆开看：① <b>整流</b>——四只二极管搭的桥（就是 ZONE 04 那座，D1·D4 与 D2·D3 轮流导通）把 12V 交流翻成 0~17V 脉动直流；② <b>滤波</b>——电解电容像小水库，电压冲高时<b>电荷堆上极板</b>，回落时<b>极板放电顶上</b>，只剩小纹波；③ <b>稳压</b>——7805 咬住 5V 不放。控制台里有 <b>7805 的内部透视</b>。试试"电容太小"预设：<b>波谷跌破 7V，7805 失稳</b>，5V 跟着掉坑。</p>
+<div class="lab">
+  <div class="panel"><h4>12V交流 → ① 二极管桥 → ② 电容滤波 → ③ 7805 → 5V设备（固定标尺）</h4>
+    <canvas class="stage" id="cv5" style="aspect-ratio:16/13.2"></canvas>
+    <div class="legend">
+      <span><i style="background:rgba(255,255,255,.5)"></i>输入 12V 交流</span>
+      <span><i style="background:#FFB800"></i>① 整流后脉动（虚线）</span>
+      <span><i style="background:#00E5A0"></i>② 滤波后（带纹波）</span>
+      <span><i style="background:#FF2D8F"></i>③ 7805 输出 5V</span>
+      <span><i style="background:#C8FF00"></i>导通的二极管</span>
+    </div>
+  </div>
+  <div class="panel"><h4>控制台</h4>
+    <div class="ctrl"><div class="btnrow">
+      <button class="btn mini" data-c="470" data-i="1">电容太小</button>
+      <button class="btn mini sel" data-c="4700" data-i="0.5">合理配置</button>
+      <button class="btn mini" data-c="22000" data-i="0.2">不惜成本</button>
+    </div></div>
+    <div class="ctrl"><label>滤波电容 C<output id="z5cv">4700 µF</output></label><input type="range" id="z5c" min="0" max="5" value="3" step="1"></div>
+    <div class="ctrl"><label>负载电流 I<output id="z5iv">0.5 A</output></label><input type="range" id="z5i" min="0.1" max="2" value="0.5" step="0.1"></div>
+    <div class="readout">
+      <div class="ro"><div class="k">滤波后电压</div><div class="v" id="z5out">—</div></div>
+      <div class="ro"><div class="k">纹波峰峰值 ΔU</div><div class="v" id="z5rip">—</div></div>
+      <div class="ro"><div class="k">7805 输出</div><div class="v" id="z5v5">—</div></div>
+      <div class="ro"><div class="k">7805 发热</div><div class="v" id="z5heat">—</div></div>
+    </div>
+    <div class="knote"><b>7805 内部透视（自动可变电阻）</b>
+      <canvas class="stage" id="z5ic" style="aspect-ratio:16/7.2;margin-top:8px"></canvas>
+    </div>
+    <div class="knote"><b>"7805"是什么意思？</b><br>它是 <b>78xx 系列三端稳压器</b>的一员：<b>"78" = 正电压输出系列，"05" = 输出 5V</b>（同系列 7809→9V、7812→12V）。三个引脚：IN 输入、GND 地、OUT 输出。它把高于 5V 的部分<b>变成热消耗掉</b>，所以输入越高、电流越大越烫——必须配散热片。</div>
+    <div class="knote"><b>分步卡</b>
+      <div style="margin-top:10px" id="z5steps"></div>
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn mini primary" id="z5next">下一步 ▸</button>
+        <button class="btn mini" id="z5reset">重置</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="appcards">
+  <div class="appcard"><div class="ic">📱</div><h5>手机充电器</h5><p>整流桥 → 高压电解电容滤波 → 开关管高频变换 → 小变压器 → 二次整流滤波 → 稳压输出。那颗最大的"蓝柱子"就是滤波电容。</p></div>
+  <div class="appcard"><div class="ic">💻</div><h5>电脑 ATX 电源</h5><p>用料更足：两只大电容并联滤波，输出 12V/5V/3.3V 多路稳定直流，纹波被压到几十毫伏。</p></div>
+  <div class="appcard"><div class="ic">🔊</div><h5>音响的"嗡嗡"声</h5><p>功放电源滤波电容老化后纹波变大，100Hz 纹波混进音频——就是你听到的低频哼声。</p></div>
+  <div class="appcard"><div class="ic">💡</div><h5>LED 频闪</h5><p>劣质 LED 灯省掉滤波电容，亮度随 100Hz 脉动闪烁，伤眼。手机摄像头对着灯能看出条纹。</p></div>
+</div>`;
+const cv=sec.querySelector('#cv5'),icv=sec.querySelector('#z5ic');
+const CLIST=[470,1000,2200,4700,10000,22000];
+let Ci=3,I=0.5,stepN=0;
+const STEPS=[
+ '① <b>交流输入</b>：12V 变压器次级，正负半周交替（示波器灰色正弦，±17V）。',
+ '② <b>整流</b>：看桥上亮点——正半周 D1·D4 导通、负半周 D2·D3 导通，负半周被翻上去 → 全波脉动（虚线）。',
+ '③ <b>充电</b>：电压上升段，电流兵分两路：一路供 7805，一路涌进电容，<b>极板 ± 电荷增多</b>。',
+ '④ <b>放电</b>：电压回落，整流桥"歇工"（变暗），<b>电容放电顶上</b> → 只剩小纹波（绿线）。',
+ '⑤ <b>稳压</b>：7805（78 系列、05=5V）内部的"自动可变电阻"咬住 5V（品红直线）。',
+ '⑥ <b>失稳警告</b>：波谷跌破 7V（电容太小/负载太重），7805 撑不住，5V 输出掉坑 ⚠。'
+];
+function renderSteps(){
+  sec.querySelector('#z5steps').innerHTML=STEPS.map((s,i)=>`<div class="dstep ${i<stepN?'show':''}"><span class="n">${i+1}</span>${s}</div>`).join('');
+}
+renderSteps();
+sec.querySelector('#z5next').onclick=()=>{stepN=Math.min(6,stepN+1);renderSteps();};
+sec.querySelector('#z5reset').onclick=()=>{stepN=0;renderSteps();};
+const cS=sec.querySelector('#z5c'),iS=sec.querySelector('#z5i');
+function syncUI(){
+  sec.querySelector('#z5cv').textContent=CLIST[Ci]+' µF';
+  sec.querySelector('#z5iv').textContent=I.toFixed(1)+' A';
+  sec.querySelectorAll('[data-c]').forEach(b=>b.classList.toggle('sel',+b.dataset.c===CLIST[Ci]&&+b.dataset.i===I));
+}
+cS.oninput=()=>{Ci=+cS.value;syncUI();};
+iS.oninput=()=>{I=+iS.value;syncUI();};
+sec.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{Ci=CLIST.indexOf(+b.dataset.c);I=+b.dataset.i;cS.value=Ci;iS.value=I;syncUI();});
+/* 电解电容详图：极板电荷堆积 ∝ charge01 */
+function drawCapDetail(ctx,x,y,q01,label){
+  ctx.strokeStyle='#c8ccd6';ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.moveTo(x-8,y-58);ctx.lineTo(x-8,y-38);ctx.moveTo(x+8,y-58);ctx.lineTo(x+8,y-38);ctx.stroke();
+  const g=ctx.createLinearGradient(x-24,0,x+24,0);
+  g.addColorStop(0,'#12233d');g.addColorStop(.45,'#2c5b9e');g.addColorStop(.6,'#3d74c4');g.addColorStop(1,'#12233d');
+  ctx.fillStyle=g;roundRect(ctx,x-24,y-38,48,72,8);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillRect(x+14,y-34,5,64);
+  ctx.fillStyle='#b9c0cd';ctx.beginPath();ctx.ellipse(x,y-38,24,6,0,0,TAU);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(x-14,y-10);ctx.lineTo(x+14,y-10);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-14,y+8);ctx.lineTo(x+14,y+8);ctx.stroke();
+  const n=Math.round(q01*7);
+  for(let i=0;i<n;i++){
+    const px=x-12+i*4;
+    text(ctx,'+',px,y-17,{size:10,color:'#FFB800',align:'center',weight:800});
+    text(ctx,'−',px,y+15,{size:10,color:'#8BB8FF',align:'center',weight:800});
+  }
+  if(q01>.05){glow(ctx,'#3d74c4',18*q01);ctx.strokeStyle='rgba(120,180,255,.6)';ctx.lineWidth=1.4;roundRect(ctx,x-24,y-38,48,72,8);ctx.stroke();noGlow(ctx);}
+  text(ctx,label,x,y+46,{size:10.5,color:'#fff',align:'center',weight:800});
+}
+/* 7805（TO-220 拟物，挂在 + 轨下）：x 中心，yRail 顶轨高度 */
+function draw7805v2(ctx,x,yRail,ok){
+  ctx.strokeStyle='#c8ccd6';ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(x-26,yRail);ctx.lineTo(x-26,yRail+18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+26,yRail);ctx.lineTo(x+26,yRail+18);ctx.stroke();
+  text(ctx,'IN',x-26,yRail-10,{size:10,color:'rgba(255,255,255,.65)',align:'center',weight:700});
+  text(ctx,'OUT',x+26,yRail-10,{size:10,color:'rgba(255,255,255,.65)',align:'center',weight:700});
+  const g=ctx.createLinearGradient(0,yRail+18,0,yRail+54);
+  g.addColorStop(0,'#3a3d46');g.addColorStop(1,'#141519');
+  ctx.fillStyle=g;roundRect(ctx,x-42,yRail+18,84,36,5);ctx.fill();
+  ctx.strokeStyle=ok?'#FF2D8F':'rgba(255,60,60,.8)';ctx.lineWidth=1.8;
+  if(ok)glow(ctx,'#FF2D8F',9);
+  ctx.stroke();noGlow(ctx);
+  text(ctx,'7805',x,yRail+36,{size:13,color:'#fff',align:'center',weight:800});
+  ctx.fillStyle='#8a8f9a';
+  for(let i=-2;i<=2;i++)ctx.fillRect(x+i*14-5,yRail+54,10,13);
+  ctx.fillStyle='#6a6f7a';roundRect(ctx,x-40,yRail+52,80,5,2);ctx.fill();
+  ctx.strokeStyle='#c8ccd6';ctx.lineWidth=2.6;
+  ctx.beginPath();ctx.moveTo(x,yRail+54);ctx.lineTo(x,yRail+72);ctx.stroke();
+  text(ctx,'GND',x+16,yRail+70,{size:10,color:'rgba(255,255,255,.65)',weight:700});
+}
+const SLOW=0.04;
+function draw(t){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const Um=Math.SQRT2*12;
+  const C=CLIST[Ci]*1e-6;
+  const dU=I/(100*C);
+  const te=t*SLOW*SPEED, stm=t*SPEED, ph=TAU*50*te;
+  const r0=Math.abs(Um*Math.sin(ph));
+  const tpk=Math.floor((te-0.005)/0.01)*0.01+0.005;
+  const vdec=Um-(I/C)*(te-tpk);
+  const charging=r0>=vdec-0.05;
+  const uc=Math.max(0,Math.max(r0>vdec?r0:vdec,0));
+  const ok7805=uc>=7;
+  const u5=ok7805?5:Math.max(0,uc-2);
+  const pos=Math.sin(ph)>0;
+  const EC='#00E5A0',MG='#FF2D8F',DC='#C8FF00',WC='rgba(154,165,184,.55)';
+  /* ===== ① 二极管桥（菱形，同 ZONE 04 结构） ===== */
+  const my=h*0.26;
+  const bdx=w*0.20;
+  const Lx=bdx-70,Rx=bdx+70,Ty=my-60,By=my+60;
+  const yT=my-108,yB=my+108;
+  const arms=[[Lx,my,bdx,Ty],[Rx,my,bdx,Ty],[bdx,By,Lx,my],[bdx,By,Rx,my]];
+  const on1=charging&&pos,on2=charging&&!pos;
+  const armOn=[on1,on2,on2,on1];
+  arms.forEach(([ax,ay,bx2,by2],i)=>{
+    const cc=armOn[i]?DC:WC;
+    wireSeg(ctx,ax,ay,ax+(bx2-ax)*0.30,ay+(by2-ay)*0.30,cc,armOn[i]?3.2:2.4);
+    wireSeg(ctx,ax+(bx2-ax)*0.70,ay+(by2-ay)*0.70,bx2,by2,cc,armOn[i]?3.2:2.4);
+  });
+  drawDiode(ctx,bdx-35,my-30,on1,{angle:Math.atan2(Ty-my,bdx-Lx),color:DC,label:'D1'});
+  drawDiode(ctx,bdx+35,my-30,on2,{angle:Math.atan2(Ty-my,bdx-Rx),color:DC,label:'D2'});
+  drawDiode(ctx,bdx-35,my+30,on2,{angle:Math.atan2(my-By,Lx-bdx),color:DC,label:'D3'});
+  drawDiode(ctx,bdx+35,my+30,on1,{angle:Math.atan2(my-By,Rx-bdx),color:DC,label:'D4'});
+  pill(ctx,bdx,yT-16,charging?(pos?'正半周：D1·D4 导通':'负半周：D2·D3 导通'):'桥"歇工"：电容供电中',charging,charging?DC:EC);
+  text(ctx,'+',bdx+8,Ty-2,{size:12,color:DC,weight:800});
+  text(ctx,'−',bdx+8,By+2,{size:12,color:'#8BB8FF',weight:800});
+  const bx=64;
+  drawACBox(ctx,bx,my,te*2);
+  text(ctx,'12V~',bx,my+40,{size:10.5,color:'#FFB79A',align:'center',weight:700});
+  text(ctx,pos?'+':'−',bx-16,my-14,{size:13,color:pos?'#FF8B8B':'#8BB8FF',weight:800});
+  text(ctx,pos?'−':'+',bx-16,my+16,{size:13,color:pos?'#8BB8FF':'#FF8B8B',weight:800});
+  wireSeg(ctx,bx+24,my-10,Lx,my-2,WC);
+  wireSeg(ctx,bx+24,my+12,bx+40,my+12,WC);wireSeg(ctx,bx+40,my+12,bx+40,By+30,WC);
+  wireSeg(ctx,bx+40,By+30,Rx,By+30,WC);wireSeg(ctx,Rx,By+30,Rx,my+2,WC);
+  /* ===== 母线与后级 ===== */
+  const capX=w*0.52,rx=w*0.75,batX=w-80;
+  wireSeg(ctx,bdx,Ty,bdx,yT,charging?DC:WC);
+  wireSeg(ctx,bdx,yT,rx-26,yT,charging?DC:WC);
+  wireSeg(ctx,rx+26,yT,batX,yT,ok7805?MG:'rgba(255,60,60,.7)');
+  wireSeg(ctx,bdx,By,bdx,yB,WC);
+  wireSeg(ctx,bdx,yB,batX,yB,EC);
+  text(ctx,'① 整流',bdx,yT-34,{size:11,color:'rgba(255,255,255,.55)',align:'center',weight:700});
+  text(ctx,'② 滤波',capX,yT-26,{size:11,color:'rgba(255,255,255,.55)',align:'center',weight:700});
+  text(ctx,'③ 稳压',rx,yT-34,{size:11,color:'rgba(255,255,255,.55)',align:'center',weight:700});
+  // 电容支路
+  wireSeg(ctx,capX,yT,capX,my-60,EC);
+  wireSeg(ctx,capX,my+32,capX,yB,EC);
+  drawCapDetail(ctx,capX,my-4,uc/Um,CLIST[Ci]+'µF');
+  pill(ctx,capX,yB+16,charging?'充电中：极板堆电荷':'放电中：释放电荷',true,charging?'#FFB800':EC);
+  // 7805 + GND 下接 − 轨
+  draw7805v2(ctx,rx,yT,ok7805);
+  wireSeg(ctx,rx,yT+72,rx,yB,WC);
+  // 电池负载
+  wireSeg(ctx,batX,yT,batX,my-30,ok7805?MG:'rgba(255,60,60,.7)');
+  wireSeg(ctx,batX,my+16,batX,yB,EC);
+  ctx.strokeStyle='#c8ccd6';ctx.lineWidth=2.4;ctx.lineCap='round';
+  roundRect(ctx,batX-16,my-30,32,46,6);ctx.stroke();
+  ctx.fillStyle='#c8ccd6';ctx.fillRect(batX-7,my-36,14,6);
+  const lv=ok7805?0.65:Math.max(0,uc-2)/5*0.65;
+  ctx.fillStyle=ok7805?'#00E5A0':'#FF6B60';
+  ctx.fillRect(batX-12,my+12-38*lv,24,38*lv);
+  text(ctx,ok7805?'5V 设备':'供电异常!',batX,my+34,{size:10.5,color:ok7805?'#00E5A0':'#FF6B60',align:'center',weight:700});
+  // 端子
+  [[bdx,yT],[capX,yT],[rx-26,yT],[rx+26,yT],[batX,yT],[bdx,yB],[capX,yB],[rx,yB],[batX,yB]].forEach(p=>termDot(ctx,p[0],p[1]));
+  // 粒子
+  if(charging){
+    const pts=[[bdx,Ty],[bdx,yT],[capX,yT],[rx-26,yT]];
+    drawParticles(ctx,pts,(stm*150)%pathLen(pts),24,Math.round(pathLen(pts)/24),DC,3);
+    drawParticles(ctx,[[capX,yT],[capX,my-62]],(stm*120)%pathLen([[capX,yT],[capX,my-62]]),13,Math.round(pathLen([[capX,yT],[capX,my-62]])/13),'#FFB800',2.6);
+  }else{
+    const pts=[[capX,my-62],[capX,yT],[rx-26,yT]];
+    drawParticles(ctx,pts,(stm*150)%pathLen(pts),26,Math.round(pathLen(pts)/26),'#FFB800',2.8);
+  }
+  drawParticles(ctx,[[rx+26,yT],[batX,yT],[batX,my-32]],(stm*110)%pathLen([[rx+26,yT],[batX,yT],[batX,my-32]]),26,Math.round(pathLen([[rx+26,yT],[batX,yT],[batX,my-32]])/26),ok7805?MG:'rgba(255,60,60,.7)',2.6);
+  /* ===== 示波器（±20V 四线同台） ===== */
+  const sc={x:70,y:h*0.575,w:w-115,h:h*0.345,vUp:20,vDn:20,vDiv:5,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'四线同台（固定标尺 ±20V）：灰=交流输入，虚线=整流后，绿=滤波后，品红=7805 输出',sc.x,sc.y-9,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  const yz=drawScope(ctx,sc);
+  trace(ctx,sc,yz,tt=>Um*Math.sin(TAU*50*tt),'rgba(255,255,255,.45)',{lw:1.4});
+  trace(ctx,sc,yz,tt=>Math.abs(Um*Math.sin(TAU*50*tt)),'#FFB800',{lw:1.6,dash:[5,4]});
+  const ucOf=tt=>{
+    const r=Math.abs(Um*Math.sin(TAU*50*tt));
+    const pk=Math.floor((tt-0.005)/0.01)*0.01+0.005;
+    const vd=Um-(I/C)*(tt-pk);
+    return Math.max(0,Math.max(r>vd?r:vd,0));
+  };
+  trace(ctx,sc,yz,ucOf,EC,{lw:2.6});
+  trace(ctx,sc,yz,tt=>{const v=ucOf(tt);return v>=7?5:Math.max(0,v-2);},MG,{lw:2.8});
+  scopeDot(ctx,sc,yz,uc,te,EC);
+  scopeDot(ctx,sc,yz,u5,te,MG);
+  const y7=yz-sc.h*7/(sc.vUp+sc.vDn);
+  ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(255,45,143,.5)';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(sc.x,y7);ctx.lineTo(sc.x+sc.w,y7);ctx.stroke();ctx.setLineDash([]);
+  text(ctx,'7805 生死线 7V',sc.x+sc.w-6,y7-9,{size:9.5,color:'#FF2D8F',align:'right',weight:700});
+  const ax=sc.x+sc.w*0.30;
+  const ypk=yz-sc.h*Um/(sc.vUp+sc.vDn), ytr=yz-sc.h*Math.max(0,Um-dU)/(sc.vUp+sc.vDn);
+  arrow(ctx,ax,ypk,ax,ytr,'#FFB800',1.8,6);arrow(ctx,ax,ytr,ax,ypk,'#FFB800',1.8,6);
+  text(ctx,'ΔU≈'+dU.toFixed(1)+'V',ax+10,(ypk+ytr)/2,{size:11,color:'#FFB800',weight:700});
+  if(Um-dU<7)text(ctx,'⚠ 波谷跌破 7V，7805 失稳，5V 输出跌落！',sc.x+sc.w/2,sc.y+13,{size:11.5,color:'#FF3B30',align:'center',weight:700});
+  sec.querySelector('#z5out').textContent=Math.max(0,Um-dU/2).toFixed(1)+' V';
+  sec.querySelector('#z5rip').textContent=dU.toFixed(1)+' V';
+  const v5=sec.querySelector('#z5v5');
+  v5.textContent=ok7805?'5.0 V 稳定':u5.toFixed(1)+' V ⚠失稳';
+  v5.style.color=ok7805?'#00E5A0':'#FF3B30';
+  const heat=Math.max(0,(ok7805?uc-5:0))*I;
+  const ht=sec.querySelector('#z5heat');
+  ht.textContent=heat.toFixed(1)+' W';
+  ht.style.color=heat>4?'#FF3B30':(heat>2?'#FFB800':'#00E5A0');
+  /* ===== 控制台：7805 内部透视 ===== */
+  {
+    const r2=fitCanvas(icv),c2=r2.ctx,W2=r2.w,H2=r2.h;
+    c2.clearRect(0,0,W2,H2);
+    const my2=H2*0.32;
+    text(c2,'IN '+uc.toFixed(1)+'V',10,my2,{size:10.5,color:'#FFB800',weight:700});
+    arrow(c2,66,my2,92,my2,'rgba(255,255,255,.6)',1.6,5);
+    c2.strokeStyle='#FF2D8F';c2.lineWidth=2;
+    c2.strokeRect(92,my2-12,58,24);
+    c2.beginPath();c2.moveTo(96,my2+14);c2.lineTo(146,my2-14);c2.stroke();
+    arrow(c2,138,my2-10,146,my2-14,'#FF2D8F',1.6,4);
+    text(c2,'调整管',121,my2+3,{size:9.5,color:'#fff',align:'center',weight:700});
+    text(c2,'≈自动可变电阻',121,my2-20,{size:9,color:'#FF2D8F',align:'center'});
+    arrow(c2,150,my2,174,my2,'rgba(255,255,255,.6)',1.6,5);
+    text(c2,'OUT 5V',178,my2,{size:10.5,color:'#00E5A0',weight:700});
+    const cy2=H2*0.72;
+    c2.strokeStyle='rgba(255,255,255,.35)';c2.lineWidth=1.2;
+    c2.beginPath();c2.moveTo(196,my2+8);c2.lineTo(196,cy2);c2.lineTo(148,cy2);c2.stroke();
+    c2.strokeStyle='#9B4DFF';c2.lineWidth=1.8;
+    c2.beginPath();c2.moveTo(116,cy2-14);c2.lineTo(116,cy2+14);c2.lineTo(146,cy2);c2.closePath();c2.stroke();
+    text(c2,'−',120,cy2-6,{size:10,color:'#9B4DFF',weight:800});
+    text(c2,'+',120,cy2+8,{size:10,color:'#9B4DFF',weight:800});
+    text(c2,'基准 5V',102,cy2+24,{size:8.5,color:'rgba(255,255,255,.55)',align:'center'});
+    c2.beginPath();c2.moveTo(110,cy2+8);c2.lineTo(116,cy2+8);c2.stroke();
+    c2.setLineDash([4,3]);
+    c2.beginPath();c2.moveTo(146,cy2);c2.lineTo(158,cy2);c2.lineTo(158,my2+20);c2.lineTo(150,my2+12);c2.stroke();
+    c2.setLineDash([]);
+    text(c2,'反馈：OUT 偏高→关小，偏低→开大',W2-8,H2-8,{size:9,color:'rgba(255,255,255,.6)',align:'right'});
+    text(c2,'损耗变热：('+(ok7805?uc.toFixed(1):'—')+'−5)V × '+I.toFixed(1)+'A ≈ '+heat.toFixed(1)+'W → 散热片',8,H2-8,{size:9,color:heat>4?'#FF3B30':'#FFB800'});
+  }
+}
+makeLoop('z5',draw);
+})();
+</script>
+
+<script>
+/* ========== ZONE 06 特高压直流输电·换流站内部 ========== */
+(function(){
+const sec=document.getElementById('sec-z6');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 06</span><h2>换流站内部：交流是怎么一步变成直流的</h2><span class="badge">人教版选必二 §3.4 电能的输送 · 国家工程</span></div>
+<p class="sdesc">特高压直流的核心是<b>换流站里的三相 6 脉动换流桥</b>——就是 ZONE 04 单相桥的"三相六阀放大版"。盯住舞台：<b>每一瞬间，电压最高那一相的上阀导通、最低那一相的下阀导通</b>，六只晶闸管阀轮流两两上岗，输出就是 6 脉动直流，再经<b>平波电抗器</b>抹平送上 ±800kV 线路。为看清原理用 380V 教学模型，真实阀厅电压数百 kV，<b>原理一模一样</b>。</p>
+<div class="lab">
+  <div class="panel"><h4>三相 6 脉动换流桥（换流站阀厅）+ 波形（固定标尺）</h4>
+    <canvas class="stage" id="cv6" style="aspect-ratio:16/13"></canvas>
+    <div class="legend">
+      <span><i style="background:#FFD43B"></i>A 相</span>
+      <span><i style="background:#69DB7C"></i>B 相</span>
+      <span><i style="background:#FF6B6B"></i>C 相</span>
+      <span><i style="background:#C8FF00"></i>导通阀 / 输出包络</span>
+      <span><i style="background:#FF6B35"></i>6 脉动直流</span>
+    </div>
+  </div>
+  <div class="panel"><h4>控制台</h4>
+    <div class="readout">
+      <div class="ro"><div class="k">当前导通的两只阀</div><div class="v" id="z6pair">—</div></div>
+      <div class="ro"><div class="k">输出瞬时 ud = u大−u小</div><div class="v" id="z6ud">—</div></div>
+      <div class="ro"><div class="k">输出平均 Ud = 1.35×U线</div><div class="v" id="z6avg">—</div></div>
+      <div class="ro"><div class="k">脉动频率</div><div class="v">300 Hz</div></div>
+    </div>
+    <div class="knote"><b>分步卡：交流→直流五步</b>
+      <div style="margin-top:10px" id="z6steps"></div>
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn mini primary" id="z6next">下一步 ▸</button>
+        <button class="btn mini" id="z6reset">重置</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="ctrl"><div class="btnrow">
+      <button class="btn mini" data-u="500" data-l="1050" data-p="3000">三峡→上海</button>
+      <button class="btn mini sel" data-u="800" data-l="2093" data-p="8000">白鹤滩→江苏</button>
+      <button class="btn mini" data-u="1100" data-l="3324" data-p="12000">准东→皖南</button>
+    </div></div>
+    <div class="ctrl"><label>输送功率 P<output id="z6pv">8000 MW</output></label><input type="range" id="z6p" min="2000" max="12000" value="8000" step="500"></div>
+    <div class="ctrl"><label>电压等级<output id="z6uv">±800 kV</output></label><input type="range" id="z6u" min="0" max="2" value="1" step="1"></div>
+    <div class="ctrl"><label>输电距离 L<output id="z6lv">2000 km</output></label><input type="range" id="z6l" min="1000" max="3300" value="2000" step="50"></div>
+    <div class="readout">
+      <div class="ro"><div class="k">输送电流 I = P/2U</div><div class="v" id="z6i">—</div></div>
+      <div class="ro"><div class="k">直流线损 ΔP = I²R</div><div class="v" id="z6dp">—</div></div>
+      <div class="ro"><div class="k">损耗率</div><div class="v" id="z6pc">—</div></div>
+      <div class="ro"><div class="k">若用 500kV 交流</div><div class="v" id="z6ac">—</div></div>
+    </div>
+    <div class="knote"><b>晶闸管阀 vs 普通二极管</b>：晶闸管是一只<b>可控开通的二极管</b>——门极（G）不给触发脉冲，即使加正向电压也不导通。换流站每 60°（3.3ms）按导通表顺序发一次脉冲，精确控制哪两只阀上岗。看舞台上阀门旁边的小亮点，就是触发脉冲到达。</div>
+    <div class="knote"><b>真实阀厅还要大得多</b>：±800kV 意味着每个"阀"其实是<b>几十只晶闸管串联</b>（分摊电压），两座 6 脉动桥再串联成 <b>12 脉动</b>（脉动更小、谐波更少）。但"最高相上阀 + 最低相下阀"的换相原理，和舞台上的模型一模一样。</div>
+    <div class="knote"><b>为什么高压又为什么直流？</b><span class="f">I = P/U</span>，<span class="f">ΔP = I²R</span>：电压 ×2 → 损耗 ÷4。直流只需 ± 两根线、没有感抗容抗、跨海电缆只能用它。±800kV 指两极对地电压，极间 1600kV。</div>
+  </div>
+</div>
+<div class="appcards">
+  <div class="appcard"><div class="ic">🏔️</div><h5>西电东送</h5><p>金沙江白鹤滩水电站 → 江苏，±800kV、约 2100km、8000MW，每年为长三角输送数百亿度清洁水电。</p></div>
+  <div class="appcard"><div class="ic">🏆</div><h5>准东—皖南 ±1100kV</h5><p>世界电压等级最高、输送容量最大（12000MW）、距离最远（3324km）的直流工程，新疆煤电直送安徽。</p></div>
+  <div class="appcard"><div class="ic">🌊</div><h5>跨海联网</h5><p>海底电缆工程（如联网海岛、海上风电送出）几乎清一色用直流——交流电缆的充电电流会"吃掉"全部容量。</p></div>
+  <div class="appcard"><div class="ic">⛷️</div><h5>张北柔性直流</h5><p>北京冬奥场馆 100% 绿电，靠张北柔性直流电网把风电光伏"攒"起来稳定送出——新一代 IGBT 换流技术。</p></div>
+</div>`;
+const cv=sec.querySelector('#cv6');
+const ULIST=[500,800,1100];
+let P=8000,Ui=1,L=2000,stepN=0;
+const STEPS=[
+ '① <b>换流变压器</b>把电网的交流送到阀厅，三相互差 120°（教学模型 380V，真实阀厅数百 kV，原理相同）。',
+ '② <b>6 只晶闸管阀</b>排成三相桥：上三只 V1·V3·V5 阴极共接 <b>+ 极</b>母线，下三只 V4·V6·V2 阳极共接 <b>− 极</b>母线。',
+ '③ 每一瞬间：<b>电压最高相的上阀 + 最低相的下阀</b>导通，其余四只关断——看舞台上轮流点亮的两只阀和下方导通表。',
+ '④ 输出 <span class="f">u<sub>d</sub> = u<sub>大</sub> − u<sub>小</sub></span>：每周期 <b>6 个脉动</b>（300Hz），波谷也有 465V，比单相桥（跌到 0）平滑得多。',
+ '⑤ <b>平波电抗器</b>把 6 脉动抹成 ≈513V 平直直流 → 送上 ±800kV 线路；到终点<b>逆变站</b>把整个过程倒过来，直流变回交流入户。'
+];
+function renderSteps(){
+  sec.querySelector('#z6steps').innerHTML=STEPS.map((s,i)=>`<div class="dstep ${i<stepN?'show':''}"><span class="n">${i+1}</span>${s}</div>`).join('');
+}
+renderSteps();
+sec.querySelector('#z6next').onclick=()=>{stepN=Math.min(5,stepN+1);renderSteps();};
+sec.querySelector('#z6reset').onclick=()=>{stepN=0;renderSteps();};
+const pS=sec.querySelector('#z6p'),uS=sec.querySelector('#z6u'),lS=sec.querySelector('#z6l');
+function syncUI(){
+  sec.querySelector('#z6pv').textContent=P+' MW';
+  sec.querySelector('#z6uv').textContent='±'+ULIST[Ui]+' kV';
+  sec.querySelector('#z6lv').textContent=L+' km';
+  sec.querySelectorAll('[data-u]').forEach(b=>b.classList.toggle('sel',
+    +b.dataset.u===ULIST[Ui]&&Math.abs(+b.dataset.l-L)<100&&+b.dataset.p===P));
+}
+pS.oninput=()=>{P=+pS.value;syncUI();};
+uS.oninput=()=>{Ui=+uS.value;syncUI();};
+lS.oninput=()=>{L=+lS.value;syncUI();};
+sec.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{
+  Ui=ULIST.indexOf(+b.dataset.u);L=+b.dataset.l;P=+b.dataset.p;
+  uS.value=Ui;lS.value=L;pS.value=P;syncUI();
+});
+const SLOW=0.04;
+const PCOL=['#FFD43B','#69DB7C','#FF6B6B'],PN=['A','B','C'];
+const TOPV=['V1','V3','V5'],BOTV=['V4','V6','V2'];
+const SEQ=[['V1','V6'],['V1','V2'],['V3','V2'],['V3','V4'],['V5','V4'],['V5','V6']];
+function draw(t){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const te=t*SLOW*SPEED, stm=t*SPEED, ph=TAU*50*te;
+  const uu=[0,1,2].map(k=>311*Math.sin(ph-k*TAU/3));
+  let mxI=0,mnI=0;
+  for(let k=1;k<3;k++){if(uu[k]>uu[mxI])mxI=k;if(uu[k]<uu[mnI])mnI=k;}
+  const udNow=uu[mxI]-uu[mnI];
+  const PC='#C8FF00',ORC='#FF6B35',WC='rgba(154,165,184,.55)';
+  /* ===== 换流桥电路（左侧） ===== */
+  const cw=w*0.53;
+  const ym=h*0.42,yT=ym-h*0.155,yB=ym+h*0.155;
+  const legX=[cw*0.42,cw*0.62,cw*0.82];
+  text(ctx,'三相 6 脉动换流桥（阀厅）',34,h*0.115,{size:11.5,color:'rgba(255,255,255,.6)',weight:700});
+  // 换流变压器
+  const tx=64;
+  drawTransformer(ctx,tx,ym,0.72,6,6);
+  text(ctx,'换流',tx,ym+44,{size:9.5,color:'rgba(255,255,255,.55)',align:'center',weight:700});
+  text(ctx,'变压器',tx,ym+56,{size:9.5,color:'rgba(255,255,255,.55)',align:'center',weight:700});
+  // ± 母线
+  const railL=tx+40,railR=cw-16;
+  wireSeg(ctx,railL,yT,railR,yT,WC,3);
+  wireSeg(ctx,railL,yB,railR,yB,WC,3);
+  text(ctx,'+ 极',railL-6,yT-10,{size:11,color:PC,weight:800,align:'right'});
+  text(ctx,'− 极',railL-6,yB+14,{size:11,color:'#00F0FF',weight:800,align:'right'});
+  // 平波电抗器（+ 极母线上）
+  const rx=railR-66;
+  wireSeg(ctx,railL,yT,rx-42,yT,'rgba(154,165,184,.9)',3);
+  drawInductor(ctx,rx,yT,true);
+  text(ctx,'平波电抗器',rx,yT-26,{size:9.5,color:'rgba(255,255,255,.6)',align:'center'});
+  wireSeg(ctx,rx+42,yT,railR,yT,'rgba(154,165,184,.9)',3);
+  arrow(ctx,railR-30,yT,railR-4,yT,PC,2.4,7);
+  arrow(ctx,railR-30,yB,railR-4,yB,'#00F0FF',2.4,7);
+  text(ctx,'→ ±800kV',railR-2,yT-12,{size:9.5,color:PC,align:'right',weight:700});
+  text(ctx,'直流线路',railR-2,yT+12,{size:9.5,color:PC,align:'right'});
+  // 三条相线（车道 ym−26 / ym / ym+26）
+  const lane=[ym-26,ym,ym+26];
+  for(let k=0;k<3;k++){
+    wireSeg(ctx,tx+30,lane[k],legX[k],lane[k],PCOL[k],2.2);
+    wireSeg(ctx,legX[k],lane[k],legX[k],ym+(k===1?0:(k===0?-4:4)),PCOL[k],2.2);
+    termDot(ctx,legX[k],lane[k]);
+    text(ctx,PN[k],tx+26,lane[k],{size:11,color:PCOL[k],align:'right',weight:800});
+  }
+  // 三条桥臂
+  for(let k=0;k<3;k++){
+    const lx=legX[k];
+    const topOn=(k===mxI),botOn=(k===mnI);
+    // 上阀段：yT → 上阀 → ym；下阀段：ym → 下阀 → yB
+    wireSeg(ctx,lx,yT,lx,ym-109,topOn?PC:WC,topOn?3.4:2.4);
+    wireSeg(ctx,lx,ym-41,lx,ym+41,WC,2.4);
+    wireSeg(ctx,lx,ym+109,lx,yB,botOn?PC:WC,botOn?3.4:2.4);
+    // 上阀（晶闸管=二极管+门极）
+    drawDiode(ctx,lx,ym-75,topOn,{angle:-Math.PI/2,color:PC,label:''});
+    drawDiode(ctx,lx,ym+75,botOn,{angle:-Math.PI/2,color:PC,label:''});
+    // 门极短线 + 触发脉冲光点（刚开通的阀门极闪一下）
+    ctx.strokeStyle=topOn?PC:'rgba(255,255,255,.4)';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(lx+14,ym-75+10);ctx.lineTo(lx+24,ym-75+18);ctx.stroke();
+    if(topOn){glow(ctx,PC,10);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(lx+24,ym-75+18,3,0,TAU);ctx.fill();noGlow(ctx);}
+    ctx.strokeStyle=botOn?PC:'rgba(255,255,255,.4)';
+    ctx.beginPath();ctx.moveTo(lx+14,ym+75+10);ctx.lineTo(lx+24,ym+75+18);ctx.stroke();
+    if(botOn){glow(ctx,PC,10);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(lx+24,ym+75+18,3,0,TAU);ctx.fill();noGlow(ctx);}
+    if(k===2)text(ctx,'G 门极（触发脉冲）',lx+30,ym-75+22,{size:9.5,color:'rgba(255,255,255,.55)'});
+    text(ctx,TOPV[k],lx-30,ym-75,{size:11,color:topOn?PC:'rgba(255,255,255,.55)',align:'center',weight:800});
+    text(ctx,BOTV[k],lx-30,ym+75,{size:11,color:botOn?PC:'rgba(255,255,255,.55)',align:'center',weight:800});
+    termDot(ctx,lx,yT);termDot(ctx,lx,yB);
+  }
+  // 导通电流路径粒子
+  if(udNow>0){
+    const p1=[[tx+30,lane[mxI]],[legX[mxI],lane[mxI]],[legX[mxI],ym],[legX[mxI],yT],[railR-6,yT]];
+    drawParticles(ctx,p1,(stm*140)%pathLen(p1),26,Math.round(pathLen(p1)/26),PC,2.8);
+    const p2=[[railR-6,yB],[legX[mnI],yB],[legX[mnI],ym],[legX[mnI],lane[mnI]],[tx+30,lane[mnI]]];
+    drawParticles(ctx,p2,(stm*140)%pathLen(p2),26,Math.round(pathLen(p2)/26),'#00F0FF',2.8);
+    pill(ctx,(legX[0]+legX[2])/2,yB+30,TOPV[mxI]+' + '+BOTV[mnI]+' 导通：'+PN[mxI]+' 相最高、'+PN[mnI]+' 相最低',true,PC);
+  }
+  /* ===== 右上：三相电压 + 导通包络 ===== */
+  const sx=w*0.575,sw=w-sx-40;
+  const sc1={x:sx,y:h*0.13,w:sw,h:h*0.28,vUp:400,vDn:400,vDiv:200,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'三相电压：始终"一相最高、一相最低"（亮线=被选中的两相）',sx,sc1.y-9,{size:11,color:'rgba(255,255,255,.6)',weight:700});
+  const yz1=drawScope(ctx,sc1);
+  for(let k=0;k<3;k++)
+    trace(ctx,sc1,yz1,tt=>311*Math.sin(TAU*50*tt-k*TAU/3),PCOL[k],{lw:1.4,dash:k===mxI||k===mnI?null:[3,3]});
+  trace(ctx,sc1,yz1,tt=>Math.max(311*Math.sin(TAU*50*tt),311*Math.sin(TAU*50*tt-TAU/3),311*Math.sin(TAU*50*tt-2*TAU/3)),PC,{lw:2.6});
+  trace(ctx,sc1,yz1,tt=>Math.min(311*Math.sin(TAU*50*tt),311*Math.sin(TAU*50*tt-TAU/3),311*Math.sin(TAU*50*tt-2*TAU/3)),'#00F0FF',{lw:2.6});
+  scopeDot(ctx,sc1,yz1,uu[mxI],te,PC);
+  scopeDot(ctx,sc1,yz1,uu[mnI],te,'#00F0FF');
+  /* ===== 右下：6 脉动输出 + 平波后 ===== */
+  const sc2={x:sx,y:h*0.50,w:sw,h:h*0.30,vUp:600,vDn:60,vDiv:200,tWin:0.04,tDiv:0.01,unit:'V'};
+  text(ctx,'输出 ud = u大 − u小：每周期 6 脉动 → 平波后平直（白线 513V）',sx,sc2.y-9,{size:11,color:'rgba(255,255,255,.6)',weight:700});
+  const yz2=drawScope(ctx,sc2);
+  trace(ctx,sc2,yz2,tt=>{
+    const a=311*Math.sin(TAU*50*tt),b=311*Math.sin(TAU*50*tt-TAU/3),c=311*Math.sin(TAU*50*tt-2*TAU/3);
+    return Math.max(a,b,c)-Math.min(a,b,c);
+  },ORC,{lw:2.6});
+  trace(ctx,sc2,yz2,()=>513,'rgba(255,255,255,.85)',{lw:2});
+  scopeDot(ctx,sc2,yz2,udNow,te,ORC);
+  text(ctx,'Ud ≈ 1.35 × 380 = 513V',sx+8,yz2-sc2.h*513/660-10,{size:10,color:'rgba(255,255,255,.75)'});
+  text(ctx,'波谷也有 465V（不跌到 0）',sx+8,yz2-sc2.h*465/660+16,{size:10,color:ORC});
+  /* ===== 阀导通顺序表 ===== */
+  text(ctx,'阀导通顺序（每只阀导通 120°，每秒轮换 300 次）：',34,h*0.845,{size:11,color:'rgba(255,255,255,.6)',weight:700});
+  const curPair=TOPV[mxI]+'+'+BOTV[mnI];
+  for(let i=0;i<6;i++){
+    const s=SEQ[i][0]+'+'+SEQ[i][1];
+    const on=s===curPair;
+    const px=44+i*96,py=h*0.885;
+    ctx.fillStyle=on?'rgba(200,255,0,.18)':'rgba(255,255,255,.04)';
+    roundRect(ctx,px,py-15,86,30,9);ctx.fill();
+    ctx.strokeStyle=on?PC:'rgba(255,255,255,.15)';ctx.lineWidth=on?1.8:1;ctx.stroke();
+    text(ctx,s,px+43,py,{size:12,color:on?PC:'rgba(255,255,255,.5)',align:'center',weight:800,mono:true});
+    if(i<5)arrow(ctx,px+88,py,px+94,py,'rgba(255,255,255,.35)',1.4,4);
+  }
+  // 读数
+  sec.querySelector('#z6pair').textContent=curPair;
+  sec.querySelector('#z6ud').textContent=udNow.toFixed(0)+' V';
+  sec.querySelector('#z6avg').textContent='513 V';
+  /* ===== 线损读数（保留原计算） ===== */
+  const Up=ULIST[Ui]*1e3;
+  const I=P*1e6/(2*Up);
+  const Rloop=2*0.008*L;
+  const dP=I*I*Rloop/1e6;
+  const pct=dP/P*100;
+  const Iac=P*1e6/(Math.sqrt(3)*500e3);
+  const pctAc=3*Iac*Iac*(0.008*L)/1e6/P*100;
+  sec.querySelector('#z6i').textContent=(I/1000).toFixed(2)+' kA';
+  sec.querySelector('#z6dp').textContent=dP.toFixed(0)+' MW';
+  const pc=sec.querySelector('#z6pc');
+  pc.textContent=pct.toFixed(1)+' %';
+  pc.style.color=pct>15?'#FF3B30':(pct>8?'#FFB800':'#C8FF00');
+  const ac=sec.querySelector('#z6ac');
+  ac.textContent=pctAc.toFixed(1)+' %';
+  ac.style.color=pctAc>15?'#FF3B30':'#FFB800';
+}
+makeLoop('z6',draw);
+})();
+</script>
+
+<script>
+/* ========== ZONE 07 生活工业全景（工程蓝图版） ========== */
+(function(){
+const sec=document.getElementById('sec-z7');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 07</span><h2>生活与工业全景：一度电的"变形记"</h2><span class="badge">综合复习 · 从电厂到手机</span></div>
+<p class="sdesc">把前六个区串起来：电厂发出<b>三相交流</b> → 升压后可选<b>特高压直流</b>跨越千里 → 换流站<b>逆变回交流</b> → 三相配电到小区 → <b>单相 220V</b> 入户 → 充电器里<b>整流、滤波、稳压</b> → 变成手机要的稳定直流。下面每张<b>工程蓝图卡</b>都是一类真实设备的内部结构，对照前面的 ZONE 看细节。</p>
+<div class="panel"><h4>⚡ 一度电的旅程（粒子的流动就是电流的方向）</h4>
+  <canvas class="stage" id="cv7" style="aspect-ratio:16/4.6"></canvas>
+</div>
+<div class="panel" style="margin-top:16px"><h4>现象矩阵：这些设备各用了哪些技术？（✓ 为用到的环节）</h4>
+<table class="matrix">
+  <tr><th>应用</th><th>半波整流</th><th>桥式整流</th><th>电容滤波</th><th>稳压</th><th>三相供电</th><th>直流输电</th></tr>
+  <tr><td>手机充电器</td><td></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td></td><td></td></tr>
+  <tr><td>LED 灯泡</td><td>（廉价款）</td><td class="hit">✓</td><td class="hit">✓</td><td></td><td></td><td></td></tr>
+  <tr><td>电热毯调档</td><td class="hit">✓</td><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>变频空调</td><td></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td>（大功率款）</td><td></td></tr>
+  <tr><td>地铁牵引</td><td></td><td class="hit">✓</td><td class="hit">✓</td><td></td><td class="hit">✓</td><td></td></tr>
+  <tr><td>电解铝厂</td><td></td><td class="hit">✓</td><td></td><td class="hit">✓</td><td class="hit">✓</td><td></td></tr>
+  <tr><td>直流快充桩</td><td></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td></td></tr>
+  <tr><td>数据中心</td><td></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td>（内部高压直流）</td></tr>
+  <tr><td>西电东送</td><td></td><td class="hit">✓ 整流</td><td></td><td></td><td class="hit">✓</td><td class="hit">✓</td></tr>
+</table>
+</div>
+<div class="bpcards">
+  <div class="appcard"><canvas class="stage" id="bp1" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>手机充电器内部</h5><p>220V 进 → 整流桥堆 → 高压电解电容滤波 → 高频变压器隔离降压 → 二次整流 → 稳压输出 5V/9V。</p></div>
+  <div class="appcard"><canvas class="stage" id="bp2" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>变频空调驱动板</h5><p>交流先整流成直流母线，再由 6 只 IGBT 逆变成频率可调的三相电驱动压缩机——"交→直→交"，省电安静。</p></div>
+  <div class="appcard"><canvas class="stage" id="bp3" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>地铁牵引变电所</h5><p>35kV 交流 → 整流变压器 → 整流机组 → 750/1500V 直流 → 接触网 → 受电弓 → 列车牵引电机。</p></div>
+  <div class="appcard"><canvas class="stage" id="bp4" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>电解铝电解槽</h5><p>整流站供出数万安培直流：阳极炭块插入冰晶石熔体，Al³⁺ 在阴极析出铝液——电解必须直流，交流会来回溶解。</p></div>
+  <div class="appcard"><canvas class="stage" id="bp5" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>电镀槽</h5><p>整流电源供低压大电流直流：锌板作阳极溶解，Zn²⁺ 迁移到阴极工件表面析出均匀镀层。</p></div>
+  <div class="appcard"><canvas class="stage" id="bp6" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>数据中心高压直流</h5><p>240V/336V 直流母线直达机架，服务器 PSU 一级变换到 12V——比传统"交→直→交→直"少两级损耗。</p></div>
+  <div class="appcard"><canvas class="stage" id="bp7" style="aspect-ratio:16/9.5;margin-bottom:10px"></canvas><h5>直流快充桩</h5><p>三相 380V 进线 → 整流/PFC 功率校正 → 高压直流母线 → DC/DC 精确调压 → 充电枪直灌电池，功率可达上百千瓦。</p></div>
+</div>
+<div class="knote" style="margin-top:16px"><b>📚 自学路径回顾</b>：ZONE 01 认识交流（有效值 √2）→ ZONE 02 三相怎么产生（空间120°→时间120°）→ ZONE 03 半波整流（0.45U）→ ZONE 04 桥式全波（0.9U、100Hz）→ ZONE 05 滤波稳压（电容水库 + 7805）→ ZONE 06 换流站（6脉动换流桥）→ ZONE 07 全景应用。</div>`;
+const cv=sec.querySelector('#cv7');
+/* ---- 工程图标（非 emoji） ---- */
+function iconFactory(ctx,x,y){
+  ctx.strokeStyle='#FFB86B';ctx.lineWidth=1.8;
+  ctx.strokeRect(x-14,y-6,28,14);
+  ctx.beginPath();ctx.moveTo(x-14,y-6);ctx.lineTo(x-7,y-12);ctx.lineTo(x,y-6);ctx.lineTo(x+7,y-12);ctx.lineTo(x+14,y-6);ctx.stroke();
+  ctx.strokeRect(x-11,y-18,4,12);ctx.strokeRect(x+2,y-16,4,10);
+}
+function iconTransformer(ctx,x,y){
+  ctx.strokeStyle='#E89A54';ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.arc(x-5,y,8,0,TAU);ctx.stroke();
+  ctx.beginPath();ctx.arc(x+5,y,8,0,TAU);ctx.stroke();
+}
+function iconConverter(ctx,x,y){
+  ctx.strokeStyle='#C8FF00';ctx.lineWidth=1.8;
+  ctx.strokeRect(x-12,y-12,24,24);
+  ctx.beginPath();ctx.moveTo(x-8,y);ctx.lineTo(x+2,y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-2,y-6);ctx.lineTo(x-2,y+6);ctx.lineTo(x+6,y);ctx.closePath();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+6,y-6);ctx.lineTo(x+6,y+6);ctx.stroke();
+}
+function iconTower(ctx,x,y){
+  ctx.strokeStyle='#8fa0bd';ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(x-9,y+14);ctx.lineTo(x-3,y-12);ctx.lineTo(x+3,y-12);ctx.lineTo(x+9,y+14);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-12,y-6);ctx.lineTo(x+12,y-6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-10,y+2);ctx.lineTo(x+10,y+2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-6,y-12);ctx.lineTo(x+6,y+14);ctx.moveTo(x+6,y-12);ctx.lineTo(x-6,y+14);ctx.stroke();
+}
+function iconCity(ctx,x,y){
+  ctx.strokeStyle='#74C0FC';ctx.lineWidth=1.6;
+  ctx.strokeRect(x-13,y-4,8,16);ctx.strokeRect(x-3,y-12,8,24);ctx.strokeRect(x+7,y-8,8,20);
+  for(let i=0;i<3;i++){ctx.fillStyle='#FFD43B';ctx.fillRect(x-1+i*3,y-8,1.6,2);}
+}
+function iconCharger(ctx,x,y){
+  ctx.strokeStyle='#00E5A0';ctx.lineWidth=1.8;
+  roundRect(ctx,x-10,y-10,20,20,4);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-5,y-14);ctx.lineTo(x-5,y-10);ctx.moveTo(x+5,y-14);ctx.lineTo(x+5,y-10);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-3,y+2);ctx.lineTo(x+1,y+2);ctx.lineTo(x-1,y+8);ctx.lineTo(x+4,y-1);ctx.stroke();
+}
+function iconBattery(ctx,x,y){
+  ctx.strokeStyle='#FF2D8F';ctx.lineWidth=1.8;
+  ctx.strokeRect(x-12,y-7,22,14);
+  ctx.beginPath();ctx.moveTo(x+12,y-3);ctx.lineTo(x+12,y+3);ctx.stroke();
+  ctx.fillStyle='#FF2D8F';ctx.fillRect(x-10,y-5,12,10);
+}
+const NODES=[
+ {ic:iconFactory,t:'电厂',s:'三相交流',z:'01'},
+ {ic:iconTransformer,t:'升压',s:'变压器',z:'02'},
+ {ic:iconConverter,t:'换流站',s:'整流 AC→DC',z:'06'},
+ {ic:iconTower,t:'特高压直流',s:'±800kV 千里输送',z:'06'},
+ {ic:iconConverter,t:'换流站',s:'逆变 DC→AC',z:'06'},
+ {ic:iconCity,t:'配电',s:'三相→单相入户',z:'02'},
+ {ic:iconCharger,t:'充电器',s:'整流·滤波·稳压',z:'05'},
+ {ic:iconBattery,t:'手机',s:'稳定直流',z:'05'},
+];
+/* ---- 蓝图卡绘制 ---- */
+const BPL='rgba(190,225,255,.92)',BPD='rgba(120,180,240,.55)';
+function bp(id,fn){
+  const c=sec.querySelector('#'+id);
+  const {w,h,ctx}=fitCanvas(c);
+  ctx.fillStyle='#0a1420';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(110,180,255,.07)';ctx.lineWidth=1;
+  for(let x=10;x<w;x+=18){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=10;y<h;y+=18){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  ctx.strokeStyle='rgba(110,180,255,.35)';ctx.lineWidth=1.2;ctx.strokeRect(5,5,w-10,h-10);
+  fn(ctx,w,h);
+}
+function bpBox(ctx,x,y,bw,bh,label,sub){
+  ctx.strokeStyle=BPL;ctx.lineWidth=1.6;ctx.strokeRect(x-bw/2,y-bh/2,bw,bh);
+  text(ctx,label,x,y-(sub?4:0),{size:10.5,color:BPL,align:'center',weight:700});
+  if(sub)text(ctx,sub,x,y+9,{size:8.5,color:BPD,align:'center'});
+}
+function bpLead(ctx,x1,y1,x2,y2,str){
+  ctx.strokeStyle=BPD;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.fillStyle=BPD;ctx.beginPath();ctx.arc(x1,y1,1.8,0,TAU);ctx.fill();
+  text(ctx,str,x2,y2-7,{size:8.5,color:BPD,align:'center'});
+}
+function bpCap(ctx,x,y){
+  ctx.strokeStyle=BPL;ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.moveTo(x-10,y-8);ctx.lineTo(x+10,y-8);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-10,y-2);ctx.lineTo(x+10,y-2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,y-14);ctx.lineTo(x,y-8);ctx.moveTo(x,y-2);ctx.lineTo(x,y+6);ctx.stroke();
+}
+let cardsDone=false;
+function drawCards(){
+  /* bp1 充电器 */
+  bp('bp1',(ctx,w,h)=>{
+    const my=h*0.52;
+    bpBox(ctx,32,my,34,26,'~','220V');
+    bpBox(ctx,w*0.28,my,50,30,'整流桥','KBPC');
+    bpBox(ctx,w*0.50,my,44,34,'电解','电容');
+    bpBox(ctx,w*0.70,my,46,34,'高频','变压器');
+    bpBox(ctx,w*0.905,my,38,26,'稳压','IC');
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.4;
+    [[49,w*0.28-25],[w*0.28+25,w*0.50-22],[w*0.50+22,w*0.70-23],[w*0.70+23,w*0.905-19]].forEach(([a,b])=>{
+      ctx.beginPath();ctx.moveTo(a,my);ctx.lineTo(b,my);ctx.stroke();});
+    bpLead(ctx,w*0.28,my+15,w*0.28,h-12,'ZONE 04');
+    bpLead(ctx,w*0.50,my+17,w*0.50,h-12,'ZONE 05 滤波');
+    text(ctx,'5V/9V →',w-10,my-22,{size:9,color:'#00E5A0',align:'right',weight:700});
+  });
+  /* bp2 变频空调 */
+  bp('bp2',(ctx,w,h)=>{
+    const my=h*0.52;
+    bpBox(ctx,30,my,34,26,'220V','~50Hz');
+    bpBox(ctx,w*0.27,my,44,30,'整流桥','单相');
+    bpBox(ctx,w*0.49,my,50,34,'直流母线','≈310V');
+    bpCap(ctx,w*0.49,my-2);
+    bpBox(ctx,w*0.72,my,52,36,'IPM 模块','6×IGBT');
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.arc(w*0.92,my,12,0,TAU);ctx.stroke();
+    text(ctx,'M',w*0.92,my,{size:11,color:BPL,align:'center',weight:800});
+    [[47,w*0.27-22],[w*0.27+22,w*0.49-25],[w*0.49+25,w*0.72-26]].forEach(([a,b])=>{
+      ctx.beginPath();ctx.moveTo(a,my);ctx.lineTo(b,my);ctx.stroke();});
+    for(let k=-1;k<=1;k++){
+      ctx.beginPath();ctx.moveTo(w*0.72+26,my+k*8);ctx.lineTo(w*0.92-12,my+k*4);ctx.stroke();
+    }
+    text(ctx,'U/V/W',w*0.83,my-22,{size:8.5,color:BPD,align:'center'});
+    bpLead(ctx,w*0.72,my+18,w*0.72,h-12,'交→直→交');
+  });
+  /* bp3 地铁牵引 */
+  bp('bp3',(ctx,w,h)=>{
+    const my=h*0.58;
+    bpBox(ctx,30,my,36,26,'35kV','三相');
+    bpBox(ctx,w*0.27,my,46,32,'整流','变压器');
+    bpBox(ctx,w*0.50,my,48,32,'整流机组','12脉动');
+    ctx.strokeStyle='#C8FF00';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(w*0.50+24,my);ctx.lineTo(w*0.62,my);ctx.lineTo(w*0.62,h*0.24);ctx.lineTo(w-14,h*0.24);ctx.stroke();
+    text(ctx,'DC 1500V 接触网',w*0.80,h*0.24-8,{size:9,color:'#C8FF00',align:'center',weight:700});
+    // 列车 + 受电弓
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.6;
+    roundRect(ctx,w*0.72,h*0.54,w*0.24,h*0.2,5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(w*0.80,h*0.54);ctx.lineTo(w*0.84,h*0.24);ctx.moveTo(w*0.88,h*0.54);ctx.lineTo(w*0.84,h*0.24);ctx.stroke();
+    text(ctx,'受电弓',w*0.79,h*0.44,{size:8.5,color:BPD,align:'center'});
+    text(ctx,'列车',w*0.84,h*0.65,{size:9.5,color:BPL,align:'center',weight:700});
+    bpLead(ctx,w*0.50,my+16,w*0.50,h-12,'ZONE 06 同款三相桥');
+  });
+  /* bp4 电解铝 */
+  bp('bp4',(ctx,w,h)=>{
+    // 直流母排
+    ctx.strokeStyle='#C8FF00';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(14,20);ctx.lineTo(w/2,20);ctx.stroke();
+    ctx.strokeStyle='#00F0FF';
+    ctx.beginPath();ctx.moveTo(w/2,20);ctx.lineTo(w-14,20);ctx.stroke();
+    text(ctx,'+ 直流母排（数万安培）',w/2,12,{size:9,color:'#C8FF00',align:'center',weight:700});
+    text(ctx,'− 回路',w-40,12,{size:9,color:'#00F0FF',align:'center'});
+    // 电解槽
+    const sx=w*0.28,sy=h*0.30,sw2=w*0.44,sh2=h*0.56;
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx,sy+sh2);ctx.lineTo(sx+sw2,sy+sh2);ctx.lineTo(sx+sw2,sy);ctx.stroke();
+    // 电解质熔体 + 铝液层
+    ctx.fillStyle='rgba(255,140,60,.25)';ctx.fillRect(sx+3,sy+sh2*0.25,sw2-6,sh2*0.45);
+    ctx.fillStyle='rgba(180,190,210,.5)';ctx.fillRect(sx+3,sy+sh2*0.7,sw2-6,sh2*0.26);
+    text(ctx,'冰晶石熔体（电解质）',sx+sw2/2,sy+sh2*0.42,{size:8.5,color:'#FFB86B',align:'center'});
+    text(ctx,'铝液（阴极析出）',sx+sw2/2,sy+sh2*0.84,{size:8.5,color:'#fff',align:'center'});
+    // 阳极炭块
+    for(let i=0;i<3;i++){
+      const ax=sx+sw2*(0.22+i*0.28);
+      ctx.fillStyle='#3a3d46';ctx.fillRect(ax-9,sy-14,18,sh2*0.5);
+      ctx.strokeStyle=BPL;ctx.lineWidth=1.2;ctx.strokeRect(ax-9,sy-14,18,sh2*0.5);
+      ctx.beginPath();ctx.moveTo(ax,sy-14);ctx.lineTo(ax,22);ctx.stroke();
+    }
+    text(ctx,'阳极炭块 →',sx+sw2+8,sy+8,{size:8.5,color:BPD});
+    text(ctx,'Al³⁺ + 3e⁻ → Al ↓',sx+sw2/2,sy+sh2+12,{size:9,color:'#00E5A0',align:'center',weight:700});
+  });
+  /* bp5 电镀槽 */
+  bp('bp5',(ctx,w,h)=>{
+    const sx=w*0.22,sy=h*0.24,sw2=w*0.56,sh2=h*0.58;
+    // 电源
+    bpBox(ctx,w*0.5,20,64,22,'整流电源','DC 12V/大电流');
+    ctx.strokeStyle='#C8FF00';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(w*0.5-20,31);ctx.lineTo(sx+16,31);ctx.lineTo(sx+16,sy);ctx.stroke();
+    ctx.strokeStyle='#00F0FF';
+    ctx.beginPath();ctx.moveTo(w*0.5+20,31);ctx.lineTo(sx+sw2-16,31);ctx.lineTo(sx+sw2-16,sy);ctx.stroke();
+    // 槽体 + 电解液
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx,sy+sh2);ctx.lineTo(sx+sw2,sy+sh2);ctx.lineTo(sx+sw2,sy);ctx.stroke();
+    ctx.fillStyle='rgba(80,160,255,.18)';ctx.fillRect(sx+3,sy+sh2*0.2,sw2-6,sh2*0.76);
+    text(ctx,'电解液（Zn²⁺）',sx+sw2/2,sy+sh2*0.55,{size:9,color:BPD,align:'center'});
+    // 阳极锌板 / 阴极工件
+    ctx.fillStyle='#8a8f9a';ctx.fillRect(sx+10,sy+4,12,sh2*0.7);
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.2;ctx.strokeRect(sx+10,sy+4,12,sh2*0.7);
+    text(ctx,'阳极 锌板',sx+16,sy+sh2+12,{size:8.5,color:BPD,align:'center'});
+    ctx.fillStyle='#c8a86a';ctx.fillRect(sx+sw2-22,sy+4,12,sh2*0.7);
+    ctx.strokeRect(sx+sw2-22,sy+4,12,sh2*0.7);
+    text(ctx,'阴极 工件',sx+sw2-16,sy+sh2+12,{size:8.5,color:BPD,align:'center'});
+    // 离子迁移箭头
+    for(let i=0;i<3;i++){
+      const ay=sy+sh2*(0.3+i*0.2);
+      arrow(ctx,sx+34,ay,sx+sw2-34,ay,'rgba(200,230,255,.6)',1.2,5);
+    }
+    text(ctx,'Zn²⁺ 迁移 → 析出镀层',sx+sw2/2,sy+sh2*0.25,{size:8.5,color:'#00E5A0',align:'center'});
+  });
+  /* bp6 数据中心 */
+  bp('bp6',(ctx,w,h)=>{
+    bpBox(ctx,44,h*0.5,56,34,'整流柜','AC→DC');
+    // 直流母线
+    ctx.strokeStyle='#C8FF00';ctx.lineWidth=2.4;
+    ctx.beginPath();ctx.moveTo(72,h*0.5);ctx.lineTo(w*0.32,h*0.5);ctx.lineTo(w*0.32,h*0.3);ctx.lineTo(w-14,h*0.3);ctx.stroke();
+    text(ctx,'240V 直流母线',w*0.62,h*0.3-8,{size:9,color:'#C8FF00',align:'center',weight:700});
+    // 机架
+    for(let i=0;i<3;i++){
+      const rx=w*0.42+i*w*0.20;
+      ctx.strokeStyle=BPL;ctx.lineWidth=1.5;
+      ctx.strokeRect(rx,h*0.42,w*0.14,h*0.44);
+      for(let u=0;u<4;u++){
+        ctx.strokeStyle='rgba(190,225,255,.5)';ctx.lineWidth=1;
+        ctx.strokeRect(rx+4,h*0.42+6+u*(h*0.10),w*0.14-8,h*0.075);
+        ctx.fillStyle=u%2?'#00E5A0':'#FFB800';
+        ctx.fillRect(rx+7,h*0.42+9+u*(h*0.10),3,3);
+      }
+      ctx.strokeStyle='#C8FF00';ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(rx+w*0.07,h*0.3);ctx.lineTo(rx+w*0.07,h*0.42);ctx.stroke();
+      text(ctx,'PSU→12V',rx+w*0.07,h*0.42+h*0.44+10,{size:8,color:BPD,align:'center'});
+    }
+    text(ctx,'少两级变换，效率 +5~10%',w/2,h-12,{size:9,color:'#00E5A0',align:'center',weight:700});
+  });
+  /* bp7 直流快充桩 */
+  bp('bp7',(ctx,w,h)=>{
+    const my=h*0.52;
+    bpBox(ctx,32,my,38,28,'三相','380V');
+    bpBox(ctx,w*0.26,my,52,32,'整流+PFC','三相桥');
+    bpBox(ctx,w*0.50,my,52,32,'直流母线','≈650V');
+    bpCap(ctx,w*0.50,my-2);
+    bpBox(ctx,w*0.72,my,52,32,'DC/DC','IGBT 调压');
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.4;
+    [[51,w*0.26-26],[w*0.26+26,w*0.50-26],[w*0.50+26,w*0.72-26]].forEach(([a,b])=>{
+      ctx.beginPath();ctx.moveTo(a,my);ctx.lineTo(b,my);ctx.stroke();});
+    // 充电枪 + 电池
+    ctx.beginPath();ctx.moveTo(w*0.72+26,my);ctx.lineTo(w*0.84,my);ctx.stroke();
+    ctx.strokeStyle='#C8FF00';ctx.lineWidth=2;
+    roundRect(ctx,w*0.84,my-9,22,18,4);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(w*0.84+22,my-4);ctx.lineTo(w*0.84+30,my-4);ctx.moveTo(w*0.84+22,my+4);ctx.lineTo(w*0.84+30,my+4);ctx.stroke();
+    text(ctx,'充电枪',w*0.84+11,my-16,{size:8.5,color:'#C8FF00',align:'center',weight:700});
+    ctx.strokeStyle=BPL;ctx.lineWidth=1.6;
+    ctx.strokeRect(w*0.92,my-10,20,20);
+    ctx.fillStyle='#00E5A0';ctx.fillRect(w*0.92+3,my+2,14,6);
+    text(ctx,'电池',w*0.92+10,my+20,{size:8.5,color:BPD,align:'center'});
+    bpLead(ctx,w*0.26,my+16,w*0.26,h-12,'ZONE 06 同款三相桥');
+    bpLead(ctx,w*0.50,my+16,w*0.68,h-12,'ZONE 05 滤波');
+    text(ctx,'200~750V 可调直灌',w-12,16,{size:9,color:'#00E5A0',align:'right',weight:700});
+  });
+}
+function draw(t){
+  const {w,h,ctx}=fitCanvas(cv);
+  ctx.clearRect(0,0,w,h);
+  const stm=t*SPEED;
+  if(!cardsDone){drawCards();cardsDone=true;}
+  const n=NODES.length,pad=60;
+  const step=(w-pad*2)/(n-1),cy=h*0.46;
+  for(let i=0;i<n-1;i++){
+    const x1=pad+i*step+30,x2=pad+(i+1)*step-30;
+    const isDC=i>=2&&i<=3;
+    const cc=isDC?'#C8FF00':'#FF6B35';
+    wireSeg(ctx,x1,cy,x2,cy,cc,2.6);
+    arrow(ctx,(x1+x2)/2-8,cy,(x1+x2)/2+8,cy,cc,2,6);
+    for(let k=0;k<3;k++){
+      const xx=x1+((stm*60+k*37)%(x2-x1));
+      glow(ctx,cc,6);ctx.fillStyle=cc;
+      ctx.beginPath();ctx.arc(xx,cy+(isDC?0:Math.sin(stm*6+k)*4),2.4,0,TAU);ctx.fill();noGlow(ctx);
+    }
+    text(ctx,isDC?'直流':'交流',(x1+x2)/2,cy-14,{size:9,color:cc,align:'center'});
+  }
+  NODES.forEach((nd,i)=>{
+    const x=pad+i*step;
+    ctx.fillStyle='#141821';roundRect(ctx,x-30,cy-30,60,60,10);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.2;ctx.stroke();
+    nd.ic(ctx,x,cy-2);
+    text(ctx,nd.t,x,cy+22,{size:10.5,color:'#fff',align:'center',weight:700});
+    text(ctx,nd.s,x,cy+44,{size:9.5,color:'rgba(255,255,255,.55)',align:'center'});
+    text(ctx,'ZONE '+nd.z,x,cy-44,{size:9,color:'#FF2D8F',align:'center',weight:700,mono:true});
+  });
+}
+makeLoop('z7',draw);
+})();
+</script>
+
+<script>
+/* 初始化：支持 #zoneId 深链 */
+const hashId=location.hash.slice(1);
+showTab(SECTIONS.some(s=>s.id===hashId)?hashId:SECTIONS[0].id);
+</script>
+</body>
+</html>

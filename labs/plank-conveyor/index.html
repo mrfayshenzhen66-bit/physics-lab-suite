@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OK</title>
+<script>window.onerror=(m,s,l,c)=>{document.title="ERR:"+m+"@"+l+":"+c;};</script>
+<style>
+:root{
+  --bg-primary:#0A0A0F; --bg-secondary:#12121A; --bg-tertiary:#1A1A26;
+  --glass:rgba(18,18,26,.78); --border:rgba(255,255,255,.07); --border-active:rgba(255,255,255,.16);
+  --cyan:#00F0FF; --magenta:#FF2D8F; --lime:#C8FF00; --amber:#FFB800; --violet:#9B4DFF; --emerald:#00E5A0; --orange:#FF6B35;
+  --text:#FFF; --text2:rgba(255,255,255,.68); --text3:rgba(255,255,255,.38);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-primary);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 50% -10%,rgba(0,240,255,.09),transparent 55%),
+             radial-gradient(ellipse at 90% 110%,rgba(155,77,255,.06),transparent 50%);}
+header{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.82);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.hwrap{max-width:1380px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+.logo small{color:var(--text3);font-weight:500;font-size:11px;display:block;letter-spacing:.14em}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+nav.tabs button{background:transparent;border:1px solid transparent;color:var(--text2);font-size:13px;padding:8px 14px;border-radius:100px;cursor:pointer;transition:all .22s;font-family:inherit;white-space:nowrap}
+nav.tabs button:hover{color:#fff;background:rgba(255,255,255,.05)}
+nav.tabs button.on{color:#06121a;font-weight:700;background:var(--ac,#00F0FF);box-shadow:0 0 18px 2px color-mix(in srgb,var(--ac,#00F0FF) 45%,transparent)}
+main{max-width:1380px;margin:0 auto;padding:26px 28px 80px;position:relative;z-index:1}
+section.tab{display:none;animation:fadeUp .5s cubic-bezier(.22,.9,.3,1)}
+section.tab.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.stitle{display:flex;align-items:baseline;gap:14px;margin:6px 0 4px;flex-wrap:wrap}
+.stitle h2{font-size:clamp(22px,3vw,30px);font-weight:800}
+.stitle .step{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ac);border:1px solid color-mix(in srgb,var(--ac) 40%,transparent);padding:3px 10px;border-radius:100px;letter-spacing:.1em}
+.sdesc{color:var(--text2);font-size:14.5px;line-height:1.8;max-width:960px;margin-bottom:18px}
+.sdesc b{color:var(--ac);font-weight:600}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+@media(max-width:980px){.lab{grid-template-columns:1fr}}
+/* ===== 统一布局：左动画/场景 + 右图象/受力图，双图同高并排；控制台通栏分栏 ===== */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;margin-bottom:18px}
+@media(max-width:980px){.duo{grid-template-columns:1fr}}
+.duo .panel{margin-bottom:0;display:flex;flex-direction:column}
+.duo .panel canvas.stage{flex:1;aspect-ratio:16/10;margin-bottom:0}
+.duo .panel .legend{margin:10px 2px 0}
+.ctrlrow{display:grid;grid-template-columns:250px 200px minmax(280px,1fr) minmax(360px,1.25fr);gap:22px;align-items:start}
+@media(max-width:1200px){.ctrlrow{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.ctrlrow{grid-template-columns:1fr}}
+.ctrlrow .pill{margin-bottom:14px}
+.qrow{display:grid;grid-template-columns:1.5fr 1fr 1.2fr;gap:22px;align-items:start}
+@media(max-width:980px){.qrow{grid-template-columns:1fr}}
+.panel{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:22px;padding:18px;position:relative;overflow:hidden;margin-bottom:18px}
+.panel::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ac,#00F0FF) 55%,transparent),transparent)}
+.panel h4{font-size:12px;letter-spacing:.14em;color:var(--text3);text-transform:uppercase;margin-bottom:12px;font-weight:700}
+canvas.stage{width:100%;display:block;border-radius:16px;background:#0c0c13;border:1px solid var(--border);margin-bottom:12px}
+canvas.stage:last-child{margin-bottom:0}
+.ctrl{margin-bottom:16px}.ctrl:last-child{margin-bottom:0}
+.ctrl label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);margin-bottom:7px}
+.ctrl label output{font-family:"JetBrains Mono",monospace;color:var(--ac);font-weight:600}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:var(--bg-tertiary);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--ac,#00F0FF);box-shadow:0 0 12px color-mix(in srgb,var(--ac,#00F0FF) 55%,transparent);cursor:pointer}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--border-active);background:transparent;color:var(--text2);padding:9px 18px;border-radius:100px;font-size:13px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{border-color:var(--ac);color:#fff}
+.btn.primary{background:var(--ac);color:#06121a;font-weight:700;border-color:transparent}
+.btn.mini{padding:6px 13px;font-size:12px}
+.btn.sel{background:color-mix(in srgb,var(--ac) 18%,transparent);border-color:var(--ac);color:#fff}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.ro{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:9px 12px}
+.ro .k{font-size:11px;color:var(--text3)}
+.ro .v{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:600;color:var(--ac);margin-top:2px}
+.knote{margin-top:14px;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent);border:1px solid var(--border);border-left:3px solid var(--ac);border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.85;color:var(--text2)}
+.knote b{color:#fff}
+.knote .f{font-family:"JetBrains Mono",monospace;color:var(--ac);background:rgba(0,0,0,.35);padding:1px 7px;border-radius:6px;font-size:12.5px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin:2px 0 12px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+footer{border-top:1px solid var(--border);padding:26px;text-align:center;color:var(--text3);font-size:12px;letter-spacing:.08em}
+.badge{display:inline-block;font-size:11px;padding:2px 9px;border-radius:100px;border:1px solid var(--border-active);color:var(--text3);margin-left:8px;vertical-align:middle}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border-active),transparent);margin:14px 0}
+.dstep{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.9;color:var(--text2);opacity:.32;transform:translateX(8px);transition:all .5s;margin-bottom:10px}
+.dstep.show{opacity:1;transform:none;border-color:color-mix(in srgb,var(--ac) 45%,transparent)}
+.dstep .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ac);color:#06121a;font-weight:800;font-size:11px;margin-right:8px}
+.appcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:6px}
+.appcard{background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:14px 16px;transition:all .25s}
+.appcard:hover{border-color:color-mix(in srgb,var(--ac) 40%,transparent);transform:translateY(-3px)}
+.appcard .ic{font-size:20px;margin-bottom:8px}
+.appcard h5{font-size:13.5px;font-weight:700;margin-bottom:5px;color:#fff}
+.appcard p{font-size:12px;color:var(--text2);line-height:1.7}
+/* ===== 状态牌闪现（阶段切换提示） ===== */
+@keyframes pillFlash{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ac) 65%,transparent)}100%{box-shadow:0 0 0 16px transparent}}
+.pill.flash{animation:pillFlash .8s ease-out}
+/* ===== 状态牌 ===== */
+.pill{display:inline-block;padding:6px 14px;border-radius:100px;font-size:12.5px;font-weight:700;border:1px solid;margin-bottom:12px}
+.pill.ok{color:#00E5A0;border-color:rgba(0,229,160,.5);background:rgba(0,229,160,.08)}
+.pill.warn{color:#FFB800;border-color:rgba(255,184,0,.5);background:rgba(255,184,0,.08)}
+.pill.bad{color:#FF5A4E;border-color:rgba(255,90,78,.5);background:rgba(255,90,78,.08)}
+/* ===== 阶段时间轴表 ===== */
+.stab{width:100%;border-collapse:collapse;font-size:12px}
+.stab th{color:var(--text3);font-weight:600;text-align:left;padding:6px 7px;border-bottom:1px solid var(--border);font-size:11px;letter-spacing:.05em}
+.stab td{padding:7px;border-bottom:1px solid var(--border);color:var(--text2);line-height:1.5}
+.stab tr.on td{background:color-mix(in srgb,var(--ac) 14%,transparent);color:#fff}
+.stab tr td:first-child{white-space:nowrap}
+/* ===== 解答卡（铁律格式） ===== */
+.solgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.solcard{background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:16px 20px;
+  font-family:'Cambria Math','STIX Two Math','STIXGeneral-Regular',Georgia,serif;font-size:14px;line-height:2.1;color:var(--text2)}
+.solcard h5{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;font-weight:800;color:var(--ac);margin-bottom:8px;letter-spacing:.06em}
+.solcard .jl{color:var(--ac);font-weight:700}
+.solcard .ln{display:block}
+.solcard .ind{padding-left:1.6em;display:block}
+.var{font-style:italic}
+.unit{font-style:normal}
+.func{font-style:normal}
+.vec{font-style:italic}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 3px;font-size:.88em;line-height:1.35}
+.frac .nu{padding:0 5px}
+.frac .de{padding:0 5px;border-top:1.2px solid currentColor}
+.sub{font-size:.72em;vertical-align:sub;font-style:inherit}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="logo"><div>板块 · 传送带实验室<small>NEWTON LAWS · 高考物理压轴双题</small></div></div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+<main id="main"></main>
+<footer>板块与传送带 · 交互式物理教学仿真 · 罗湖区统考 20 题 / 宝安区高一期末 17 题</footer>
+
+<script>
+/* ========== 分区注册 ========== */
+const SECTIONS=[
+  {id:'z1',num:'01',name:'板块·题面与受力',color:'#00F0FF'},
+  {id:'z2',num:'02',name:'板块·动画+v-t图',color:'#9B4DFF'},
+  {id:'z3',num:'03',name:'板块·f—F图象',color:'#FFB800'},
+  {id:'z4',num:'04',name:'传送带·题面分段',color:'#00E5A0'},
+  {id:'z5',num:'05',name:'传送带·动画+v-t图',color:'#FF2D8F'},
+  {id:'z6',num:'06',name:'传送带·最短时间',color:'#FF6B35'},
+];
+const main=document.getElementById('main'),tabsEl=document.getElementById('tabs');
+const loops={};
+SECTIONS.forEach(s=>{
+  const b=document.createElement('button');
+  b.textContent=s.num+' '+s.name;b.style.setProperty('--ac',s.color);
+  b.onclick=()=>showTab(s.id);b.dataset.id=s.id;tabsEl.appendChild(b);
+  const sec=document.createElement('section');
+  sec.className='tab';sec.id='sec-'+s.id;sec.style.setProperty('--ac',s.color);
+  main.appendChild(sec);
+});
+function showTab(id){
+  window.__curZone=id;
+  SECTIONS.forEach(s=>{
+    document.getElementById('sec-'+s.id).classList.toggle('on',s.id===id);
+    document.querySelector('nav.tabs button[data-id="'+s.id+'"]').classList.toggle('on',s.id===id);
+    if(loops[s.id]){s.id===id?loops[s.id].start():loops[s.id].stop();}
+  });
+  window.scrollTo({top:0});
+}
+/* ========== Canvas 工具 ========== */
+const TAU=Math.PI*2;
+function fitCanvas(cv){
+  const dpr=Math.min(window.devicePixelRatio||1,1.5),r=cv.getBoundingClientRect();
+  cv.width=Math.max(2,r.width*dpr);cv.height=Math.max(2,r.height*dpr);
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {w:r.width,h:r.height,ctx};
+}
+/* 按需渲染循环：30 FPS 上限；active()=true（播放中）才逐帧渲染，
+   否则仅 dirty（滑杆/按钮/resize/受力开关等状态变化）时渲染一次，静止零重画 */
+function makeLoop(id,draw,active){
+  let raf=null,last=performance.now(),lastRender=0;
+  const st={dirty:true};
+  const tick=(now)=>{
+    raf=requestAnimationFrame(tick);
+    const animating=active?active():true;
+    if(!animating&&!st.dirty)return;          // 静止且画面已最新：本帧跳过
+    if(now-lastRender<33)return;               // 30 FPS 闸（dirty 保持到下一帧）
+    const dt=Math.min(.05,(now-last)/1000);last=now;lastRender=now;st.dirty=false;
+    draw(now/1000,dt);
+  };
+  loops[id]={start(){if(!raf){last=performance.now();st.dirty=true;raf=requestAnimationFrame(tick);}},
+             stop(){if(raf){cancelAnimationFrame(raf);raf=null;}},
+             poke(){st.dirty=true;}};
+}
+/* 页面切后台自动暂停，回前台恢复当前栏目 */
+document.addEventListener('visibilitychange',()=>{
+  const id=window.__curZone;
+  if(!id||!loops[id])return;
+  if(document.hidden)loops[id].stop();else loops[id].start();
+});
+/* resize 触发一次 dirty 重绘 */
+window.addEventListener('resize',()=>{
+  const id=window.__curZone;
+  if(id&&loops[id])loops[id].poke();
+});
+function glow(ctx,c,b=10){ctx.shadowColor=c;ctx.shadowBlur=b;}
+function noGlow(ctx){ctx.shadowBlur=0;}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function arrow(ctx,x1,y1,x2,y2,color,lw=2,head=7){
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-head*Math.cos(a-.45),y2-head*Math.sin(a-.45));
+  ctx.lineTo(x2-head*Math.cos(a+.45),y2-head*Math.sin(a+.45));
+  ctx.closePath();ctx.fill();
+}
+function text(ctx,str,x,y,{size=12,color='rgba(255,255,255,.75)',align='left',weight=500,mono=false}={}){
+  ctx.fillStyle=color;ctx.font=weight+' '+size+'px '+(mono?'"JetBrains Mono",monospace':'"PingFang SC","Microsoft YaHei",sans-serif');
+  ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(str,x,y);
+}
+/* ========== 动画控制台（播放/暂停/单步/重播/三档慢动作/受力图开关） ========== */
+function animControlsHTML(p){
+  return '<div class="ctrl"><label>慢动作（只缩放时间，物理数值不变）</label><div class="btnrow">'
+    +'<button class="btn mini spd" data-s="0.2" id="'+p+'-spd02">0.2×</button>'
+    +'<button class="btn mini spd sel" data-s="0.5" id="'+p+'-spd05">0.5×</button>'
+    +'<button class="btn mini spd" data-s="1" id="'+p+'-spd1">1×</button></div></div>'
+    +'<div class="ctrl"><div class="btnrow">'
+    +'<button class="btn mini primary" id="'+p+'-play">⏸ 暂停</button>'
+    +'<button class="btn mini" id="'+p+'-step">⏭ 单步 +0.05s</button>'
+    +'<button class="btn mini" id="'+p+'-replay">↺ 重播</button>'
+    +'<button class="btn mini" id="'+p+'-force">受力图：关</button></div></div>';
+}
+function wireAnim(sec,p,st){
+  const poke=()=>{if(loops[p])loops[p].poke();};
+  const play=sec.querySelector('#'+p+'-play');
+  play.onclick=()=>{st.playing=!st.playing;play.textContent=st.playing?'⏸ 暂停':'▶ 播放';poke();};
+  sec.querySelector('#'+p+'-step').onclick=()=>{st.playing=false;play.textContent='▶ 播放';st.t=Math.min(st.t+0.05,st.tEnd());poke();};
+  sec.querySelector('#'+p+'-replay').onclick=()=>{st.t=0;st.playing=true;play.textContent='⏸ 暂停';poke();};
+  const fb=sec.querySelector('#'+p+'-force');
+  fb.onclick=()=>{st.showForce=!st.showForce;fb.textContent='受力图：'+(st.showForce?'开':'关');fb.classList.toggle('sel',st.showForce);poke();};
+  sec.querySelectorAll('.spd').forEach(b=>{b.onclick=()=>{
+    sec.querySelectorAll('.spd').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');
+    st.speed=parseFloat(b.dataset.s);poke();};});
+}
+function fmt(x,d=2){if(!isFinite(x))return '—';return x.toFixed(d);}
+</script>
+
+<script>
+/* ==================================================================
+   物理引擎 1：板块问题（题一）
+   M=1 kg 木板，m=1 kg 铁块，地面 μ₁，接触面 μ₂，g=10，拉力 F 向左
+   板长 L=3 m（由问2解出，作为场景定值）
+================================================================== */
+const BP={M:1,m:1,g:10,L:3};
+function bpSim(F,mu1,mu2){
+  const M=BP.M,m=BP.m,g=BP.g,L=BP.L;
+  const fg=mu1*(M+m)*g;              // 地面最大静摩擦
+  const f2=mu2*m*g;                  // 铁块-木板滑动摩擦
+  const a2max=Math.max(0,(f2-fg)/M); // 木板能承受的最大共同加速度
+  const F0=fg+(M+m)*a2max;           // 临界拉力
+  let mode,a1,a2,f;
+  if(F<=fg+1e-9){mode='rest';a1=0;a2=0;f=F;}
+  else if(F<=F0+1e-9){mode='together';a1=a2=(F-fg)/(M+m);f=F-m*a1;}
+  else{mode='slide';a1=(F-f2)/m;a2=a2max;f=f2;}
+  const tLeave=(mode==='slide'&&a1>a2+1e-12)?Math.sqrt(2*L/(a1-a2)):Infinity;
+  return {F,mu1,mu2,fg,f2,F0,mode,a1,a2,f,tLeave,L};
+}
+/* t 时刻状态：xb/xp=铁块/木板向左移动距离，vb/vp=速度，rel=相对位移 */
+function bpState(sim,t){
+  const te=(sim.mode==='slide')?Math.min(t,sim.tLeave):t;
+  return {t:te,
+    xb:0.5*sim.a1*te*te, xp:0.5*sim.a2*te*te,
+    vb:sim.a1*te, vp:sim.a2*te,
+    rel:0.5*(sim.a1-sim.a2)*te*te,
+    done:(sim.mode==='slide'&&t>=sim.tLeave)};
+}
+/* ---- 板块场景绘制（zone2/zone3 共用） ----
+   比例 88 px/m，地面剖面线 + 拟物木板 + 拟物铁块 + F 箭头 + 受力叠加层 */
+function drawBlockScene(ctx,w,h,sim,t,showForce){
+  const S=Math.max(62,Math.min(96,(w-260)/4.4)), gy=h-58;
+  const st=bpState(sim,t);
+  const cam=Math.max(0,st.xb*S-(w-300));      // 大位移时镜头跟随铁块
+  const X=x=>x+cam;
+  // 地面
+  ctx.fillStyle='#101018';ctx.fillRect(0,gy,w,h-gy);
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(w,gy);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=1.2;
+  for(let x=-20;x<w+20;x+=16){ctx.beginPath();ctx.moveTo(x,gy+3);ctx.lineTo(x-8,gy+13);ctx.stroke();}
+  text(ctx,'地面（μ₁='+fmt(sim.mu1,2)+'）',w-14,gy+30,{size:11.5,color:'rgba(255,255,255,.45)',align:'right'});
+  // 木板（木纹拟物）
+  const plankW=sim.L*S, ph=26;
+  const px0=X(w-80-st.xp*S)-plankW, py=gy-ph;
+  const wg=ctx.createLinearGradient(0,py,0,py+ph);
+  wg.addColorStop(0,'#8a5a28');wg.addColorStop(.45,'#b57a3a');wg.addColorStop(1,'#6e441d');
+  ctx.fillStyle=wg;roundRect(ctx,px0,py,plankW,ph,4);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1.4;ctx.stroke();
+  ctx.strokeStyle='rgba(60,30,8,.35)';ctx.lineWidth=1;
+  for(let i=1;i<=3;i++){ctx.beginPath();ctx.moveTo(px0+6,py+i*ph/4);ctx.lineTo(px0+plankW-6,py+i*ph/4);ctx.stroke();}
+  text(ctx,'木板 M=1 kg',px0+plankW/2,py+ph+16,{size:11.5,color:'#E8B87A',align:'center',weight:700});
+  // 铁块（金属拟物）
+  const bs=34, bx0=X(w-80-st.xb*S)-bs, by=py-bs;
+  const ig=ctx.createLinearGradient(bx0,0,bx0+bs,0);
+  ig.addColorStop(0,'#3d434f');ig.addColorStop(.4,'#8b95a8');ig.addColorStop(.6,'#aeb8cb');ig.addColorStop(1,'#343a46');
+  ctx.fillStyle=ig;roundRect(ctx,bx0,by,bs,bs,5);ctx.fill();
+  ctx.strokeStyle=sim.mode==='slide'?'#FF5A4E':'rgba(255,255,255,.5)';ctx.lineWidth=1.6;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.arc(bx0+bs/2,by+bs/2,5,0,TAU);ctx.fill();
+  text(ctx,'铁块 m=1 kg',bx0+bs/2,by-14,{size:11.5,color:'#C9D2E4',align:'center',weight:700});
+  // 拉力 F 箭头（向左）
+  glow(ctx,'#00F0FF',8);
+  arrow(ctx,bx0-4,by+bs/2,bx0-72,by+bs/2,'#00F0FF',3,10);noGlow(ctx);
+  text(ctx,'F⃗ = '+fmt(sim.F,1)+' N（向左）',bx0-76,by+bs/2-14,{size:12,color:'#00F0FF',align:'right',weight:700});
+  // 运动方向小箭头
+  if(st.vb>0.01){arrow(ctx,bx0+bs+8,by+bs/2,bx0+bs+8-Math.min(60,st.vb*10),by+bs/2,'rgba(0,240,255,.5)',2,7);
+    text(ctx,'v⃗₁='+fmt(st.vb,1)+' m/s',bx0+bs+14,by+bs/2-14,{size:11,color:'rgba(0,240,255,.8)'});}
+  if(st.vp>0.01){arrow(ctx,px0+plankW/2+30,py+ph/2,px0+plankW/2+30-Math.min(46,st.vp*16),py+ph/2,'rgba(255,184,0,.55)',2,7);
+    text(ctx,'v⃗₂='+fmt(st.vp,1)+' m/s',px0+plankW/2+34,py+ph/2-13,{size:11,color:'rgba(255,184,0,.85)'});}
+  // 受力叠加层
+  if(showForce){
+    const cx=bx0+bs/2,cy=by+bs/2;
+    // 铁块：F 左 / f 右 / mg 下 / N 上
+    arrow(ctx,cx,cy,cx-56,cy,'#00F0FF',2.4,8); text(ctx,'F⃗',cx-62,cy-11,{size:11,color:'#00F0FF',align:'right'});
+    arrow(ctx,cx,cy,cx+40,cy,'#FFB800',2.4,8); text(ctx,'f⃗=μ₂mg',cx+46,cy-11,{size:11,color:'#FFB800'});
+    arrow(ctx,cx,cy,cx,cy+44,'rgba(255,255,255,.7)',2,7); text(ctx,'m g⃗',cx+8,cy+40,{size:11,color:'rgba(255,255,255,.75)'});
+    arrow(ctx,cx,cy,cx,cy-44,'rgba(255,255,255,.7)',2,7); text(ctx,'N⃗₁',cx+8,cy-40,{size:11,color:'rgba(255,255,255,.75)'});
+    // 木板：铁块摩擦力向左 / 地面摩擦力向右
+    const pcx=px0+plankW/2, pcy=py+ph/2;
+    arrow(ctx,pcx,pcy,pcx-46,pcy,'#FF2D8F',2.4,8); text(ctx,'f⃗′（铁块对板，向左）',pcx-30,py-10,{size:10.5,color:'#FF2D8F',align:'center'});
+    arrow(ctx,px0+plankW*.3,gy+1,px0+plankW*.3+44,gy+1,'#FF6B35',2.4,8);
+    text(ctx,'f⃗地（地面，向右）',px0+plankW*.3+22,gy+34,{size:10.5,color:'#FF6B35',align:'center'});
+  }
+  // 运动形态标记：共同加速→锁定标记；相对滑动→相对速度箭头
+  if(sim.mode==='together'&&st.vp>0.05){
+    ctx.strokeStyle='#00E5A0';ctx.lineWidth=1.8;ctx.setLineDash([5,4]);glow(ctx,'#00E5A0',6);
+    roundRect(ctx,bx0-7,by-7,bs+14,bs+ph+12,8);ctx.stroke();ctx.setLineDash([]);noGlow(ctx);
+    text(ctx,'🔒 相对静止（铁块与木板一起加速）',bx0+bs/2,by-30,{size:11.5,color:'#00E5A0',align:'center',weight:700});
+  }
+  if(sim.mode==='slide'&&(st.vb-st.vp)>0.05){
+    const rl=Math.min(70,(st.vb-st.vp)*14);
+    glow(ctx,'#FF2D8F',7);arrow(ctx,bx0+bs/2,py-6,bx0+bs/2-rl,py-6,'#FF2D8F',2.6,9);noGlow(ctx);
+    text(ctx,'v⃗相 = v₁−v₂ = '+fmt(st.vb-st.vp,1)+' m/s（相对木板向左滑）',bx0+bs/2,py-22,{size:11,color:'#FF2D8F',align:'center',weight:700});
+  }
+  // 状态标注
+  if(sim.mode==='rest')text(ctx,'● 系统静止（F ≤ 地面最大静摩擦）',18,26,{size:13,color:'#00E5A0',weight:700});
+  else if(sim.mode==='together')text(ctx,'● 共同加速 a='+fmt(sim.a1,2)+' m/s²（无相对滑动）',18,26,{size:13,color:'#FFB800',weight:700});
+  else if(st.done){glow(ctx,'#FF5A4E',10);text(ctx,'■ t='+fmt(sim.tLeave,2)+' s 铁块到达木板左端（相对位移=L='+fmt(sim.L,1)+' m）',18,26,{size:13,color:'#FF5A4E',weight:700});noGlow(ctx);}
+  else text(ctx,'● 相对滑动中：a₁='+fmt(sim.a1,1)+' m/s²，a₂='+fmt(sim.a2,1)+' m/s²',18,26,{size:13,color:'#FF5A4E',weight:700});
+  text(ctx,'t = '+fmt(st.t,2)+' s',18,48,{size:12,color:'rgba(255,255,255,.6)',mono:true});
+}
+/* ==================================================================
+   物理引擎 2：传送带问题（题二）
+   带1 水平 L₁=2 m（μ₁=0.4），带2 倾斜 L₂=1 m、θ=37°（μ₂ 可调）
+   分段解析积分，返回段表 segs：{t0,t1,s0,s1,v0,v1,a,zone,fric}
+================================================================== */
+const CV={m:0.2,g:10,L1:2,L2:1,sn:0.6,cs:0.8,mu1:0.4};
+function cvSim(vb1,vb2,mu2){
+  const g=CV.g,L1=CV.L1,L2=CV.L2,gs=g*CV.sn,gc=mu2*g*CV.cs,a1=CV.mu1*g;
+  const segs=[];
+  let tB=0,vB=0,stuck=false;
+  if(vb1<=1e-9){stuck=true;}
+  else{
+    const tAcc=vb1/a1,sAcc=vb1*vb1/(2*a1);
+    if(sAcc>=L1-1e-12){tB=Math.sqrt(2*L1/a1);vB=a1*tB;
+      segs.push({t0:0,t1:tB,s0:0,s1:L1,v0:0,v1:vB,a:a1,zone:'belt',fric:'left',name:'带1·匀加速'});}
+    else{tB=tAcc+(L1-sAcc)/vb1;vB=vb1;
+      segs.push({t0:0,t1:tAcc,s0:0,s1:sAcc,v0:0,v1:vb1,a:a1,zone:'belt',fric:'left',name:'带1·匀加速'});
+      segs.push({t0:tAcc,t1:tB,s0:sAcc,s1:L1,v0:vb1,v1:vb1,a:0,zone:'belt',fric:'none',name:'带1·随带匀速'});}
+  }
+  let reach=false,tc=0,vc=0,stopped=false,stopNote='',slideBack=false;
+  if(!stuck){
+    let v=vB,s=0,tt=tB;
+    for(let it=0;it<8;it++){
+      let a,fric;
+      if(v>vb2+1e-9){a=-(gs+gc);fric='down';}
+      else if(v<vb2-1e-9){a=-gs+gc;fric='up';}
+      else{if(gc>=gs-1e-9){a=0;fric='stick';}else{a=-gs+gc;fric='up';}}
+      if(v<=1e-9&&a<0){stopped=true;slideBack=(gs>gc+1e-9);
+        stopNote=slideBack?'盒子到达最高点后将会回滑（μ₂·cosθ < sinθ）':'盒子停在斜面上';break;}
+      if(a===0&&v<=1e-9){stopped=true;stopNote='盒子停在斜面上';break;}
+      let dtC=Infinity,dtV=Infinity,dt0=Infinity;
+      if(Math.abs(a)>1e-12){
+        const disc=v*v+2*a*(L2-s);
+        if(disc>=0){const r=(-v+Math.sqrt(disc))/a;if(r>1e-9)dtC=r;}
+        if(a<0){if(v>1e-9)dt0=v/(-a);if(v>vb2+1e-9)dtV=(v-vb2)/(-a);}
+        else{if(v<vb2-1e-9)dtV=(vb2-v)/a;}
+      }else if(v>1e-9){dtC=(L2-s)/v;}
+      const dt=Math.min(dtC,dtV,dt0);
+      if(!isFinite(dt)||dt<=1e-9){stopped=true;stopNote='盒子停在斜面上';break;}
+      const v1=v+a*dt,s1=s+v*dt+0.5*a*dt*dt;
+      const fricName=fric==='down'?'沿斜面向下':(fric==='up'?'沿斜面向上':(fric==='stick'?'静摩擦（随带）':'—'));
+      segs.push({t0:tt,t1:tt+dt,s0:L1+s,s1:L1+s1,v0:v,v1:v1,a:a,zone:'incl',fric:fric,fricName:fricName,
+        name:(a<0?(fric==='down'?'斜面·急减':'斜面·缓减'):(a>0?'斜面·带上行加速':'斜面·随带匀速'))});
+      tt+=dt;v=v1;s=s1;
+      if(dt===dtC){reach=true;tc=tt;vc=v;break;}
+      if(dt===dt0){v=0;}
+    }
+    if(!reach&&!stopped){stopped=true;stopNote='未能到达 c';}
+  }
+  const tEnd=reach?tc:(segs.length?segs[segs.length-1].t1:tB);
+  return {vb1,vb2,mu2,a1,gs,gc,segs,tB,vB,stuck,reach,tc,vc,stopped,stopNote,slideBack,tEnd,
+    a1p:gs+gc,a2p:Math.abs(-gs+gc)};
+}
+/* t 时刻采样：s=全程路程（0~L1+L2），v=速率，seg=当前段 */
+function cvStateAt(sim,t){
+  const segs=sim.segs;
+  if(!segs.length)return {s:0,v:0,seg:null,idx:-1};
+  for(let i=0;i<segs.length;i++){
+    const sg=segs[i];
+    if(t<=sg.t1+1e-12||i===segs.length-1){
+      const dt=Math.max(0,Math.min(t,sg.t1)-sg.t0);
+      return {s:sg.s0+sg.v0*dt+0.5*sg.a*dt*dt, v:Math.max(0,sg.v0+sg.a*dt), seg:sg, idx:i};
+    }
+  }
+  const last=segs[segs.length-1];
+  return {s:last.s1,v:last.v1,seg:last,idx:segs.length-1};
+}
+/* ---- 传送带场景绘制（zone4/zone5/zone6 共用） ---- */
+function cvGeom(w,h){
+  const mX=54;
+  const S=Math.min((w-2*mX)/(CV.L1+CV.L2*CV.cs),(h-150)/1.05);
+  const W=(CV.L1+CV.L2*CV.cs)*S;                    // 2.8 m 内容总宽，水平居中
+  const ax=(w+W)/2, gy=(h+CV.L2*CV.sn*S)/2+8;       // 垂直方向内容居中
+  const bx=ax-CV.L1*S;
+  const cx=bx-CV.L2*CV.cs*S, cy=gy-CV.L2*CV.sn*S;
+  return {S,ax,ay:gy,bx,by:gy,cx,cy,gy,
+    r:Math.max(13,0.11*S), bs:Math.max(22,Math.min(34,0.19*S))};
+}
+function drawConveyor(ctx,w,h,sim,t,showForce,opts={}){
+  const G=cvGeom(w,h),S=G.S,r=G.r;
+  const th=Math.atan2(G.by-G.cy,G.bx-G.cx);
+  const ux=(G.cx-G.bx)/CV.L2/S, uy=(G.cy-G.by)/CV.L2/S;
+  // 地面
+  const gl=G.gy+2*r+34;
+  ctx.fillStyle='#101018';ctx.fillRect(0,gl,w,h-gl);
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,gl);ctx.lineTo(w,gl);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=1.2;
+  for(let x=-20;x<w+20;x+=16){ctx.beginPath();ctx.moveTo(x,gl+3);ctx.lineTo(x-8,gl+13);ctx.stroke();}
+  // 支腿（带1 两个滚筒架）
+  ctx.strokeStyle='#2a3040';ctx.lineWidth=5;ctx.lineCap='round';
+  [G.ax,G.bx].forEach(xx=>{
+    ctx.beginPath();ctx.moveTo(xx-r*.55,G.by+r);ctx.lineTo(xx-r*.55,gl);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(xx+r*.55,G.by+r);ctx.lineTo(xx+r*.55,gl);ctx.stroke();});
+  // 斜带支架
+  ctx.beginPath();ctx.moveTo(G.bx,G.by+r);ctx.lineTo(G.cx,G.cy+2);ctx.lineTo(G.cx,gl);ctx.stroke();
+  // 滚筒（金属渐变 + 三辐条转动）
+  function roller(x,y,rr,ph,col){
+    const g=ctx.createRadialGradient(x-rr*.35,y-rr*.35,1,x,y,rr);
+    g.addColorStop(0,'#7a8499');g.addColorStop(.55,'#454d5f');g.addColorStop(1,'#1d222d');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rr,0,TAU);ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=2;glow(ctx,col,6);ctx.stroke();noGlow(ctx);
+    ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.arc(x,y,rr*.62,0,TAU);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=2.2;
+    for(let k=0;k<3;k++){const a=ph+k*TAU/3;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+rr*.8*Math.cos(a),y+rr*.8*Math.sin(a));ctx.stroke();}
+    ctx.fillStyle='#d4d9e4';ctx.beginPath();ctx.arc(x,y,3,0,TAU);ctx.fill();
+  }
+  const spin=t*(sim?Math.max(sim.vb1,0.2):1)*2;
+  roller(G.ax,G.by+r+1,r,spin,'#00E5A0');
+  roller(G.bx,G.by+r+1,r,-spin,'#00E5A0');
+  roller(G.cx,G.cy-r*0.55,r,-spin*1.2,'#FF6B35');
+  // 带面（分段显式绘制：上表面 + 回程 + 斜面）
+  const bw=Math.max(6,0.05*S);
+  ctx.lineCap='round';
+  ctx.strokeStyle='#424a5e';ctx.lineWidth=bw;
+  ctx.beginPath();ctx.moveTo(G.ax,G.by);ctx.lineTo(G.bx,G.by);ctx.stroke();       // 带1 上表面
+  ctx.strokeStyle='#262c3a';
+  ctx.beginPath();ctx.moveTo(G.ax,G.by+2*r+2);ctx.lineTo(G.bx,G.by+2*r+2);ctx.stroke(); // 带1 回程
+  ctx.strokeStyle='#424a5e';
+  ctx.beginPath();ctx.moveTo(G.bx,G.by);ctx.lineTo(G.cx,G.cy);ctx.stroke();       // 带2 上表面
+  // 带面运动虚线纹理（逆时针：带1 向左，带2 沿斜面向上）
+  ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.22)';
+  ctx.setLineDash([12,10]);ctx.lineDashOffset=t*48;
+  ctx.beginPath();ctx.moveTo(G.ax-6,G.by);ctx.lineTo(G.bx+6,G.by);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(G.bx-4,G.by-2);ctx.lineTo(G.cx+4,G.cy+2);ctx.stroke();
+  ctx.setLineDash([]);ctx.lineDashOffset=0;
+  // 运动方向箭头
+  for(let i=0;i<3;i++){const xx=G.ax-40-((i*100+t*48)%(G.ax-G.bx-70));
+    arrow(ctx,xx,G.by-bw/2-9,xx-24,G.by-bw/2-9,'rgba(0,229,160,.85)',2.4,7);}
+  for(let i=0;i<2;i++){const k=.28+i*.42;
+    const px=G.bx+(G.cx-G.bx)*k, py=G.by+(G.cy-G.by)*k;
+    arrow(ctx,px,py-bw/2-9,px+ux*24,py-bw/2-9+uy*24,'rgba(255,107,53,.9)',2.4,7);}
+  // 标注 a / b / c 与参数
+  text(ctx,'a（轻放点）',G.ax+4,G.by-G.bs-32,{size:12.5,color:'#00E5A0',align:'center',weight:700});
+  text(ctx,'b（连接点）',G.bx,G.by+2*r+24,{size:12.5,color:'#FFB800',align:'center',weight:700});
+  text(ctx,'c（顶端）',G.cx,G.cy-r-24,{size:12.5,color:'#FF6B35',align:'center',weight:700});
+  text(ctx,'带1：L₁=2 m，μ₁=0.4',(G.ax+G.bx)/2,G.by+2*r+24,{size:11.5,color:'rgba(255,255,255,.5)',align:'center'});
+  text(ctx,'带2：L₂=1 m，θ=37°，μ₂='+(sim?fmt(sim.mu2,2):'0.50'),18,70,{size:11.5,color:'rgba(255,255,255,.5)',align:'left'});
+  text(ctx,'v⃗带1='+fmt(sim?sim.vb1:4,1)+' m/s',G.ax-84,G.by-G.bs-54,{size:11.5,color:'#00E5A0',align:'center'});
+  text(ctx,'v⃗带2='+fmt(sim?sim.vb2:1,1)+' m/s',G.cx+50,G.cy-r-4,{size:11.5,color:'#FF6B35',align:'left'});
+  // 倾角标注
+  const TA=Math.atan2(CV.sn,CV.cs), arcR=0.26*S;
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.setLineDash([4,4]);ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(G.bx,G.by);ctx.lineTo(G.bx-arcR-20,G.by);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(G.bx,G.by,arcR,Math.PI-TA,Math.PI);ctx.stroke();
+  text(ctx,'37°',G.bx-arcR-8,G.by-14,{size:11.5,color:'rgba(255,255,255,.65)',align:'right',weight:700});
+  // 盒子（盒底中点贴带面，盒身沿表面外法线立起：水平段 ang=0，斜面段 ang=TA）
+  if(sim&&!sim.stuck){
+    const st=cvStateAt(sim,t);
+    let px,py,ang=0;
+    if(st.s<=CV.L1){px=G.ax-st.s*S;py=G.by;ang=0;}
+    else{const d=st.s-CV.L1;px=G.bx+ (G.cx-G.bx)/CV.L2*d;py=G.by+(G.cy-G.by)/CV.L2*d;ang=TA;}
+    drawParcel(ctx,px,py,ang,G.bs,st.s>CV.L1+0.65);
+    if(showForce)drawParcelForces(ctx,px,py,ang,st,sim);
+    if(opts.status!==false){
+      const ph=st.seg?st.seg.name:'—';
+      text(ctx,'t = '+fmt(Math.min(t,sim.tEnd),2)+' s   '+ph,18,26,{size:12.5,color:'rgba(255,255,255,.65)',mono:true});
+    }
+  }
+  if(sim&&sim.stuck)text(ctx,'带 1 速度为 0：盒子在 a 点原地不动',18,26,{size:13,color:'#FFB800',weight:700});
+  else if(sim&&sim.reach){glow(ctx,'#00E5A0',8);text(ctx,'✓ t='+fmt(sim.tc,2)+' s 到达 c（v⃗c='+fmt(sim.vc,2)+' m/s）',18,48,{size:12.5,color:'#00E5A0',weight:700});noGlow(ctx);}
+  else if(sim&&sim.stopped){text(ctx,'✗ 到不了 c：'+sim.stopNote,18,48,{size:12.5,color:'#FF5A4E',weight:700});}
+}
+function drawParcel(ctx,px,py,ang,bs=28,hideL=false){
+  const hh=bs*0.85;
+  ctx.save();ctx.translate(px,py);ctx.rotate(ang);
+  const g=ctx.createLinearGradient(0,-hh,0,0);
+  g.addColorStop(0,'#d9a05b');g.addColorStop(1,'#8a5a28');
+  ctx.fillStyle=g;roundRect(ctx,-bs/2,-hh,bs,hh,4);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=1.3;ctx.stroke();
+  // 顶面（伪 3D）
+  ctx.fillStyle='rgba(255,220,170,.28)';
+  ctx.beginPath();ctx.moveTo(-bs/2,-hh);ctx.lineTo(-bs/2+bs*.22,-hh-bs*.16);
+  ctx.lineTo(bs/2+bs*.22,-hh-bs*.16);ctx.lineTo(bs/2,-hh);ctx.closePath();ctx.fill();
+  // 右侧面（伪 3D）
+  ctx.fillStyle='rgba(0,0,0,.22)';
+  ctx.beginPath();ctx.moveTo(bs/2,-hh);ctx.lineTo(bs/2+bs*.22,-hh-bs*.16);
+  ctx.lineTo(bs/2+bs*.22,-bs*.16);ctx.lineTo(bs/2,0);ctx.closePath();ctx.fill();
+  // 封箱胶带
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(-bs*.11,-hh,bs*.22,hh);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1;ctx.strokeRect(-bs/2,-hh,bs,hh);
+  ctx.restore();
+  if(!hideL)text(ctx,'口罩盒 m=0.2 kg',px,py-hh-16,{size:11,color:'#E8B87A',align:'center',weight:700});
+}
+function drawParcelForces(ctx,px,py,ang,st,sim){
+  const cy=py-12;
+  const onBelt=(st.seg&&st.seg.zone==='belt');
+  const TA=Math.atan2(CV.sn,CV.cs);           // 37°
+  const upS=onBelt?[-1,0]:[-Math.cos(TA),-Math.sin(TA)];   // 沿运动方向（左/沿斜面向上）
+  const nrm=onBelt?[0,-1]:[Math.sin(TA),-Math.cos(TA)];    // 支持力方向
+  // 重力
+  arrow(ctx,px,cy,px,cy+38,'rgba(255,255,255,.75)',2,7);
+  text(ctx,'m g⃗',px+7,cy+34,{size:10.5,color:'rgba(255,255,255,.8)'});
+  // 支持力
+  arrow(ctx,px,cy,px+nrm[0]*30,cy+nrm[1]*30,'#00F0FF',2,7);
+  text(ctx,'N⃗',px+nrm[0]*40,cy+nrm[1]*40,{size:10.5,color:'#00F0FF',align:'center'});
+  // 摩擦力
+  if(st.seg){
+    let fdir=null,col='#FFB800',lab='';
+    if(onBelt&&st.seg.fric==='left'){fdir=upS;lab='f⃗（向左，提供 a=μ₁g）';}
+    if(st.seg.zone==='incl'){
+      if(st.seg.fric==='down'){fdir=[-upS[0],-upS[1]];lab='f⃗ 沿斜面向下';col='#FF5A4E';}
+      else if(st.seg.fric==='up'||st.seg.fric==='stick'){fdir=upS;lab='f⃗ 沿斜面向上';col='#00E5A0';}
+    }
+    if(fdir){arrow(ctx,px,cy,px+fdir[0]*34,cy+fdir[1]*34,col,2.4,8);
+      text(ctx,lab,px+fdir[0]*46,cy+fdir[1]*46-6,{size:10.5,color:col,align:'center',weight:700});}
+  }
+}
+/* ---- 固定标尺坐标架（禁归一化） ---- */
+function drawAxes(ctx,gx0,gy0,gx1,gy1,o){
+  // o={tMax,vMax,dt,dv,xName,yName,xUnit,yUnit}
+  ctx.strokeStyle='rgba(255,255,255,.09)';ctx.lineWidth=1;
+  for(let t=o.dt;t<=o.tMax+1e-9;t+=o.dt){const x=gx0+(t/o.tMax)*(gx1-gx0);
+    ctx.beginPath();ctx.moveTo(x,gy0);ctx.lineTo(x,gy1);ctx.stroke();}
+  for(let v=o.dv;v<=o.vMax+1e-9;v+=o.dv){const y=gy1-(v/o.vMax)*(gy1-gy0);
+    ctx.beginPath();ctx.moveTo(gx0,y);ctx.lineTo(gx1,y);ctx.stroke();}
+  // 轴
+  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1.6;
+  arrow(ctx,gx0,gy1,gx1+10,gy1,'rgba(255,255,255,.4)',1.6,6);
+  arrow(ctx,gx0,gy1,gx0,gy0-10,'rgba(255,255,255,.4)',1.6,6);
+  text(ctx,o.xName,gx1+16,gy1,{size:12.5,color:'rgba(255,255,255,.65)',weight:700});
+  text(ctx,o.yName,gx0-8,gy0-18,{size:12.5,color:'rgba(255,255,255,.65)',align:'right',weight:700});
+  text(ctx,'O',gx0-12,gy1+14,{size:11.5,color:'rgba(255,255,255,.5)',align:'center'});
+  // 刻度真实数值
+  for(let t=o.dt;t<=o.tMax+1e-9;t+=o.dt){const x=gx0+(t/o.tMax)*(gx1-gx0);
+    text(ctx,(Math.round(t/o.dt)*o.dt).toFixed(1),x,gy1+14,{size:11,color:'rgba(255,255,255,.5)',align:'center',mono:true});}
+  for(let v=o.dv;v<=o.vMax+1e-9;v+=o.dv){const y=gy1-(v/o.vMax)*(gy1-gy0);
+    text(ctx,String(Math.round(v/o.dv)*o.dv),gx0-9,y,{size:11,color:'rgba(255,255,255,.5)',align:'right',mono:true});}
+  text(ctx,'每格 '+o.dt+' '+o.xUnit,gx1-4,gy1+28,{size:10.5,color:'rgba(255,255,255,.45)',align:'right'});
+  text(ctx,'每格 '+o.dv+' '+o.yUnit,gx0+6,gy0+11,{size:10.5,color:'rgba(255,255,255,.45)'});
+}
+</script>
+
+<script>
+/* ================= ZONE 1 板块·题面与受力拆解 ================= */
+(function(){
+const sec=document.getElementById('sec-z1');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 01</span><h2>板块·题面与受力拆解</h2><span class="badge">罗湖区统考 第 20 题 · 16 分</span></div>
+<p class="sdesc">板块问题的第一步永远是<b>受力分析</b>：铁块靠拉力 F 向左走，木板只能靠<b>铁块给它的摩擦力</b>驱动。
+先看场景与两个物体的完整受力图，再用「下一步」推出临界拉力 <b>F₀ = 6 N</b>。</p>
+<div class="duo">
+  <div class="panel"><h4>拟物场景 · 铁块在木板右端，F 向左拉</h4>
+    <canvas class="stage" id="cv1a" style="aspect-ratio:16/10"></canvas>
+  </div>
+  <div class="panel"><h4>受力分析图（摩擦力的方向是判断前提）</h4>
+    <canvas class="stage" id="cv1b" style="aspect-ratio:16/10"></canvas>
+  </div>
+</div>
+<div class="panel"><h4>题干卡</h4>
+  <div class="qrow">
+    <div class="knote" style="margin-top:0">质量 <b>M=1 kg</b> 的木板静止在水平面上，质量 <b>m=1 kg</b>、大小可忽略的铁块静止在木板<b>右端</b>。最大静摩擦力等于滑动摩擦力，木板与地面间动摩擦因数 <b>μ₁=0.1</b>，铁块与木板间 <b>μ₂=0.4</b>，g 取 <b>10 m/s²</b>。现给铁块施加水平拉力 <b>F（向左）</b>，把铁块从木板右端往左端拉。</div>
+    <div class="readout" style="margin-top:0">
+      <div class="ro"><div class="k">地面最大静摩擦 μ₁(M+m)g</div><div class="v">2 N</div></div>
+      <div class="ro"><div class="k">板块间滑动摩擦 μ₂mg</div><div class="v">4 N</div></div>
+      <div class="ro"><div class="k">木板最大共同加速度 a_max</div><div class="v">2 m/s²</div></div>
+      <div class="ro"><div class="k">临界拉力 F₀</div><div class="v">6 N</div></div>
+    </div>
+    <div class="knote" style="margin-top:0"><b>关键直觉</b>：F 作用在<b>铁块</b>上，不直接作用于木板。木板的动力只有一个来源——铁块对木板的摩擦力（最大 4 N），而它还要克服地面摩擦力（2 N），所以木板的加速度被封顶在 <span class="f">a_max = 2 m/s²</span>。</div>
+  </div>
+</div>
+<div class="panel"><h4>临界判据推导卡 · 为什么 F₀ = 6 N？</h4>
+  <div class="dstep show"><span class="n">①</span><b>系统先得起动</b>：把铁块+木板看成整体，拉力 F 要超过地面最大静摩擦才能动：
+    f<sub>1m</sub> = μ₁(<i class="var">M</i>+<i class="var">m</i>)<i class="var">g</i> = 0.1×(1+1) kg×10 m/s² = <b>2 N</b>。即 F ≤ 2 N 时整体静止。</div>
+  <div class="dstep"><span class="n">②</span><b>木板的加速度有上限</b>：木板水平方向只受两个摩擦力——铁块给的（向左，最大 μ₂<i class="var">mg</i> = 4 N）和地面给的（向右，2 N）：
+    <i class="var">a</i><sub>max</sub> = <span class="frac"><span class="nu">μ₂<i class="var">mg</i> − μ₁(<i class="var">M</i>+<i class="var">m</i>)<i class="var">g</i></span><span class="de"><i class="var">M</i></span></span>
+    = <span class="frac"><span class="nu">4 N − 2 N</span><span class="de">1 kg</span></span> = <b>2 m/s²</b>。</div>
+  <div class="dstep"><span class="n">③</span><b>求临界拉力</b>：若二者共同加速，整体 <i class="var">a</i> =
+    <span class="frac"><span class="nu"><i class="var">F</i> − 2 N</span><span class="de"><i class="var">M</i>+<i class="var">m</i></span></span>。令 <i class="var">a</i> = <i class="var">a</i><sub>max</sub>：
+    <span class="frac"><span class="nu"><i class="var">F</i>₀ − 2 N</span><span class="de">2 kg</span></span> = 2 m/s² → <b>F₀ = 6 N</b>。
+    F ≤ 6 N 共同加速；F &gt; 6 N 铁块比木板快，<b>发生相对滑动</b>。</div>
+  <div class="btnrow" style="margin-top:6px"><button class="btn mini primary" id="z1-next">下一步 ▸</button><button class="btn mini" id="z1-reset">收起重看</button></div>
+</div>`;
+const cvA=sec.querySelector('#cv1a'),cvB=sec.querySelector('#cv1b');
+const sim0=bpSim(12,0.1,0.4);
+function drawA(){
+  const {w,h,ctx}=fitCanvas(cvA);ctx.clearRect(0,0,w,h);
+  drawBlockScene(ctx,w,h,sim0,0,true);
+}
+function drawB(){
+  const {w,h,ctx}=fitCanvas(cvB);ctx.clearRect(0,0,w,h);
+  const cx1=w*0.25,cx2=w*0.75,cy=h*0.52;
+  /* —— 铁块受力 —— */
+  ctx.fillStyle='#12121c';roundRect(ctx,cx1-w*0.23,26,w*0.46,h-52,14);ctx.fill();
+  ctx.strokeStyle='rgba(0,240,255,.25)';ctx.lineWidth=1.2;ctx.stroke();
+  text(ctx,'铁块 m（4 个力）',cx1,46,{size:13,color:'#00F0FF',align:'center',weight:800});
+  const ig=ctx.createLinearGradient(cx1-22,0,cx1+22,0);
+  ig.addColorStop(0,'#3d434f');ig.addColorStop(.5,'#aeb8cb');ig.addColorStop(1,'#343a46');
+  ctx.fillStyle=ig;roundRect(ctx,cx1-22,cy-22,44,44,6);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1.4;ctx.stroke();
+  arrow(ctx,cx1-22,cy,cx1-92,cy,'#00F0FF',2.6,9);text(ctx,'F⃗（拉力，向左）',cx1-57,cy-16,{size:11.5,color:'#00F0FF',align:'center',weight:700});
+  arrow(ctx,cx1+22,cy,cx1+72,cy,'#FFB800',2.6,9);text(ctx,'f⃗=μ₂mg（向右）',cx1+47,cy+16,{size:11.5,color:'#FFB800',align:'center',weight:700});
+  arrow(ctx,cx1,cy+22,cx1,cy+62,'rgba(255,255,255,.75)',2.2,8);text(ctx,'m g⃗',cx1+9,cy+56,{size:11.5,color:'rgba(255,255,255,.8)'});
+  arrow(ctx,cx1,cy-22,cx1,cy-58,'rgba(255,255,255,.75)',2.2,8);text(ctx,'N⃗₁（木板支持力）',cx1+9,cy-52,{size:11.5,color:'rgba(255,255,255,.8)'});
+  /* —— 木板受力 —— */
+  ctx.fillStyle='#12121c';roundRect(ctx,cx2-w*0.23,26,w*0.46,h-52,14);ctx.fill();
+  ctx.strokeStyle='rgba(255,184,0,.25)';ctx.lineWidth=1.2;ctx.stroke();
+  text(ctx,'木板 M（水平 2 个力 + 竖直 3 个力）',cx2,46,{size:13,color:'#FFB800',align:'center',weight:800});
+  const wg=ctx.createLinearGradient(0,cy-14,0,cy+14);
+  wg.addColorStop(0,'#8a5a28');wg.addColorStop(.5,'#b57a3a');wg.addColorStop(1,'#6e441d');
+  ctx.fillStyle=wg;roundRect(ctx,cx2-90,cy-14,180,28,5);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1.3;ctx.stroke();
+  // 水平
+  arrow(ctx,cx2-40,cy-14,cx2-40-58,cy-14,'#FF2D8F',2.6,9);
+  text(ctx,'f⃗′（向左，≤4 N）',cx2-69,cy-29,{size:11.5,color:'#FF2D8F',align:'center',weight:700});
+  arrow(ctx,cx2+30,cy+14,cx2+30+54,cy+14,'#FF6B35',2.6,9);
+  text(ctx,'f⃗地（向右，≤2 N）',cx2+57,cy+31,{size:11.5,color:'#FF6B35',align:'center',weight:700});
+  // 竖直
+  arrow(ctx,cx2-62,cy+8,cx2-62,cy+50,'rgba(255,255,255,.75)',2.2,8);text(ctx,'M g⃗',cx2-71,cy+44,{size:11.5,color:'rgba(255,255,255,.8)',align:'right'});
+  arrow(ctx,cx2+62,cy+8,cx2+62,cy+36,'rgba(255,255,255,.55)',2,7);text(ctx,'N⃗₁′',cx2+62,cy+47,{size:11,color:'rgba(255,255,255,.65)',align:'center'});
+  arrow(ctx,cx2,cy-14,cx2,cy-56,'#00F0FF',2.2,8);text(ctx,'N⃗₂（地面支持力）',cx2+9,cy-50,{size:11.5,color:'#00F0FF'});
+  text(ctx,'水平方向：f′ − f地 = Ma（木板加速度的唯一来源）',cx2,h-24,{size:11.5,color:'rgba(255,255,255,.55)',align:'center'});
+}
+makeLoop('z1',()=>{drawA();drawB();},()=>false);
+/* 推导卡逐步展开 */
+const steps=sec.querySelectorAll('.dstep');let shown=1;
+sec.querySelector('#z1-next').onclick=()=>{if(shown<steps.length){steps[shown].classList.add('show');shown++;}};
+sec.querySelector('#z1-reset').onclick=()=>{steps.forEach((s,i)=>s.classList.toggle('show',i===0));shown=1;};
+})();
+</script>
+
+<script>
+/* ================= ZONE 2 板块·慢动作动画 + v-t 图（问1问2） ================= */
+(function(){
+const sec=document.getElementById('sec-z2');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 02</span><h2>板块·慢动作动画 + v-t 图</h2><span class="badge">问（1）问（2）· F = 12 N</span></div>
+<p class="sdesc">F=12 N &gt; F₀=6 N，<b>铁块与木板相对滑动</b>：铁块 a₁=8 m/s²，木板 a₂=2 m/s²。
+动画与 v-t 图<b>共用同一时间变量</b>：两条 v-t 线夹出的面积就是<b>相对位移</b>——t=1 s 时恰好等于板长 L=3 m。拖动滑杆改变 F、μ₁、μ₂，分段结果实时重算。</p>
+<div class="duo">
+  <div class="panel"><h4>慢动作动画（真实积分，t=1 s 到达左端后停住）</h4>
+    <canvas class="stage" id="cv2a" style="aspect-ratio:16/10"></canvas>
+  </div>
+  <div class="panel"><h4>v-t 图象（固定标尺：横轴每格 0.2 s，纵轴每格 2 m/s）</h4>
+    <canvas class="stage" id="cv2b" style="aspect-ratio:16/10"></canvas>
+    <div class="legend">
+      <span><i style="background:#00F0FF"></i>铁块 v₁（斜率 a₁=8）</span>
+      <span><i style="background:#FFB800"></i>木板 v₂（斜率 a₂=2）</span>
+      <span><i style="background:rgba(255,45,143,.6)"></i>夹面积 = 相对位移 L</span>
+    </div>
+  </div>
+</div>
+<div class="panel"><h4>控制台</h4>
+  <div class="ctrlrow">
+    <div>
+      <div class="pill bad" id="z2-pill">③ F &gt; F₀：相对滑动</div>
+      <div class="ctrl"><label>拉力 F<output id="z2-Fv">12.0 N</output></label><input type="range" id="z2-F" min="0" max="14" step="0.1" value="12"></div>
+      <div class="ctrl"><label>μ₁（板—地）<output id="z2-m1v">0.10</output></label><input type="range" id="z2-m1" min="0" max="0.5" step="0.01" value="0.1"></div>
+      <div class="ctrl"><label>μ₂（铁块—板）<output id="z2-m2v">0.40</output></label><input type="range" id="z2-m2" min="0.05" max="1" step="0.01" value="0.4"></div>
+    </div>
+    <div>${animControlsHTML('z2')}</div>
+    <div class="readout" style="margin-top:0">
+      <div class="ro"><div class="k">时间 t</div><div class="v" id="z2-t">0.00 s</div></div>
+      <div class="ro"><div class="k">铁块 v₁ / 木板 v₂</div><div class="v" id="z2-v">0.0 / 0.0</div></div>
+      <div class="ro"><div class="k">铁块 a₁ / 木板 a₂</div><div class="v" id="z2-a">8.0 / 2.0</div></div>
+      <div class="ro"><div class="k">相对位移 Δx（夹面积）</div><div class="v" id="z2-rel">0.00 m</div></div>
+      <div class="ro"><div class="k">板块间摩擦力 f</div><div class="v" id="z2-f">4.0 N</div></div>
+      <div class="ro"><div class="k">临界 F₀（当前 μ）</div><div class="v" id="z2-f0">6.0 N</div></div>
+    </div>
+    <div>
+      <h4 style="margin-bottom:8px">阶段时间轴</h4>
+      <table class="stab" id="z2-stab"><thead><tr><th>阶段</th><th>时间段</th><th>加速度</th><th>摩擦力方向</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <div class="knote"><b>读图要诀</b>：v-t 图象的<b>斜率</b>=加速度，<b>两线夹面积</b>=相对位移。铁块比木板每秒钟多走 (a₁−a₂)·t，面积 ½(a₁−a₂)t² 攒够板长 L 时，铁块到达左端。</div>
+</div>
+<div class="panel"><h4>规范解答卡</h4>
+  <div class="solgrid">
+    <div class="solcard"><h5>第（1）问 · 铁块的加速度</h5>
+      <span class="ln"><span class="jl">解：</span>因 <i class="var">F</i> = 12 N &gt; <i class="var">F</i>₀ = 6 N，铁块与木板发生相对滑动，铁块所受滑动摩擦力 <i class="var">f</i> = μ₂<i class="var">mg</i> 水平向右。取水平向左为正方向，对铁块由牛顿第二定律：</span>
+      <span class="ind"><i class="var">F</i> − μ₂<i class="var">mg</i> = <i class="var">ma</i>₁</span>
+      <span class="ind"><i class="var">a</i>₁ = <span class="frac"><span class="nu"><i class="var">F</i> − μ₂<i class="var">mg</i></span><span class="de"><i class="var">m</i></span></span> = <span class="frac"><span class="nu">12 N − 0.4×1 kg×10 m/s²</span><span class="de">1 kg</span></span> = <span class="frac"><span class="nu">8 N</span><span class="de">1 kg</span></span></span>
+      <span class="ind"><i class="var">a</i>₁ = 8 m/s²</span>
+      <span class="ln"><span class="jl">答：</span>铁块的加速度大小为 8 m/s²，方向水平向左。</span>
+    </div>
+    <div class="solcard"><h5>第（2）问 · 木板的长度</h5>
+      <span class="ln"><span class="jl">解：</span>对木板，水平方向受铁块的摩擦力（向左）与地面的摩擦力（向右），由牛顿第二定律：</span>
+      <span class="ind">μ₂<i class="var">mg</i> − μ₁(<i class="var">M</i>+<i class="var">m</i>)<i class="var">g</i> = <i class="var">Ma</i>₂</span>
+      <span class="ind"><i class="var">a</i>₂ = <span class="frac"><span class="nu">4 N − 2 N</span><span class="de">1 kg</span></span> = 2 m/s²</span>
+      <span class="ln">铁块相对木板的初速度为 0，相对加速度 <i class="var">a</i><sub>相</sub> = <i class="var">a</i>₁ − <i class="var">a</i>₂ = 6 m/s²，经 <i class="var">t</i> = 1 s 到达左端：</span>
+      <span class="ind"><i class="var">L</i> = <span class="frac"><span class="nu">1</span><span class="de">2</span></span>(<i class="var">a</i>₁−<i class="var">a</i>₂)<i class="var">t</i>² = <span class="frac"><span class="nu">1</span><span class="de">2</span></span>×6 m/s²×(1 s)² = 3 m</span>
+      <span class="ln"><span class="jl">答：</span>木板的长度为 3 m。</span>
+    </div>
+  </div>
+</div>`;
+const cvA=sec.querySelector('#cv2a'),cvB=sec.querySelector('#cv2b');
+const T=1.2,VMAX=10;
+let sim=bpSim(12,0.1,0.4);
+const st={playing:true,speed:0.5,t:0,showForce:false,tEnd:()=>sim.mode==='slide'?Math.min(T,sim.tLeave):T};
+wireAnim(sec,'z2',st);
+const tbody=sec.querySelector('#z2-stab tbody');
+let rows=[];
+function rebuildTable(){
+  const arr=[];
+  if(sim.mode==='rest')arr.push({n:'①',t0:0,t1:T,seg:'全程',a:'a = 0',f:'静摩擦 f = F（板块间），地面摩擦平衡 F'});
+  else if(sim.mode==='together')arr.push({n:'①',t0:0,t1:T,seg:'共同加速（无相对滑动）',a:'a₁ = a₂ = '+fmt(sim.a1,2)+' m/s²',f:'板块间静摩擦 f = F − ma（铁块受向右）'});
+  else{
+    arr.push({n:'①',t0:0,t1:Math.min(sim.tLeave,T),seg:'相对滑动',a:'a₁ = '+fmt(sim.a1,1)+'，a₂ = '+fmt(sim.a2,1)+' m/s²',f:'铁块受 f 向右；木板受 f′ 向左、f地 向右'});
+    if(sim.tLeave<=T)arr.push({n:'②',t0:sim.tLeave,t1:T,seg:'到达左端（停住）',a:'—',f:'—'});
+  }
+  rows=arr;
+  tbody.innerHTML=arr.map(r=>'<tr data-t0="'+r.t0+'" data-t1="'+r.t1+'"><td>'+r.n+'</td><td>'+fmt(r.t0,2)+' ~ '+(r.t1>=T?fmt(T,1)+' s':fmt(r.t1,2)+' s')+'</td><td>'+r.seg+'<br>'+r.a+'</td><td>'+r.f+'</td></tr>').join('');
+}
+function updatePill(){
+  const p=sec.querySelector('#z2-pill');
+  if(sim.mode==='rest'){p.className='pill ok';p.textContent='① F ≤ '+fmt(sim.fg,1)+' N：未拉动，f = F';}
+  else if(sim.mode==='together'){p.className='pill warn';p.textContent='② '+fmt(sim.fg,1)+' N < F ≤ F₀ = '+fmt(sim.F0,1)+' N：共同加速';}
+  else{p.className='pill bad';p.textContent='③ F > F₀ = '+fmt(sim.F0,1)+' N：相对滑动，t(到左端) = '+fmt(sim.tLeave,2)+' s';}
+}
+function drawVT(){
+  const {w,h,ctx}=fitCanvas(cvB);ctx.clearRect(0,0,w,h);
+  const gx0=52,gy0=18,gx1=w-44,gy1=h-34;
+  drawAxes(ctx,gx0,gy0,gx1,gy1,{tMax:T,vMax:VMAX,dt:0.2,dv:2,xName:'t',yName:'v',xUnit:'s',yUnit:'m/s'});
+  const X=t=>gx0+t/T*(gx1-gx0), Y=v=>gy1-Math.min(v,VMAX)/VMAX*(gy1-gy0);
+  // 夹面积 = 相对位移
+  const tA=sim.mode==='slide'?Math.min(sim.tLeave,T):0;
+  if(sim.mode==='slide'&&tA>0){
+    ctx.fillStyle='rgba(255,45,143,.18)';ctx.beginPath();ctx.moveTo(X(0),Y(0));
+    for(let t=0;t<=tA;t+=0.01)ctx.lineTo(X(t),Y(sim.a1*t));
+    for(let t=tA;t>=0;t-=0.01)ctx.lineTo(X(t),Y(sim.a2*t));
+    ctx.closePath();ctx.fill();
+    text(ctx,'夹面积 = 相对位移 = '+fmt(0.5*(sim.a1-sim.a2)*tA*tA,2)+' m'+(sim.tLeave<=T?' = L':''),
+      X(tA*0.42),Y(sim.a1*tA*0.42)-14,{size:11.5,color:'#FF2D8F',align:'center',weight:700});
+  }
+  // 两条 v 线（削顶）
+  let clip=false;
+  [['a1','#00F0FF'],['a2','#FFB800']].forEach(([k,c])=>{
+    ctx.strokeStyle=c;ctx.lineWidth=2.4;glow(ctx,c,6);ctx.beginPath();
+    for(let px=0;px<=gx1-gx0;px+=2){
+      const t=px/(gx1-gx0)*T;let v=bpState(sim,t)[k==='a1'?'vb':'vp'];
+      if(v>VMAX){clip=true;v=VMAX;}
+      px===0?ctx.moveTo(gx0+px,Y(v)):ctx.lineTo(gx0+px,Y(v));
+    }
+    ctx.stroke();noGlow(ctx);
+  });
+  if(clip)text(ctx,'⚠ 超量程削顶',gx0+8,gy0+22,{size:10.5,color:'#FF3B30',weight:700});
+  // 同步时间光标 + 描点
+  const tc=Math.min(st.t,T),sb=bpState(sim,tc);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(X(tc),gy0);ctx.lineTo(X(tc),gy1);ctx.stroke();ctx.setLineDash([]);
+  [[sb.vb,'#00F0FF'],[sb.vp,'#FFB800']].forEach(([v,c])=>{
+    ctx.fillStyle=c;glow(ctx,c,8);ctx.beginPath();ctx.arc(X(tc),Y(Math.min(v,VMAX)),4,0,TAU);ctx.fill();noGlow(ctx);
+  });
+  if(sim.mode==='slide'&&sim.tLeave<=T){
+    text(ctx,'t = '+fmt(sim.tLeave,2)+' s 到达左端',X(sim.tLeave),gy0+12,{size:10.5,color:'#FF2D8F',align:'center',weight:700});
+  }
+}
+function draw(){
+  if(st.t>=st.tEnd()&&st.playing){st.playing=false;sec.querySelector('#z2-play').textContent='▶ 播放';}
+  const {w,h,ctx}=fitCanvas(cvA);ctx.clearRect(0,0,w,h);
+  drawBlockScene(ctx,w,h,sim,st.t,st.showForce);
+  drawVT();
+  const sb=bpState(sim,st.t);
+  sec.querySelector('#z2-t').textContent=fmt(sb.t,2)+' s';
+  sec.querySelector('#z2-v').textContent=fmt(sb.vb,1)+' / '+fmt(sb.vp,1);
+  sec.querySelector('#z2-a').textContent=fmt(sim.a1,1)+' / '+fmt(sim.a2,1);
+  sec.querySelector('#z2-rel').textContent=fmt(sb.rel,2)+' m';
+  sec.querySelector('#z2-f').textContent=fmt(sim.f,1)+' N';
+  sec.querySelector('#z2-f0').textContent=fmt(sim.F0,1)+' N';
+  const trs=tbody.querySelectorAll('tr');
+  trs.forEach(tr=>{const t0=+tr.dataset.t0,t1=+tr.dataset.t1;
+    tr.classList.toggle('on',st.t>=t0-1e-9&&st.t<t1);});
+}
+makeLoop('z2',(now,dt)=>{
+  if(st.playing){st.t=Math.min(st.t+dt*st.speed,st.tEnd());}
+  draw();
+},()=>st.playing);
+function rebuild(){updatePill();rebuildTable();}
+sec.querySelector('#z2-F').oninput=e=>{sim=bpSim(+e.target.value,sim.mu1,sim.mu2);sec.querySelector('#z2-Fv').textContent=fmt(sim.F,1)+' N';st.t=0;st.playing=true;sec.querySelector('#z2-play').textContent='⏸ 暂停';rebuild();};
+sec.querySelector('#z2-m1').oninput=e=>{sim=bpSim(sim.F,+e.target.value,sim.mu2);sec.querySelector('#z2-m1v').textContent=fmt(sim.mu1,2);st.t=0;rebuild();loops['z2'].poke();};
+sec.querySelector('#z2-m2').oninput=e=>{sim=bpSim(sim.F,sim.mu1,+e.target.value);sec.querySelector('#z2-m2v').textContent=fmt(sim.mu2,2);st.t=0;rebuild();loops['z2'].poke();};
+rebuild();
+})();
+</script>
+
+<script>
+/* ================= ZONE 3 板块·f—F 图象探究（问3） ================= */
+(function(){
+const sec=document.getElementById('sec-z3');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 03</span><h2>板块·f—F 图象探究</h2><span class="badge">问（3）· F 从零渐增，木板足够长</span></div>
+<p class="sdesc">F 从零逐渐增大，板块间摩擦力 f 如何变化？点<b>「▶ 自动演示」</b>，F 用约 24 s 从 0 匀缓升到 14 N：<b>① F≤2 N 纹丝不动</b>；<b>② 2&lt;F≤6 N 锁定共加速</b>；<b>③ F&gt;6 N 相对滑动</b>。
+工作点沿三段曲线爬行、轨迹加亮，临界瞬间状态牌闪现；随时拖滑杆可接管。</p>
+<div class="duo">
+  <div class="panel"><h4>当前 F 下的慢动作动画</h4>
+    <canvas class="stage" id="cv3b" style="aspect-ratio:16/10"></canvas>
+  </div>
+  <div class="panel"><h4>f—F 图象（固定标尺：横轴每格 2 N，纵轴每格 1 N）</h4>
+    <canvas class="stage" id="cv3a" style="aspect-ratio:16/10"></canvas>
+    <div class="legend">
+      <span><i style="background:rgba(0,229,160,.7)"></i>① f = F</span>
+      <span><i style="background:rgba(255,184,0,.7)"></i>② f = F/2 + 1</span>
+      <span><i style="background:rgba(255,90,78,.7)"></i>③ f = 4 N</span>
+      <span><i style="background:#fff"></i>当前工作点</span>
+    </div>
+  </div>
+</div>
+<div class="panel"><h4>控制台</h4>
+  <div class="ctrlrow">
+    <div>
+      <div class="pill ok" id="z3-pill">① F ≤ 2.0 N：未拉动，f = F</div>
+      <div class="ctrl"><label>自动演示（F：0 → 14 N，约 24 s）</label><div class="btnrow">
+        <button class="btn mini primary" id="z3-auto">▶ 自动演示</button>
+        <button class="btn mini" id="z3-redo">↺ 重播演示</button></div></div>
+      <div class="ctrl"><label>拉力 F（拖动即接管）<output id="z3-Fv">0.0 N</output></label><input type="range" id="z3-F" min="0" max="14" step="0.1" value="0"></div>
+      <div class="ctrl"><label>μ₁（板—地）<output id="z3-m1v">0.10</output></label><input type="range" id="z3-m1" min="0" max="0.5" step="0.01" value="0.1"></div>
+      <div class="ctrl"><label>μ₂（铁块—板）<output id="z3-m2v">0.40</output></label><input type="range" id="z3-m2" min="0.05" max="1" step="0.01" value="0.4"></div>
+    </div>
+    <div>${animControlsHTML('z3')}</div>
+    <div class="readout" style="margin-top:0">
+      <div class="ro"><div class="k">板块间摩擦力 f</div><div class="v" id="z3-f">—</div></div>
+      <div class="ro"><div class="k">加速度 a（铁块）</div><div class="v" id="z3-a">—</div></div>
+      <div class="ro"><div class="k">临界 F₀（当前 μ）</div><div class="v" id="z3-f0">—</div></div>
+      <div class="ro"><div class="k">相对位移 Δx（动画时刻）</div><div class="v" id="z3-rel">—</div></div>
+    </div>
+    <div>
+      <h4 style="margin-bottom:8px">阶段表（按 F 的范围）</h4>
+      <table class="stab" id="z3-stab"><thead><tr><th>阶段</th><th>F 范围</th><th>f 表达式</th><th>状态</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <div class="knote"><b>易错点</b>：第②段 f ≠ μ₂mg！共同加速时板块间是<b>静摩擦</b>，大小由牛顿第二定律反解：f = F − ma，随 F 线性增大（斜率 M/(M+m) = 1/2），直到顶满 μ₂mg = 4 N 才进入第③段。</div>
+</div>
+<div class="panel"><h4>规范解答卡</h4>
+  <div class="solgrid">
+    <div class="solcard"><h5>第（3）问 · f 随 F 变化的图象</h5>
+      <span class="ln"><span class="jl">解：</span>设板块间摩擦力大小为 <i class="var">f</i>，分三段讨论（<i class="var">F</i> 从零渐增，板足够长）：</span>
+      <span class="ln">① 当 0 &lt; <i class="var">F</i> ≤ μ₁(<i class="var">M</i>+<i class="var">m</i>)<i class="var">g</i> = 2 N：整体静止，由平衡条件</span>
+      <span class="ind"><i class="var">f</i> = <i class="var">F</i>（0 &lt; <i class="var">F</i> ≤ 2 N）</span>
+      <span class="ln">② 当 2 N &lt; <i class="var">F</i> ≤ <i class="var">F</i>₀ = 6 N：整体共同加速，对整体与铁块分别由牛顿第二定律：</span>
+      <span class="ind"><i class="var">a</i> = <span class="frac"><span class="nu"><i class="var">F</i> − 2 N</span><span class="de"><i class="var">M</i>+<i class="var">m</i></span></span>，<i class="var">F</i> − <i class="var">f</i> = <i class="var">ma</i></span>
+      <span class="ind"><i class="var">f</i> = <i class="var">F</i> − <i class="var">m</i>·<span class="frac"><span class="nu"><i class="var">F</i> − 2 N</span><span class="de"><i class="var">M</i>+<i class="var">m</i></span></span> = <span class="frac"><span class="nu"><i class="var">F</i></span><span class="de">2</span></span> + 1（N）（2 N &lt; <i class="var">F</i> ≤ 6 N）</span>
+      <span class="ln">③ 当 <i class="var">F</i> &gt; 6 N：相对滑动，滑动摩擦力</span>
+      <span class="ind"><i class="var">f</i> = μ₂<i class="var">mg</i> = 0.4×1 kg×10 m/s² = 4 N（<i class="var">F</i> &gt; 6 N，水平线）</span>
+      <span class="ln"><span class="jl">答：</span>f—F 图象分三段：0~2 N 段为过原点的直线 f=F；2~6 N 段为直线 f=F/2+1，端点为 (2 N, 2 N)、(6 N, 4 N)；F&gt;6 N 段为 f=4 N 的水平线（如上图）。</span>
+    </div>
+  </div>
+</div>`;
+const cvA=sec.querySelector('#cv3a'),cvB=sec.querySelector('#cv3b');
+const T=1.2,FMAX=14,YMAX=6;
+let sim=bpSim(0,0.1,0.4);
+const st={playing:true,speed:0.5,t:0,showForce:false,tEnd:()=>T};
+wireAnim(sec,'z3',st);
+/* 自动演示状态：F 0→14 N 约 24 s，trail=已走过的最大 F（轨迹加亮） */
+const demo={auto:false,trail:0,rate:14/24};
+function flashPill(){const p=sec.querySelector('#z3-pill');p.classList.remove('flash');void p.offsetWidth;p.classList.add('flash');}
+function setF(F){
+  F=Math.max(0,Math.min(14,F));
+  const prev=sim.mode;
+  sim=bpSim(F,sim.mu1,sim.mu2);
+  demo.trail=Math.max(demo.trail,F);
+  sec.querySelector('#z3-F').value=F;
+  sec.querySelector('#z3-Fv').textContent=fmt(F,1)+' N';
+  loops['z3'].poke();
+  if(sim.mode!==prev){rebuild();flashPill();}
+}
+const tbody=sec.querySelector('#z3-stab tbody');
+function fTheory(F){
+  const M=BP.M,m=BP.m;
+  if(F<=sim.fg)return F;
+  if(F<=sim.F0)return F-m*(F-sim.fg)/(M+m);
+  return sim.f2;
+}
+function rebuildTable(){
+  const fg=sim.fg,F0=sim.F0,F=sim.F;
+  const rows=[
+    {n:'①',r:'0 < F ≤ '+fmt(fg,1)+' N',e:'f = F',s:'未拉动（静摩擦）',on:F<=fg},
+    {n:'②',r:fmt(fg,1)+' N < F ≤ '+fmt(F0,1)+' N',e:'f = F − ma',s:'共同加速（静摩擦）',on:F>fg&&F<=F0},
+    {n:'③',r:'F > '+fmt(F0,1)+' N',e:'f = μ₂mg = '+fmt(sim.f2,1)+' N',s:'相对滑动（滑动摩擦）',on:F>F0},
+  ];
+  tbody.innerHTML=rows.map(r=>'<tr class="'+(r.on?'on':'')+'"><td>'+r.n+'</td><td>'+r.r+'</td><td>'+r.e+'</td><td>'+r.s+'</td></tr>').join('');
+}
+function updatePill(){
+  const p=sec.querySelector('#z3-pill');
+  if(sim.mode==='rest'){p.className='pill ok';p.textContent='① F ≤ '+fmt(sim.fg,1)+' N：未拉动，f = F';}
+  else if(sim.mode==='together'){p.className='pill warn';p.textContent='② '+fmt(sim.fg,1)+' N < F ≤ '+fmt(sim.F0,1)+' N：共同加速，f = F − ma';}
+  else{p.className='pill bad';p.textContent='③ F > '+fmt(sim.F0,1)+' N：相对滑动，f = μ₂mg = '+fmt(sim.f2,1)+' N';}
+}
+function drawGraph(){
+  const {w,h,ctx}=fitCanvas(cvA);ctx.clearRect(0,0,w,h);
+  const gx0=52,gy0=18,gx1=w-44,gy1=h-34;
+  drawAxes(ctx,gx0,gy0,gx1,gy1,{tMax:FMAX,vMax:YMAX,dt:2,dv:1,xName:'F',yName:'f',xUnit:'N',yUnit:'N'});
+  const X=F=>gx0+F/FMAX*(gx1-gx0), Y=f=>gy1-f/YMAX*(gy1-gy0);
+  const fg=Math.min(sim.fg,FMAX),F0=Math.min(sim.F0,FMAX);
+  function seg(Fa,Fb,c,alpha,lw,gl){
+    if(Fb<=Fa+1e-9)return;
+    ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.globalAlpha=alpha;
+    if(gl)glow(ctx,c,7);
+    ctx.beginPath();
+    ctx.moveTo(X(Fa),Y(Math.min(fTheory(Fa),YMAX)));ctx.lineTo(X(Fb),Y(Math.min(fTheory(Fb),YMAX)));
+    ctx.stroke();ctx.globalAlpha=1;if(gl)noGlow(ctx);
+  }
+  // 三段理论线（淡色打底）
+  seg(0,fg,'#00E5A0',.22,5,false);seg(fg,F0,'#FFB800',.22,5,false);seg(F0,FMAX,'#FF5A4E',.22,5,false);
+  // 已走过轨迹（加亮描出）
+  const tr=Math.min(demo.trail,FMAX);
+  seg(0,Math.min(tr,fg),'#00E5A0',1,3.4,true);
+  if(tr>fg)seg(fg,Math.min(tr,F0),'#FFB800',1,3.4,true);
+  if(tr>F0)seg(F0,tr,'#FF5A4E',1,3.4,true);
+  // 临界标记（F 逼近时发光脉冲）
+  function crit(Fx,c,lab){
+    if(Fx>FMAX)return;
+    const near=Math.abs(sim.F-Fx)<0.4;
+    if(near)glow(ctx,c,16);
+    ctx.fillStyle=c;ctx.beginPath();ctx.arc(X(Fx),Y(fTheory(Fx)),near?6:4,0,TAU);ctx.fill();
+    if(near)noGlow(ctx);
+    text(ctx,lab,X(Fx)+7,Y(fTheory(Fx))-12,{size:10.5,color:c,weight:near?800:500});
+    // 临界竖虚线
+    ctx.strokeStyle=c;ctx.globalAlpha=.3;ctx.setLineDash([3,5]);
+    ctx.beginPath();ctx.moveTo(X(Fx),gy1);ctx.lineTo(X(Fx),Y(fTheory(Fx)));ctx.stroke();
+    ctx.setLineDash([]);ctx.globalAlpha=1;
+  }
+  crit(sim.fg,'#00E5A0','临界① ('+fmt(sim.fg,1)+', '+fmt(fTheory(sim.fg),1)+') 起动');
+  crit(sim.F0,'#FFB800','临界② F₀=('+fmt(sim.F0,1)+', '+fmt(fTheory(sim.F0),1)+') 相对滑动');
+  if(sim.F0>FMAX)text(ctx,'⚠ F₀='+fmt(sim.F0,1)+' N 超出横轴量程',gx0+8,gy0+22,{size:10.5,color:'#FF3B30',weight:700});
+  // 当前工作点
+  const fN=fTheory(sim.F);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(X(sim.F),gy1);ctx.lineTo(X(sim.F),Y(Math.min(fN,YMAX)));ctx.lineTo(gx0,Y(Math.min(fN,YMAX)));ctx.stroke();ctx.setLineDash([]);
+  glow(ctx,'#fff',10);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(sim.F),Y(Math.min(fN,YMAX)),5.5,0,TAU);ctx.fill();noGlow(ctx);
+  const labY=(sim.F>sim.F0-0.6)?Y(Math.min(fN,YMAX))+24:Y(Math.min(fN,YMAX))-16;
+  text(ctx,'F='+fmt(sim.F,1)+' N，f='+fmt(fN,2)+' N',X(sim.F),labY,{size:11.5,color:'#fff',align:'center',weight:700});
+}
+function draw(){
+  drawGraph();
+  const {w,h,ctx}=fitCanvas(cvB);ctx.clearRect(0,0,w,h);
+  const tdisp=(sim.mode==='slide')?Math.min(st.t,sim.tLeave):st.t;
+  drawBlockScene(ctx,w,h,sim,tdisp,st.showForce);
+  const sb=bpState(sim,tdisp);
+  sec.querySelector('#z3-f').textContent=fmt(sim.mode==='slide'?sim.f2:fTheory(sim.F),2)+' N';
+  sec.querySelector('#z3-a').textContent=fmt(sim.a1,2)+' m/s²';
+  sec.querySelector('#z3-f0').textContent=fmt(sim.F0,1)+' N';
+  sec.querySelector('#z3-rel').textContent=(sim.mode==='slide'?fmt(sb.rel,2)+' m':'0（无相对滑动）');
+}
+makeLoop('z3',(now,dt)=>{
+  if(demo.auto){
+    const nF=Math.min(14,sim.F+dt*demo.rate);
+    setF(nF);
+    if(nF>=14){demo.auto=false;autoBtn.textContent='▶ 自动演示';}
+  }
+  if(st.playing){
+    st.t+=dt*st.speed;
+    const tl=sim.mode==='slide'?sim.tLeave:Infinity;
+    if(tl<T){if(st.t>tl+0.5)st.t=0;}        // 相对滑：到左端停半拍后循环
+    else if(st.t>T)st.t=0;                  // 静止/共加速：1.2 s 窗口循环
+  }
+  draw();
+},()=>st.playing||demo.auto);
+function rebuild(){updatePill();rebuildTable();}
+const autoBtn=sec.querySelector('#z3-auto');
+autoBtn.onclick=()=>{
+  demo.auto=!demo.auto;
+  if(demo.auto&&sim.F>=14){demo.trail=0;setF(0);}
+  autoBtn.textContent=demo.auto?'⏸ 暂停演示':'▶ 自动演示';
+};
+sec.querySelector('#z3-redo').onclick=()=>{
+  demo.trail=0;setF(0);st.t=0;st.playing=true;
+  sec.querySelector('#z3-play').textContent='⏸ 暂停';
+  demo.auto=true;autoBtn.textContent='⏸ 暂停演示';
+};
+sec.querySelector('#z3-F').oninput=e=>{demo.auto=false;autoBtn.textContent='▶ 自动演示';setF(+e.target.value);};
+sec.querySelector('#z3-m1').oninput=e=>{sim=bpSim(sim.F,+e.target.value,sim.mu2);sec.querySelector('#z3-m1v').textContent=fmt(sim.mu1,2);st.t=0;rebuild();loops['z3'].poke();};
+sec.querySelector('#z3-m2').oninput=e=>{sim=bpSim(sim.F,sim.mu1,+e.target.value);sec.querySelector('#z3-m2v').textContent=fmt(sim.mu2,2);st.t=0;rebuild();loops['z3'].poke();};
+rebuild();
+})();
+</script>
+
+<script>
+/* ================= ZONE 4 传送带·题面与运动分段 ================= */
+(function(){
+const sec=document.getElementById('sec-z4');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 04</span><h2>传送带·题面与运动分段</h2><span class="badge">宝安区高一期末 第 17 题</span></div>
+<p class="sdesc">口罩盒从 a 点轻放，先在水平带 1 上被摩擦力<b>带着向左加速</b>，到 b 恰好与带 1 共速；随后滑上 37° 倾斜带 2。
+斜面上的关键是<b>比较盒子与带 2 的速度</b>：盒比带快，摩擦力沿斜面向下（急减 10 m/s²）；盒比带慢，摩擦力沿斜面向上（缓减 2 m/s²）。</p>
+<div class="duo">
+  <div class="panel"><h4>拟物场景 · 两段传送带（逆时针转动）</h4>
+    <canvas class="stage" id="cv4a" style="aspect-ratio:16/10"></canvas>
+  </div>
+  <div class="panel"><h4>斜面受力图 · 重力分解 + 两种摩擦力方向</h4>
+    <canvas class="stage" id="cv4b" style="aspect-ratio:16/10"></canvas>
+  </div>
+</div>
+<div class="panel"><h4>题干卡</h4>
+  <div class="qrow">
+    <div class="knote" style="margin-top:0">质量 <b>m=0.2 kg</b> 的口罩盒（大小可忽略），水平传送带 1 长 <b>L₁=2 m</b>，倾斜传送带 2 长 <b>L₂=1 m</b>、倾角 <b>θ=37°</b>；μ₁=0.4（盒—带1）、μ₂=0.5（盒—带2）。盒子在带 1 右端点 <b>a</b> 由静止轻放，到达连接点 <b>b</b> 时<b>恰好与带 1 共速</b>；过 b 速度大小不变滑上斜带，沿斜面向上到 <b>c</b>。两带均<b>逆时针</b>转动。sin37°=0.6，cos37°=0.8，g=10 m/s²。</div>
+    <div class="readout" style="margin-top:0">
+      <div class="ro"><div class="k">带1 加速度 a=μ₁g</div><div class="v">4 m/s²</div></div>
+      <div class="ro"><div class="k">到 b 速度 v₁</div><div class="v">4 m/s</div></div>
+      <div class="ro"><div class="k">急减 a₁′=g(sinθ+μ₂cosθ)</div><div class="v">10 m/s²</div></div>
+      <div class="ro"><div class="k">缓减 a₂′=g(sinθ−μ₂cosθ)</div><div class="v">2 m/s²</div></div>
+    </div>
+    <div class="knote" style="margin-top:0"><b>核心判据</b>：摩擦力的方向由<b>相对运动</b>决定——盒子相对带面向哪里滑，摩擦力就反着来。斜面上盒速 &gt; 带速 → f 沿斜面向下；盒速 &lt; 带速 → f 沿斜面向上。</div>
+  </div>
+</div>
+<div class="panel"><h4>分段模型卡 · 三段运动一次看清</h4>
+  <div class="appcards">
+    <div class="appcard"><div class="ic">🟢</div><h5>① 水平段（a → b）</h5>
+      <p>水平方向只受滑动摩擦力，<b>f = μ₁mg 提供加速度</b>：a = μ₁g = 4 m/s²，方向向左。由 v₁² = 2aL₁ 得 v₁ = 4 m/s，恰好与带 1 共速。</p></div>
+    <div class="appcard"><div class="ic">🔴</div><h5>② 斜面急减段（盒比带快）</h5>
+      <p>盒速 &gt; 带 2 速度 → 摩擦力<b>沿斜面向下</b>，与重力分力叠加：a₁′ = g(sinθ+μ₂cosθ) = 10×(0.6+0.4) = <b>10 m/s²</b>。</p></div>
+    <div class="appcard"><div class="ic">🟡</div><h5>③ 斜面缓减段（盒比带慢）</h5>
+      <p>盒速 &lt; 带 2 速度 → 摩擦力<b>沿斜面向上</b>，抵消部分重力分力：a₂′ = g(sinθ−μ₂cosθ) = 10×(0.6−0.4) = <b>2 m/s²</b>（仍在减速，因为 sinθ &gt; μ₂cosθ）。</p></div>
+  </div>
+</div>`;
+const cvA=sec.querySelector('#cv4a'),cvB=sec.querySelector('#cv4b');
+const sim0=cvSim(4,1,0.5);
+function drawA(){
+  const {w,h,ctx}=fitCanvas(cvA);ctx.clearRect(0,0,w,h);
+  drawConveyor(ctx,w,h,sim0,0,false,{status:false});
+  text(ctx,'两带均逆时针转动：带 1 上表面向左，带 2 上表面沿斜面向上',18,26,{size:12.5,color:'rgba(255,255,255,.6)'});
+}
+function drawB(){
+  const {w,h,ctx}=fitCanvas(cvB);ctx.clearRect(0,0,w,h);
+  const cx=w*0.40,cy=h*0.58,TA=Math.atan2(0.6,0.8);
+  const ux=-Math.cos(TA),uy=-Math.sin(TA);   // 沿斜面向上
+  const nx=Math.sin(TA),ny=-Math.cos(TA);    // 斜面法向（向外）
+  // 斜面
+  ctx.strokeStyle='#3a4152';ctx.lineWidth=8;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(cx+150,cy+112);ctx.lineTo(cx-150,cy+112-300*Math.tan(TA));ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1.2;
+  for(let i=0;i<9;i++){const k=i/8;const px=cx+150-300*k,py=cy+112-300*Math.tan(TA)*k;
+    ctx.beginPath();ctx.moveTo(px,py+4);ctx.lineTo(px-6,py+12);ctx.stroke();}
+  text(ctx,'θ=37°',cx+118,cy+92,{size:11.5,color:'rgba(255,255,255,.55)'});
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(cx+150,cy+112);ctx.lineTo(cx+60,cy+112);ctx.stroke();ctx.setLineDash([]);
+  // 盒子（贴斜面）
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(-TA);
+  const g=ctx.createLinearGradient(0,-26,0,0);g.addColorStop(0,'#c98d4b');g.addColorStop(1,'#8a5a28');
+  ctx.fillStyle=g;roundRect(ctx,-15,-26,30,26,4);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=1.3;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(-3,-26,6,26);
+  ctx.restore();
+  const py=cy-13;
+  // 重力 + 分解（虚线）
+  arrow(ctx,cx,py,cx,py+66,'rgba(255,255,255,.85)',2.4,9);
+  text(ctx,'m g⃗',cx+9,py+60,{size:11.5,color:'rgba(255,255,255,.85)',weight:700});
+  ctx.setLineDash([5,4]);
+  arrow(ctx,cx,py,cx-ux*60,py-uy*60,'rgba(255,255,255,.45)',1.8,7);           // sin 分量（沿斜面向下）
+  arrow(ctx,cx,py,cx-nx*48,py-ny*48,'rgba(255,255,255,.45)',1.8,7);          // cos 分量（指向斜面内）
+  ctx.setLineDash([]);
+  text(ctx,'mg sinθ',cx-ux*60+6,py-uy*60+10,{size:11,color:'rgba(255,255,255,.6)'});
+  text(ctx,'mg cosθ',cx-nx*48-8,py-ny*48+12,{size:11,color:'rgba(255,255,255,.6)',align:'right'});
+  // 支持力
+  arrow(ctx,cx,py,cx+nx*52,py+ny*52,'#00F0FF',2.4,9);
+  text(ctx,'N⃗',cx+nx*60,py+ny*60-4,{size:11.5,color:'#00F0FF',weight:700});
+  // 两种摩擦力（平行斜面，上下错开画，短标签 fA / fB）
+  arrow(ctx,cx+nx*10,py+ny*10,cx+nx*10-ux*66,py+ny*10-uy*66,'#FF5A4E',2.6,9);
+  text(ctx,'f⃗A',cx+nx*10-ux*66+8,py+ny*10-uy*66-4,{size:11.5,color:'#FF5A4E',weight:700});
+  arrow(ctx,cx-nx*6,py-ny*6,cx-nx*6+ux*52,py-ny*6+uy*52,'#00E5A0',2.6,9);
+  text(ctx,'f⃗B',cx-nx*6+ux*52-6,py-ny*6+uy*52-10,{size:11.5,color:'#00E5A0',align:'center',weight:700});
+  // 左下角图例行（长文本集中，避免压图）
+  text(ctx,'情况A（盒比带快）：f⃗A 沿斜面向下，大小 μ₂mgcosθ = 0.8 N',18,h-62,{size:11.5,color:'#FF5A4E',weight:700});
+  text(ctx,'情况B（盒比带慢）：f⃗B 沿斜面向上',18,h-40,{size:11.5,color:'#00E5A0',weight:700});
+  text(ctx,'m g⃗ = 2 N：sinθ 分量 1.2 N（沿斜面向下），cosθ 分量 1.6 N（压向斜面）',18,h-18,{size:11,color:'rgba(255,255,255,.6)'});
+  // 结论
+  text(ctx,'a₁′ = g(sinθ+μ₂cosθ) = 10 m/s²（急减）',w-24,40,{size:12.5,color:'#FF5A4E',align:'right',weight:700});
+  text(ctx,'a₂′ = g(sinθ−μ₂cosθ) = 2 m/s²（缓减）',w-24,62,{size:12.5,color:'#00E5A0',align:'right',weight:700});
+}
+makeLoop('z4',(now)=>{drawA();drawB();},()=>false);
+})();
+</script>
+
+<script>
+/* ================= ZONE 5 传送带·慢动作动画 + v-t 图（问1问2） ================= */
+(function(){
+const sec=document.getElementById('sec-z5');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 05</span><h2>传送带·慢动作动画 + v-t 图</h2><span class="badge">问（1）问（2）· v带₂ = 1 m/s 恰好到 c</span></div>
+<p class="sdesc">三段连播：<b>① 水平加速（0→4 m/s，1 s）</b>→ <b>② 斜面急减 10 m/s²（4→1 m/s，0.3 s）</b>→ <b>③ 斜面缓减 2 m/s²（1→0，0.5 s）</b>，到 c 速度恰好为 0。
+v-t 图下两块面积 S₁=0.75 m、S₂=0.25 m，<b>S₁+S₂=L₂=1 m</b>。调带速与 μ₂，分段自动重算，到不了 c 时状态牌如实显示。</p>
+<div class="duo">
+  <div class="panel"><h4>慢动作动画（真实分段积分）</h4>
+    <canvas class="stage" id="cv5a" style="aspect-ratio:16/10"></canvas>
+  </div>
+  <div class="panel"><h4>v-t 图象（固定标尺：横轴每格 0.2 s，纵轴每格 1 m/s）</h4>
+    <canvas class="stage" id="cv5b" style="aspect-ratio:16/10"></canvas>
+    <div class="legend">
+      <span><i style="background:#FF2D8F"></i>盒子 v-t 折线</span>
+      <span><i style="background:rgba(255,90,78,.6)"></i>S₁（急减段面积）</span>
+      <span><i style="background:rgba(0,229,160,.6)"></i>S₂（缓减段面积）</span>
+    </div>
+  </div>
+</div>
+<div class="panel"><h4>控制台</h4>
+  <div class="ctrlrow">
+    <div>
+      <div class="pill ok" id="z5-pill">✓ 恰好到达 c</div>
+      <div class="ctrl"><label>带 1 速度<output id="z5-v1v">4.0 m/s</output></label><input type="range" id="z5-v1" min="0" max="8" step="0.1" value="4"></div>
+      <div class="ctrl"><label>带 2 速度<output id="z5-v2v">1.0 m/s</output></label><input type="range" id="z5-v2" min="0" max="8" step="0.1" value="1"></div>
+      <div class="ctrl"><label>μ₂（盒—带2）<output id="z5-m2v">0.50</output></label><input type="range" id="z5-m2" min="0.1" max="1" step="0.01" value="0.5"></div>
+    </div>
+    <div>${animControlsHTML('z5')}</div>
+    <div class="readout" style="margin-top:0">
+      <div class="ro"><div class="k">时间 t / 速率 v</div><div class="v" id="z5-t">—</div></div>
+      <div class="ro"><div class="k">到 b 时间 t₁ / 速度 v₁</div><div class="v" id="z5-tb">—</div></div>
+      <div class="ro"><div class="k">S₁（急减段位移）</div><div class="v" id="z5-s1">—</div></div>
+      <div class="ro"><div class="k">S₂（缓减段位移）</div><div class="v" id="z5-s2">—</div></div>
+      <div class="ro"><div class="k">S₁+S₂（= L₂?）</div><div class="v" id="z5-ss">—</div></div>
+      <div class="ro"><div class="k">到 c 时刻 / 末速</div><div class="v" id="z5-tc">—</div></div>
+    </div>
+    <div>
+      <h4 style="margin-bottom:8px">阶段时间轴</h4>
+      <table class="stab" id="z5-stab"><thead><tr><th>阶段</th><th>时间段</th><th>a</th><th>速度变化</th><th>摩擦力方向</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <div class="knote"><b>读图要诀</b>：v-t 图象与 t 轴围成的<b>面积=位移</b>。斜面上「先急减后缓减」的拐点，就是盒速等于带 2 速度、<b>摩擦力换向</b>的瞬间。</div>
+</div>
+<div class="panel"><h4>规范解答卡</h4>
+  <div class="solgrid">
+    <div class="solcard"><h5>第（1）问 · 传送带 1 的速度</h5>
+      <span class="ln"><span class="jl">解：</span>盒子在带 1 上水平方向只受滑动摩擦力，由牛顿第二定律 <i class="var">a</i> = μ₁<i class="var">g</i> = 0.4×10 m/s² = 4 m/s²。盒子由静止加速，到达 b 时恰好与带 1 共速，由匀变速运动公式：</span>
+      <span class="ind"><i class="var">v</i>₁² = 2<i class="var">aL</i>₁ = 2×4 m/s²×2 m = 16 m²/s²</span>
+      <span class="ind"><i class="var">v</i>₁ = 4 m/s</span>
+      <span class="ln"><span class="jl">答：</span>传送带 1 的速度为 4 m/s。</span>
+    </div>
+    <div class="solcard"><h5>第（2）问 · 传送带 2 的速度</h5>
+      <span class="ln"><span class="jl">解：</span>设带 2 速度为 <i class="var">v</i>（0 &lt; <i class="var">v</i> &lt; 4 m/s）。盒上斜面后先比带快，摩擦力沿斜面向下：</span>
+      <span class="ind"><i class="var">a</i>₁′ = <i class="var">g</i>(<span class="func">sin</span>θ+μ₂<span class="func">cos</span>θ) = 10 m/s²×(0.6+0.5×0.8) = 10 m/s²</span>
+      <span class="ln">减速到 <i class="var">v</i> 与带共速，此段位移：</span>
+      <span class="ind"><i class="var">S</i>₁ = <span class="frac"><span class="nu"><i class="var">v</i>₁²−<i class="var">v</i>²</span><span class="de">2<i class="var">a</i>₁′</span></span> = <span class="frac"><span class="nu">16−<i class="var">v</i>²</span><span class="de">20</span></span>（m）</span>
+      <span class="ln">此后盒比带慢，摩擦力沿斜面向上，<i class="var">a</i>₂′ = <i class="var">g</i>(<span class="func">sin</span>θ−μ₂<span class="func">cos</span>θ) = 2 m/s²，减速到 0 恰好到 c：</span>
+      <span class="ind"><i class="var">S</i>₂ = <span class="frac"><span class="nu"><i class="var">v</i>²</span><span class="de">2<i class="var">a</i>₂′</span></span> = <span class="frac"><span class="nu"><i class="var">v</i>²</span><span class="de">4</span></span>（m）</span>
+      <span class="ln">由 <i class="var">S</i>₁+<i class="var">S</i>₂ = <i class="var">L</i>₂：</span>
+      <span class="ind"><span class="frac"><span class="nu">16−<i class="var">v</i>²</span><span class="de">20</span></span> + <span class="frac"><span class="nu"><i class="var">v</i>²</span><span class="de">4</span></span> = 1 → 16−<i class="var">v</i>²+5<i class="var">v</i>² = 20 → <i class="var">v</i>² = 1 m²/s²</span>
+      <span class="ln"><span class="jl">答：</span>传送带 2 的速度为 1 m/s。</span>
+    </div>
+  </div>
+</div>`;
+const cvA=sec.querySelector('#cv5a'),cvB=sec.querySelector('#cv5b');
+const T=2.0,VMAX=6;
+let sim=cvSim(4,1,0.5);
+const st={playing:true,speed:0.5,t:0,showForce:false,tEnd:()=>sim.tEnd};
+wireAnim(sec,'z5',st);
+const tbody=sec.querySelector('#z5-stab tbody');
+/* v-t 图拖拽调带 2 速度（0~6 m/s，吸附 0.1） */
+let G5=null,dragV2=false,hoverV2=false;
+function setV2(v){
+  v=Math.max(0,Math.min(6,Math.round(v*10)/10));
+  sim=cvSim(sim.vb1,v,sim.mu2);
+  sec.querySelector('#z5-v2').value=v;
+  sec.querySelector('#z5-v2v').textContent=fmt(v,1)+' m/s';
+  st.t=0;st.playing=true;sec.querySelector('#z5-play').textContent='⏸ 暂停';
+  rebuild();
+}
+function segAreas(){
+  const incl=sim.segs.filter(s=>s.zone==='incl');
+  return incl.map(s=>(s.v0+s.v1)/2*(s.t1-s.t0));
+}
+function rebuildTable(){
+  tbody.innerHTML=sim.segs.map((s,i)=>{
+    const fric=s.zone==='belt'?(s.fric==='left'?'向左（提供动力）':'无（随带匀速）'):s.fricName;
+    return '<tr data-t0="'+s.t0+'" data-t1="'+s.t1+'"><td>'+'①②③④⑤⑥'[i]+'</td><td>'
+      +fmt(s.t0,2)+' ~ '+fmt(s.t1,2)+' s</td><td>'+s.name+'<br>a = '+fmt(s.a,1)+' m/s²</td><td>'
+      +fmt(s.v0,1)+' → '+fmt(s.v1,1)+' m/s</td><td>'+fric+'</td></tr>';
+  }).join('');
+}
+function updatePill(){
+  const p=sec.querySelector('#z5-pill');
+  if(sim.stuck){p.className='pill warn';p.textContent='带 1 速度为 0：盒子在 a 点不动';}
+  else if(sim.reach){p.className='pill ok';p.textContent='✓ t = '+fmt(sim.tc,2)+' s 到达 c（v_c = '+fmt(sim.vc,2)+' m/s）';}
+  else{p.className='pill bad';p.textContent='✗ 到不了 c：'+sim.stopNote;}
+}
+function drawVT(){
+  const {w,h,ctx}=fitCanvas(cvB);ctx.clearRect(0,0,w,h);
+  const gx0=52,gy0=18,gx1=w-44,gy1=h-34;
+  G5={gx0,gy0,gx1,gy1};
+  drawAxes(ctx,gx0,gy0,gx1,gy1,{tMax:T,vMax:VMAX,dt:0.2,dv:1,xName:'t',yName:'v',xUnit:'s',yUnit:'m/s'});
+  const X=t=>gx0+t/T*(gx1-gx0), Y=v=>gy1-Math.min(v,VMAX)/VMAX*(gy1-gy0);
+  // 斜面各段面积高亮
+  const incl=sim.segs.filter(s=>s.zone==='incl');
+  const cols=['rgba(255,90,78,.20)','rgba(0,229,160,.20)','rgba(155,77,255,.20)'];
+  incl.forEach((s,i)=>{
+    ctx.fillStyle=cols[i%3];ctx.beginPath();ctx.moveTo(X(s.t0),gy1);
+    for(let t=s.t0;t<=s.t1;t+=0.005)ctx.lineTo(X(Math.min(t,T)),Y(Math.max(0,s.v0+s.a*(t-s.t0))));
+    ctx.lineTo(X(Math.min(s.t1,T)),gy1);ctx.closePath();ctx.fill();
+    const tm=(s.t0+s.t1)/2, vm=Math.max(0,(s.v0+s.v1)/2), area=(s.v0+s.v1)/2*(s.t1-s.t0);
+    if(s.t1<=T)text(ctx,'S'+'₁₂₃'[i]+'='+fmt(area,2)+' m',X(tm),Y(vm)-12,{size:11,color:cols[i%3].replace('.20','1').replace('0.20','1'),align:'center',weight:700});
+  });
+  // 带2 速度参考线（可拖拽调速：抓手 + hover 提示）
+  if(sim.vb2>0){
+    const ly=Y(Math.min(sim.vb2,VMAX));
+    ctx.strokeStyle=dragV2?'rgba(255,107,53,.95)':'rgba(255,107,53,.5)';
+    ctx.setLineDash([6,4]);ctx.lineWidth=dragV2?2.4:1.4;
+    ctx.beginPath();ctx.moveTo(gx0,ly);ctx.lineTo(gx1,ly);ctx.stroke();ctx.setLineDash([]);
+    // 抓手（三道横杠）
+    ctx.fillStyle=hoverV2||dragV2?'#FF6B35':'rgba(255,107,53,.75)';
+    for(let i=-1;i<=1;i++){roundRect(ctx,gx0+7,ly+i*5-1.6,20,3.2,1.6);ctx.fill();}
+    text(ctx,'v带₂='+fmt(sim.vb2,1)+(hoverV2||dragV2?'（拖拽调速）':''),gx1-4,ly-10,{size:10.5,color:'rgba(255,107,53,.85)',align:'right',weight:hoverV2||dragV2?700:500});
+  }
+  // v-t 折线
+  ctx.strokeStyle='#FF2D8F';ctx.lineWidth=2.6;glow(ctx,'#FF2D8F',6);ctx.beginPath();
+  for(let px=0;px<=gx1-gx0;px+=2){
+    const t=px/(gx1-gx0)*T, v=cvStateAt(sim,t).v;
+    px===0?ctx.moveTo(gx0+px,Y(v)):ctx.lineTo(gx0+px,Y(v));
+  }
+  ctx.stroke();noGlow(ctx);
+  // 同步光标 + 描点
+  const tc=Math.min(st.t,T),sv=cvStateAt(sim,tc);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(X(tc),gy0);ctx.lineTo(X(tc),gy1);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#fff';glow(ctx,'#FF2D8F',10);ctx.beginPath();ctx.arc(X(tc),Y(sv.v),4.5,0,TAU);ctx.fill();noGlow(ctx);
+  if(sim.tEnd>T)text(ctx,'⚠ 全过程 '+fmt(sim.tEnd,2)+' s，超出图窗',gx0+8,gy0+22,{size:10.5,color:'#FF3B30',weight:700});
+}
+function draw(){
+  if(st.t>=st.tEnd()&&st.playing){st.playing=false;sec.querySelector('#z5-play').textContent='▶ 播放';}
+  const {w,h,ctx}=fitCanvas(cvA);ctx.clearRect(0,0,w,h);
+  drawConveyor(ctx,w,h,sim,st.t,st.showForce);
+  drawVT();
+  const sv=cvStateAt(sim,st.t);
+  sec.querySelector('#z5-t').textContent=fmt(Math.min(st.t,sim.tEnd),2)+' s / '+fmt(sv.v,2)+' m/s';
+  sec.querySelector('#z5-tb').textContent=fmt(sim.tB,2)+' s / '+fmt(sim.vB,2)+' m/s';
+  const ar=segAreas();
+  sec.querySelector('#z5-s1').textContent=ar.length?fmt(ar[0],2)+' m':'—';
+  sec.querySelector('#z5-s2').textContent=ar.length>1?fmt(ar[1],2)+' m':'—';
+  sec.querySelector('#z5-ss').textContent=ar.length?fmt(ar.reduce((x,y)=>x+y,0),2)+' m（L₂=1 m）':'—';
+  sec.querySelector('#z5-tc').textContent=sim.reach?fmt(sim.tc,2)+' s / '+fmt(sim.vc,2)+' m/s':'到不了 c';
+  tbody.querySelectorAll('tr').forEach(tr=>{const t0=+tr.dataset.t0,t1=+tr.dataset.t1;
+    tr.classList.toggle('on',st.t>=t0-1e-9&&st.t<t1);});
+}
+makeLoop('z5',(now,dt)=>{if(st.playing)st.t=Math.min(st.t+dt*st.speed,st.tEnd());draw();},()=>st.playing);
+function rebuild(){updatePill();rebuildTable();}
+sec.querySelector('#z5-v1').oninput=e=>{sim=cvSim(+e.target.value,sim.vb2,sim.mu2);sec.querySelector('#z5-v1v').textContent=fmt(sim.vb1,1)+' m/s';st.t=0;st.playing=true;sec.querySelector('#z5-play').textContent='⏸ 暂停';rebuild();};
+sec.querySelector('#z5-v2').oninput=e=>{setV2(+e.target.value);};
+sec.querySelector('#z5-m2').oninput=e=>{sim=cvSim(sim.vb1,sim.vb2,+e.target.value);sec.querySelector('#z5-m2v').textContent=fmt(sim.mu2,2);st.t=0;rebuild();loops['z5'].poke();};
+/* v-t 图上拖拽带 2 速度虚线 */
+(function(){
+  function lineY(v){return G5.gy1-Math.min(v,VMAX)/VMAX*(G5.gy1-G5.gy0);}
+  function evY(e){const r=cvB.getBoundingClientRect();return e.clientY-r.top;}
+  function yToV(y){return Math.max(0,Math.min(6,(G5.gy1-y)/(G5.gy1-G5.gy0)*VMAX));}
+  cvB.addEventListener('pointerdown',e=>{
+    if(!G5)return;
+    if(Math.abs(evY(e)-lineY(sim.vb2))<10){dragV2=true;cvB.setPointerCapture(e.pointerId);e.preventDefault();}
+  });
+  cvB.addEventListener('pointermove',e=>{
+    if(!G5)return;
+    if(dragV2){setV2(yToV(evY(e)));}
+    else{const hv=Math.abs(evY(e)-lineY(sim.vb2))<10;if(hv!==hoverV2){hoverV2=hv;loops['z5'].poke();}cvB.style.cursor=hoverV2?'ns-resize':'default';}
+  });
+  cvB.addEventListener('pointerup',()=>{dragV2=false;});
+  cvB.addEventListener('pointercancel',()=>{dragV2=false;});
+})();
+rebuild();
+})();
+</script>
+
+<script>
+/* ================= ZONE 6 传送带·最短时间（问3）+ 方法论 ================= */
+(function(){
+const sec=document.getElementById('sec-z6');
+sec.innerHTML=`
+<div class="stitle"><span class="step">ZONE 06</span><h2>传送带·最短时间 + 方法论总结</h2><span class="badge">问（3）· 逆向思维</span></div>
+<p class="sdesc">带 2「足够快」时，盒子在斜面上<b>始终比带慢</b>，摩擦力全程沿斜面向上，以最小的 a₂′=2 m/s² 减速——这就是最短时间的由来：
+<b>t = t₁+t₂ = 1+(2−√3) = (3−√3) s ≈ 1.27 s</b>。图中实线为当前工况，灰虚线为问（2）的三段工况作对比。</p>
+<div class="duo">
+  <div class="panel"><h4>最短工况且动画（带 2 足够快）</h4>
+    <canvas class="stage" id="cv6a" style="aspect-ratio:16/10"></canvas>
+  </div>
+  <div class="panel"><h4>v-t 对比（固定标尺：横轴每格 0.2 s，纵轴每格 1 m/s）</h4>
+    <canvas class="stage" id="cv6b" style="aspect-ratio:16/10"></canvas>
+    <div class="legend">
+      <span><i style="background:#FF6B35"></i>当前工况（带 2 快）</span>
+      <span><i style="background:rgba(255,255,255,.45)"></i>问(2)工况 v带₂=1（虚线）</span>
+    </div>
+  </div>
+</div>
+<div class="panel"><h4>控制台</h4>
+  <div class="ctrlrow">
+    <div>
+      <div class="pill ok" id="z6-pill">✓ 最短工况</div>
+      <div class="ctrl"><label>带 1 速度<output id="z6-v1v">4.0 m/s</output></label><input type="range" id="z6-v1" min="0" max="8" step="0.1" value="4"></div>
+      <div class="ctrl"><label>带 2 速度<output id="z6-v2v">6.0 m/s</output></label><input type="range" id="z6-v2" min="0" max="8" step="0.1" value="6"></div>
+      <div class="ctrl"><label>μ₂（盒—带2）<output id="z6-m2v">0.50</output></label><input type="range" id="z6-m2" min="0" max="1" step="0.01" value="0.5"></div>
+    </div>
+    <div>${animControlsHTML('z6')}</div>
+    <div class="readout" style="margin-top:0">
+      <div class="ro"><div class="k">t₁（带 1，恒定）</div><div class="v" id="z6-t1">—</div></div>
+      <div class="ro"><div class="k">t₂（斜面段）</div><div class="v" id="z6-t2">—</div></div>
+      <div class="ro"><div class="k">当前总时间</div><div class="v" id="z6-tt">—</div></div>
+      <div class="ro"><div class="k">理论最短（带2→∞）</div><div class="v" id="z6-tm">—</div></div>
+    </div>
+    <div>
+      <h4 style="margin-bottom:8px">阶段时间轴</h4>
+      <table class="stab" id="z6-stab"><thead><tr><th>阶段</th><th>时间段</th><th>a</th><th>速度变化</th><th>摩擦力方向</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <div class="knote"><b>逆向思维</b>：别问「带 2 要多快」，先问「摩擦力全程向上需要什么条件」——只要 v带₂ ≥ v₁ = 4 m/s，盒子全程以 a₂′ = 2 m/s² 减速，时间自然最短。</div>
+</div>
+<div class="panel"><h4>逆向思维推导卡 · 逐张展开</h4>
+  <div class="dstep show"><span class="n">①</span><b>拆目标</b>：总时间 t = t₁ + t₂。带 1 上盒子由静止加速 L₁ = 2 m，t₁ = √(2<i class="var">L</i>₁/<i class="var">a</i>) = √(2×2 m / 4 m/s²) = <b>1 s</b>，与带 2 无关——只需让斜面段 t₂ 最短。</div>
+  <div class="dstep"><span class="n">②</span><b>t₂ 最短的条件</b>：斜面上盒子在减速，要减得慢，就要<b>摩擦力全程沿斜面向上</b>（抵消重力分力）。这要求盒子始终比带 2 慢：<i class="var">v</i><sub>带2</sub> ≥ <i class="var">v</i>₁ = 4 m/s。</div>
+  <div class="dstep"><span class="n">③</span><b>列方程</b>：全程以 <i class="var">a</i>₂′ = <i class="var">g</i>(<span class="func">sin</span>θ−μ₂<span class="func">cos</span>θ) = 2 m/s² 匀减速：
+    <i class="var">L</i>₂ = <i class="var">v</i>₁<i class="var">t</i>₂ − <span class="frac"><span class="nu">1</span><span class="de">2</span></span><i class="var">a</i>₂′<i class="var">t</i>₂² → 1 = 4<i class="var">t</i>₂ − <i class="var">t</i>₂²（单位：m、s）。</div>
+  <div class="dstep"><span class="n">④</span><b>解并取舍</b>：<i class="var">t</i>₂² − 4<i class="var">t</i>₂ + 1 = 0 → <i class="var">t</i>₂ = 2±√3（s）。
+    根 2+√3 ≈ 3.73 s 时盒子早已越过 c（那是若斜面无限长、盒子到顶返回后再次经过 c 的时刻），<b>舍去</b>；取 <i class="var">t</i>₂ = (2−√3) s ≈ 0.27 s。</div>
+  <div class="dstep"><span class="n">⑤</span><b>合并</b>：t = <i class="var">t</i>₁+<i class="var">t</i>₂ = 1+(2−√3) = <b>(3−√3) s ≈ 1.27 s</b>。</div>
+  <div class="btnrow" style="margin-top:6px"><button class="btn mini primary" id="z6-next">下一步 ▸</button><button class="btn mini" id="z6-reset">收起重看</button></div>
+</div>
+<div class="panel"><h4>规范解答卡</h4>
+  <div class="solgrid">
+    <div class="solcard"><h5>第（3）问 · 全程最短时间</h5>
+      <span class="ln"><span class="jl">解：</span>带 1 上运动与带 2 无关，由 <i class="var">L</i>₁ = <span class="frac"><span class="nu">1</span><span class="de">2</span></span><i class="var">at</i>₁²：</span>
+      <span class="ind"><i class="var">t</i>₁ = √<span style="text-decoration:overline">2<i class="var">L</i>₁/<i class="var">a</i></span> = √<span style="text-decoration:overline">2×2 m / 4 m/s²</span> = 1 s</span>
+      <span class="ln">带 2 速度足够大（<i class="var">v</i><sub>带2</sub> ≥ <i class="var">v</i>₁）时，盒子在斜面上全程比带慢，摩擦力始终沿斜面向上，以 <i class="var">a</i>₂′ = 2 m/s² 匀减速，时间最短：</span>
+      <span class="ind"><i class="var">L</i>₂ = <i class="var">v</i>₁<i class="var">t</i>₂ − <span class="frac"><span class="nu">1</span><span class="de">2</span></span><i class="var">a</i>₂′<i class="var">t</i>₂²</span>
+      <span class="ind">1 m = 4 m/s·<i class="var">t</i>₂ − <span class="frac"><span class="nu">1</span><span class="de">2</span></span>×2 m/s²·<i class="var">t</i>₂² → <i class="var">t</i>₂² − 4 s·<i class="var">t</i>₂ + 1 s² = 0</span>
+      <span class="ind"><i class="var">t</i>₂ = (2−√3) s（另一根 2+√3 s 不合题意，舍去）</span>
+      <span class="ind"><i class="var">t</i> = <i class="var">t</i>₁+<i class="var">t</i>₂ = 1 s + (2−√3) s = (3−√3) s ≈ 1.27 s</span>
+      <span class="ln"><span class="jl">答：</span>全程最短时间为 (3−√3) s，约为 1.27 s。</span>
+    </div>
+  </div>
+</div>
+<div class="panel"><h4>两题方法论总结卡</h4>
+  <div class="appcards">
+    <div class="appcard"><div class="ic">⚖️</div><h5>相对滑动判据</h5><p>先求「假设不滑动」时需要的摩擦力/加速度，再与最大静摩擦比较：需求 &gt; 上限 → 相对滑动。板块题中木板的 a<sub>max</sub> = 2 m/s² 就是这个上限。</p></div>
+    <div class="appcard"><div class="ic">✂️</div><h5>分段讨论</h5><p>摩擦力方向一变，运动就换一段。分段点永远是「速度相等」的瞬间：板块题是 F 的临界值，传送带题是盒速 = 带速。</p></div>
+    <div class="appcard"><div class="ic">📐</div><h5>v-t 面积 = 位移</h5><p>两线夹面积 = 相对位移（板块题求板长 L=3 m）；折线下面积分段求和 = 各段位移（S₁+S₂=L₂=1 m 反解带速 v=1 m/s）。</p></div>
+    <div class="appcard"><div class="ic">🎯</div><h5>临界「恰好」条件</h5><p>「恰好共速」「恰好到 c」「最短时间」都翻译成等式：到 c 时 v=0、S₁+S₂=L₂、摩擦力全程同向。临界条件就是把不等式卡成等号。</p></div>
+  </div>
+</div>`;
+const cvA=sec.querySelector('#cv6a'),cvB=sec.querySelector('#cv6b');
+const T=1.5,VMAX=5;
+let sim=cvSim(4,6,0.5);
+let minSim=cvSim(4,1e9,0.5);
+const refSim=cvSim(4,1,0.5);
+const st={playing:true,speed:0.5,t:0,showForce:false,tEnd:()=>Math.min(sim.tEnd,T)};
+wireAnim(sec,'z6',st);
+const tbody=sec.querySelector('#z6-stab tbody');
+function rebuildTable(){
+  tbody.innerHTML=sim.segs.map((s,i)=>{
+    const fric=s.zone==='belt'?(s.fric==='left'?'向左（提供动力）':'无（随带匀速）'):s.fricName;
+    return '<tr data-t0="'+s.t0+'" data-t1="'+s.t1+'"><td>'+'①②③④⑤⑥'[i]+'</td><td>'
+      +fmt(s.t0,2)+' ~ '+fmt(s.t1,2)+' s</td><td>'+s.name+'<br>a = '+fmt(s.a,1)+' m/s²</td><td>'
+      +fmt(s.v0,1)+' → '+fmt(s.v1,1)+' m/s</td><td>'+fric+'</td></tr>';
+  }).join('');
+}
+function updatePill(){
+  const p=sec.querySelector('#z6-pill');
+  if(sim.stuck){p.className='pill warn';p.textContent='带 1 速度为 0：盒子不动';}
+  else if(!minSim.reach){p.className='pill bad';p.textContent='✗ 当前 μ₂ 下即使带 2 无限快也到不了 c';}
+  else if(sim.reach&&sim.vb2>=sim.vB-1e-9&&Math.abs(sim.tc-minSim.tc)<0.02){
+    p.className='pill ok';p.textContent='✓ 最短工况：t = '+fmt(sim.tc,3)+' s（理论 '+fmt(minSim.tc,3)+' s）';}
+  else if(sim.reach){p.className='pill warn';p.textContent='非最短工况：t = '+fmt(sim.tc,3)+' s > 最短 '+fmt(minSim.tc,3)+' s';}
+  else{p.className='pill bad';p.textContent='✗ 到不了 c：'+sim.stopNote;}
+}
+function drawVT(){
+  const {w,h,ctx}=fitCanvas(cvB);ctx.clearRect(0,0,w,h);
+  const gx0=52,gy0=18,gx1=w-44,gy1=h-34;
+  drawAxes(ctx,gx0,gy0,gx1,gy1,{tMax:T,vMax:VMAX,dt:0.2,dv:1,xName:'t',yName:'v',xUnit:'s',yUnit:'m/s'});
+  const X=t=>gx0+t/T*(gx1-gx0), Y=v=>gy1-Math.min(v,VMAX)/VMAX*(gy1-gy0);
+  // 参考（问2工况）灰虚线
+  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1.8;ctx.setLineDash([6,5]);ctx.beginPath();
+  for(let px=0;px<=gx1-gx0;px+=2){
+    const t=px/(gx1-gx0)*T, v=cvStateAt(refSim,t).v;
+    px===0?ctx.moveTo(gx0+px,Y(v)):ctx.lineTo(gx0+px,Y(v));
+  }
+  ctx.stroke();ctx.setLineDash([]);
+  text(ctx,'问(2)：1.80 s 到 c',X(Math.min(1.8,T))-6,Y(0)-10,{size:10.5,color:'rgba(255,255,255,.5)',align:'right'});
+  // 当前工况实线
+  ctx.strokeStyle='#FF6B35';ctx.lineWidth=2.6;glow(ctx,'#FF6B35',6);ctx.beginPath();
+  for(let px=0;px<=gx1-gx0;px+=2){
+    const t=px/(gx1-gx0)*T, v=cvStateAt(sim,t).v;
+    px===0?ctx.moveTo(gx0+px,Y(v)):ctx.lineTo(gx0+px,Y(v));
+  }
+  ctx.stroke();noGlow(ctx);
+  if(sim.reach&&sim.tc<=T)text(ctx,'最短：'+fmt(sim.tc,2)+' s 到 c',X(sim.tc)+6,Y(sim.vc)+14,{size:10.5,color:'#FF6B35',weight:700});
+  const tc=Math.min(st.t,T),sv=cvStateAt(sim,tc);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(X(tc),gy0);ctx.lineTo(X(tc),gy1);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#fff';glow(ctx,'#FF6B35',10);ctx.beginPath();ctx.arc(X(tc),Y(sv.v),4.5,0,TAU);ctx.fill();noGlow(ctx);
+  if(sim.tEnd>T)text(ctx,'⚠ 全过程 '+fmt(sim.tEnd,2)+' s，超出图窗',gx0+8,gy0+22,{size:10.5,color:'#FF3B30',weight:700});
+}
+function draw(){
+  if(st.t>=st.tEnd()&&st.playing){st.playing=false;sec.querySelector('#z6-play').textContent='▶ 播放';}
+  const {w,h,ctx}=fitCanvas(cvA);ctx.clearRect(0,0,w,h);
+  drawConveyor(ctx,w,h,sim,st.t,st.showForce);
+  drawVT();
+  sec.querySelector('#z6-t1').textContent=fmt(sim.tB,2)+' s';
+  sec.querySelector('#z6-t2').textContent=sim.reach?fmt(sim.tc-sim.tB,3)+' s':'—';
+  sec.querySelector('#z6-tt').textContent=sim.reach?fmt(sim.tc,3)+' s':'到不了 c';
+  sec.querySelector('#z6-tm').textContent=minSim.reach?fmt(minSim.tc,3)+' s':'无法到达';
+  tbody.querySelectorAll('tr').forEach(tr=>{const t0=+tr.dataset.t0,t1=+tr.dataset.t1;
+    tr.classList.toggle('on',st.t>=t0-1e-9&&st.t<t1);});
+}
+makeLoop('z6',(now,dt)=>{if(st.playing)st.t=Math.min(st.t+dt*st.speed,st.tEnd());draw();},()=>st.playing);
+function rebuild(){minSim=cvSim(sim.vb1,1e9,sim.mu2);updatePill();rebuildTable();}
+sec.querySelector('#z6-v1').oninput=e=>{sim=cvSim(+e.target.value,sim.vb2,sim.mu2);sec.querySelector('#z6-v1v').textContent=fmt(sim.vb1,1)+' m/s';st.t=0;st.playing=true;sec.querySelector('#z6-play').textContent='⏸ 暂停';rebuild();};
+sec.querySelector('#z6-v2').oninput=e=>{sim=cvSim(sim.vb1,+e.target.value,sim.mu2);sec.querySelector('#z6-v2v').textContent=fmt(sim.vb2,1)+' m/s';st.t=0;st.playing=true;sec.querySelector('#z6-play').textContent='⏸ 暂停';rebuild();};
+sec.querySelector('#z6-m2').oninput=e=>{sim=cvSim(sim.vb1,sim.vb2,+e.target.value);sec.querySelector('#z6-m2v').textContent=fmt(sim.mu2,2);st.t=0;rebuild();loops['z6'].poke();};
+rebuild();
+/* 推导卡逐步展开 */
+const steps=sec.querySelectorAll('.dstep');let shown=1;
+sec.querySelector('#z6-next').onclick=()=>{if(shown<steps.length){steps[shown].classList.add('show');shown++;}};
+sec.querySelector('#z6-reset').onclick=()=>{steps.forEach((s,i)=>s.classList.toggle('show',i===0));shown=1;};
+})();
+</script>
+
+<script>
+/* ========== 初始化：支持 #zoneId 深链 ========== */
+const hashId=location.hash.slice(1);
+showTab(SECTIONS.some(s=>s.id===hashId)?hashId:SECTIONS[0].id);
+</script>
+</body>
+</html>

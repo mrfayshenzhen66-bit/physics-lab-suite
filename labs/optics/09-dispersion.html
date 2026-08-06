@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光的色散实验</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#141a26;overflow:hidden}
+  /* ---- 顶栏 ---- */
+  #topbar{position:fixed;top:0;left:0;right:0;height:46px;background:rgba(20,26,38,.9);
+    display:flex;align-items:center;z-index:20;backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(255,255,255,.06)}
+  #topbar a{color:#fff;text-decoration:none;font-size:14px;margin-left:14px;padding:6px 10px;border-radius:6px}
+  #topbar a:hover{background:rgba(255,255,255,.1)}
+  #topbar .title{position:absolute;left:50%;transform:translateX(-50%);
+    color:#eef2f8;font-size:16px;font-weight:600;letter-spacing:2px}
+  #topbar .hint{margin-left:auto;margin-right:16px;color:#8a93a6;font-size:12px}
+  /* ---- 画布 ---- */
+  #stage{position:relative;width:min(96vw,1150px);margin:58px auto 0}
+  canvas{display:block;width:100%;height:auto;border-radius:10px;
+    box-shadow:0 12px 40px rgba(0,0,0,.45)}
+  /* ---- 读数区 ---- */
+  #readout{position:absolute;top:12px;right:12px;background:rgba(20,26,38,.82);
+    border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#dfe6f2;
+    font-size:13px;padding:10px 14px;line-height:1.9;min-width:215px;pointer-events:none}
+  #readout b{color:#ffd34d;font-weight:600}
+  /* ---- 底部工具栏 ---- */
+  #toolbar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.08);
+    border-radius:999px;padding:8px 14px;display:flex;gap:10px;z-index:20}
+  #toolbar button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    color:#e6ebf4;font-size:14px;padding:7px 22px;border-radius:999px;cursor:pointer;
+    font-family:inherit;transition:background .15s,border-color .15s}
+  #toolbar button:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.25)}
+  /* ---- 设置面板 ---- */
+  #settings{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);
+    width:min(92vw,580px);background:rgba(22,28,42,.96);
+    border:1px solid rgba(255,255,255,.1);border-radius:14px;
+    padding:14px 22px;color:#dfe6f2;z-index:19;display:none;
+    box-shadow:0 14px 40px rgba(0,0,0,.5)}
+  #settings.open{display:block}
+  .srow{display:flex;align-items:center;gap:12px;margin:12px 0;font-size:13px}
+  .srow>label{width:96px;color:#aeb8c8;flex:none}
+  .srow input[type=range]{flex:1;accent-color:#ffd34d}
+  .srow .val{width:58px;text-align:right;color:#ffd34d;flex:none;font-variant-numeric:tabular-nums}
+  .radioGroup{display:flex;gap:16px}
+  .radioGroup label{display:flex;align-items:center;gap:5px;cursor:pointer;color:#dfe6f2}
+  .radioGroup input{accent-color:#ffd34d}
+  .chk{display:flex;align-items:center;gap:6px;cursor:pointer;color:#dfe6f2}
+  .chk input{accent-color:#ffd34d}
+  /* ---- 简介弹窗 ---- */
+  #modalMask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;
+    display:none;align-items:center;justify-content:center}
+  #modalMask.open{display:flex}
+  #modal{width:min(90vw,500px);background:#1c2434;border:1px solid rgba(255,255,255,.12);
+    border-radius:16px;padding:24px 28px;color:#e8edf6;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  #modal h3{font-size:17px;margin-bottom:12px;color:#ffd34d;letter-spacing:1px}
+  #modal p{font-size:14px;line-height:2;color:#cdd6e4;text-align:justify}
+  #modal .close{margin-top:18px;text-align:right}
+  #modal .close button{background:rgba(255,211,77,.15);border:1px solid rgba(255,211,77,.4);
+    color:#ffd34d;font-size:14px;padding:7px 22px;border-radius:999px;cursor:pointer;font-family:inherit}
+  #modal .close button:hover{background:rgba(255,211,77,.28)}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <a href="index.html">← 返回合集</a>
+  <span class="title">光的色散实验</span>
+  <span class="hint">拖动手电筒改变入射方向 · 拖动光屏改变远近 · 设置里可调顶角与光谱模式</span>
+</div>
+
+<div id="stage">
+  <canvas id="cv" width="1100" height="640"></canvas>
+  <div id="readout"></div>
+</div>
+
+<div id="toolbar">
+  <button id="btnIntro">简介</button>
+  <button id="btnSettings">设置</button>
+  <button id="btnReset">重置</button>
+</div>
+
+<div id="settings">
+  <div class="srow">
+    <label>入射角 i</label>
+    <input id="incRange" type="range" min="8" max="80" step="1" value="40">
+    <span class="val" id="incVal">40.0°</span>
+  </div>
+  <div class="srow">
+    <label>棱镜顶角 A</label>
+    <input id="apexRange" type="range" min="30" max="60" step="1" value="45">
+    <span class="val" id="apexVal">45°</span>
+  </div>
+  <div class="srow">
+    <label>光谱显示</label>
+    <div class="radioGroup">
+      <label><input type="radio" name="mode" value="discrete" checked> 七色分立</label>
+      <label><input type="radio" name="mode" value="continuous"> 连续渐变</label>
+    </div>
+  </div>
+  <div class="srow">
+    <label>辅助线</label>
+    <span class="chk"><input id="guidesChk" type="checkbox" checked> 显示法线与角度标注</span>
+  </div>
+</div>
+
+<div id="modalMask">
+  <div id="modal">
+    <h3>光的色散实验</h3>
+    <p>白光并不是单色光，而是由红、橙、黄、绿、蓝、靛、紫等各种色光混合而成的。三棱镜对不同色光的折射率略有不同（红光约 1.510，紫光约 1.532），所以白光在棱镜中经过两次折射后，各种色光的偏折程度不同：红光偏折最小，紫光偏折最大，于是在光屏上展开成一条彩色光谱带，这就是牛顿著名的色散实验。雨后的彩虹，正是阳光在无数小水滴中折射、反射并发生色散而形成的。操作提示：拖动手电筒可改变入射方向，拖动右侧光屏可改变距离，在「设置」中可调节入射角、棱镜顶角（30°~60°）以及「七色分立 / 连续渐变」光谱显示方式。</p>
+    <div class="close"><button id="modalClose">知道了</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+ * 光的色散实验（2D）
+ * 白光经三棱镜两次折射后分光：
+ *   每种色光折射率不同（红 1.510 ~ 紫 1.532，线性插值）
+ *   每次折射严格按 n1·sinθ1 = n2·sinθ2（向量形式）
+ *   偏折角 δ = i + e - A（与向量法结果互相校验）
+ * ========================================================= */
+const canvas = document.getElementById('cv');
+const ctx = canvas.getContext('2d');
+const W = 1100, H = 640;
+const DEG = Math.PI / 180;
+
+/* ---------------- 状态 ---------------- */
+const PRISM = { cx: 620, cy: 362, h: 280 };   // 棱镜中心与高度
+const ENTRY_T = 0.35;                          // 入射点 E 在左侧边的位置（自顶点起）
+const SCREEN_Y0 = 86, SCREEN_Y1 = 594;
+let A = 45;                 // 棱镜顶角（度）
+let screenX = 1015;         // 光屏 x 坐标
+let mode = 'discrete';      // discrete | continuous
+let showGuides = true;
+let F = { x: 0, y: 0 };     // 手电筒出光口位置（光束始终射向入射点 E）
+let dragging = null;        // 'flash' | 'screen'
+let grabOff = { x: 0, y: 0 };
+
+/* 七色光：红光折射率最小，紫光最大，中间线性插值 */
+const COLORS = [
+  { name: '红', w: 700, c: '#ff3232' },
+  { name: '橙', w: 620, c: '#ff9a1f' },
+  { name: '黄', w: 580, c: '#ffe14d' },
+  { name: '绿', w: 530, c: '#43f06a' },
+  { name: '蓝', w: 470, c: '#3fa9ff' },
+  { name: '靛', w: 440, c: '#5a6bff' },
+  { name: '紫', w: 400, c: '#b45cff' }
+];
+const N_RED = 1.510, N_VIOLET = 1.532;
+const nOf = i => N_RED + (N_VIOLET - N_RED) * i / 6;
+const nOfWave = w => N_RED + (700 - w) / 300 * (N_VIOLET - N_RED);
+
+/* ---------------- 几何与向量工具 ---------------- */
+const dot = (a, b) => a.x * b.x + a.y * b.y;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+function norm(v) { const l = Math.hypot(v.x, v.y); return l < 1e-9 ? { x: 1, y: 0 } : { x: v.x / l, y: v.y / l }; }
+
+/* 折射（向量形式）：d 入射方向(单位)，n 界面外法线(单位)，n1→n2；全反射返回 null */
+function refract(d, n, n1, n2) {
+  let nn = n;
+  if (dot(d, nn) > 0) nn = { x: -nn.x, y: -nn.y };   // 保证法线逆着入射光
+  const cosI = -dot(d, nn);
+  const eta = n1 / n2;
+  const s2 = eta * eta * (1 - cosI * cosI);          // sin²θ2
+  if (s2 > 1) return null;                           // 全反射
+  const k = eta * cosI - Math.sqrt(1 - s2);
+  return { x: eta * d.x + k * nn.x, y: eta * d.y + k * nn.y };
+}
+function reflect(d, n) { const c = 2 * dot(d, n); return { x: d.x - c * n.x, y: d.y - c * n.y }; }
+
+/* 射线与线段求交，返回参数 t（t>0 且落在线段内），否则 null */
+function raySeg(p, d, a, b) {
+  const ex = b.x - a.x, ey = b.y - a.y;
+  const den = d.x * ey - d.y * ex;
+  if (Math.abs(den) < 1e-12) return null;
+  const ax = a.x - p.x, ay = a.y - p.y;
+  const t = (ax * ey - ay * ex) / den;
+  const u = (ax * d.y - ay * d.x) / den;
+  if (t > 1e-4 && u >= -1e-9 && u <= 1 + 1e-9) return t;
+  return null;
+}
+
+/* 棱镜顶点：顶角 A，顶角在上，底边水平 */
+function verts() {
+  const hb = PRISM.h * Math.tan(A / 2 * DEG);
+  return {
+    apex: { x: PRISM.cx, y: PRISM.cy - PRISM.h / 2 },
+    bl:   { x: PRISM.cx - hb, y: PRISM.cy + PRISM.h / 2 },
+    br:   { x: PRISM.cx + hb, y: PRISM.cy + PRISM.h / 2 }
+  };
+}
+function entryPoint(v) {
+  return { x: v.apex.x + (v.bl.x - v.apex.x) * ENTRY_T,
+           y: v.apex.y + (v.bl.y - v.apex.y) * ENTRY_T };
+}
+function outwardNormal(a, b, c) {   // c 为三角形质心，用于判定"外"
+  const ex = b.x - a.x, ey = b.y - a.y, L = Math.hypot(ex, ey);
+  let nx = -ey / L, ny = ex / L;
+  if (nx * (c.x - a.x) + ny * (c.y - a.y) > 0) { nx = -nx; ny = -ny; }
+  return { x: nx, y: ny };
+}
+function normals(v) {
+  const c = { x: (v.apex.x + v.bl.x + v.br.x) / 3, y: (v.apex.y + v.bl.y + v.br.y) / 3 };
+  return {
+    nL: outwardNormal(v.apex, v.bl, c),
+    nR: outwardNormal(v.apex, v.br, c),
+    nB: outwardNormal(v.bl, v.br, c)
+  };
+}
+/* 由入射角 I（相对法线）求光束方向：β = A/2 - I */
+function dirFromI(Ideg) {
+  const b = A / 2 * DEG - Ideg * DEG;
+  return { x: Math.cos(b), y: Math.sin(b) };
+}
+
+/* ---------------- 单条色光光路追迹 ---------------- */
+function trace(n2, d0, v, ns, E) {
+  const r = refract(d0, ns.nL, 1, n2);          // 第一次折射：空气→玻璃
+  if (!r) return { ok: false };
+  const segs = [
+    { a: v.apex, b: v.br, n: ns.nR, face: 'right' },
+    { a: v.bl,   b: v.br, n: ns.nB, face: 'base'  },
+    { a: v.apex, b: v.bl, n: ns.nL, face: 'left'  }
+  ];
+  let p = { x: E.x + r.x * 0.02, y: E.y + r.y * 0.02 };
+  let d = r;
+  const pts = [{ x: E.x, y: E.y }];
+  let out = null, outP = null, exitFace = null, bounces = 0, tirRight = false;
+  for (let i = 0; i < 3; i++) {
+    let best = null;
+    for (const s of segs) {
+      const t = raySeg(p, d, s.a, s.b);
+      if (t !== null && (!best || t < best.t)) best = { t, s };
+    }
+    if (!best) { pts.push({ x: p.x + d.x * 600, y: p.y + d.y * 600 }); break; }
+    const hp = { x: p.x + d.x * best.t, y: p.y + d.y * best.t };
+    pts.push(hp);
+    const o = refract(d, best.s.n, n2, 1);       // 第二次折射：玻璃→空气
+    if (o) { out = o; outP = hp; exitFace = best.s.face; break; }
+    if (best.s.face === 'right') tirRight = true;
+    bounces++;
+    d = reflect(d, best.s.n);                    // 界面内全反射，继续追迹
+    p = { x: hp.x + d.x * 0.02, y: hp.y + d.y * 0.02 };
+  }
+  if (!out) pts.push({ x: p.x + d.x * 600, y: p.y + d.y * 600 });
+  let screenY = null, dev = null;
+  if (out && out.x > 1e-4) {
+    const t = (screenX - outP.x) / out.x;
+    if (t > 0) {
+      const y = outP.y + t * out.y;
+      if (y >= SCREEN_Y0 + 2 && y <= SCREEN_Y1 - 2) screenY = y;
+    }
+  }
+  if (out && exitFace === 'right' && bounces === 0) {
+    dev = Math.acos(clamp(dot(d0, out), -1, 1)) / DEG;   // 偏折角 δ
+  }
+  return { ok: true, r, pts, out, outP, exitFace, bounces, tirRight, screenY, dev };
+}
+
+/* ---------------- 每帧统一计算 ---------------- */
+function computeAll() {
+  const v = verts(), ns = normals(v), E = entryPoint(v);
+  const d0 = norm({ x: E.x - F.x, y: E.y - F.y });
+  const cosI = clamp(-(d0.x * ns.nL.x + d0.y * ns.nL.y), -1, 1);
+  const I = Math.acos(cosI) / DEG;
+  const res = COLORS.map((c, i) => ({ ...c, n: nOf(i), tr: trace(nOf(i), d0, v, ns, E) }));
+  return { v, ns, E, d0, I, res };
+}
+
+/* 连续模式：按波长采样 */
+function waveRGB(w) {
+  let r, g, b;
+  if (w < 440)      { r = -(w - 440) / 60; g = 0; b = 1; }
+  else if (w < 490) { r = 0; g = (w - 440) / 50; b = 1; }
+  else if (w < 510) { r = 0; g = 1; b = -(w - 510) / 20; }
+  else if (w < 580) { r = (w - 510) / 70; g = 1; b = 0; }
+  else if (w < 645) { r = 1; g = -(w - 645) / 65; b = 0; }
+  else              { r = 1; g = 0; b = 0; }
+  let f = 1;
+  if (w > 660) f = 0.6 + 0.4 * (700 - w) / 40;
+  else if (w < 420) f = 0.6 + 0.4 * (w - 380) / 40;
+  return 'rgb(' + Math.round(r * f * 255) + ',' + Math.round(g * f * 255) + ',' + Math.round(b * f * 255) + ')';
+}
+function contSamples(S) {
+  const arr = [], N = 28;
+  for (let i = 0; i < N; i++) {
+    const w = 700 - 300 * i / (N - 1);
+    arr.push({ w, rgb: waveRGB(w), tr: trace(nOfWave(w), S.d0, S.v, S.ns, S.E) });
+  }
+  return arr;
+}
+
+/* ---------------- 绘图基础 ---------------- */
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function glowLine(x1, y1, x2, y2, color, width, blur, alpha) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = color; ctx.globalAlpha = alpha;
+  ctx.lineWidth = width; ctx.lineCap = 'round';
+  ctx.shadowColor = color; ctx.shadowBlur = blur;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.restore();
+}
+function strokePath(pts, color, width, blur, alpha) {
+  if (pts.length < 2) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = color; ctx.globalAlpha = alpha;
+  ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.shadowColor = color; ctx.shadowBlur = blur;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+  ctx.restore();
+}
+function dashedNormal(P, n, len) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)';
+  ctx.setLineDash([6, 6]); ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(P.x - n.x * len, P.y - n.y * len);
+  ctx.lineTo(P.x + n.x * len, P.y + n.y * len);
+  ctx.stroke();
+  ctx.restore();
+}
+function angleArc(cx, cy, r, a1, a2, label, labelR) {
+  let d = a2 - a1;
+  while (d > Math.PI) d -= 2 * Math.PI;
+  while (d < -Math.PI) d += 2 * Math.PI;
+  ctx.save();
+  ctx.strokeStyle = '#ffd34d'; ctx.fillStyle = '#ffd34d'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, r, a1, a1 + d, d < 0); ctx.stroke();
+  const am = a1 + d / 2;
+  ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, cx + Math.cos(am) * labelR, cy + Math.sin(am) * labelR);
+  ctx.restore();
+}
+
+/* ---------------- 各部件绘制 ---------------- */
+function drawPrism(v) {
+  ctx.beginPath();
+  ctx.moveTo(v.apex.x, v.apex.y);
+  ctx.lineTo(v.br.x, v.br.y);
+  ctx.lineTo(v.bl.x, v.bl.y);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(150,200,255,.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(150,200,255,.55)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(174,184,198,.75)';
+  ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('三棱镜（玻璃）', PRISM.cx, v.bl.y + 22);
+}
+
+function drawFlashlight(d0) {
+  const ang = Math.atan2(d0.y, d0.x);
+  ctx.save();
+  ctx.translate(F.x, F.y);
+  ctx.rotate(ang);
+  // 金属筒身
+  const g = ctx.createLinearGradient(0, -13, 0, 13);
+  g.addColorStop(0, '#3a3f4b'); g.addColorStop(0.45, '#2b303b'); g.addColorStop(1, '#20242e');
+  ctx.fillStyle = g;
+  roundRect(-102, -12, 88, 24, 11); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1; ctx.stroke();
+  // 头部
+  const g2 = ctx.createLinearGradient(0, -14, 0, 14);
+  g2.addColorStop(0, '#4a5160'); g2.addColorStop(1, '#262b35');
+  ctx.fillStyle = g2;
+  roundRect(-16, -14, 20, 28, 5); ctx.fill(); ctx.stroke();
+  // 灯头玻璃（白光）
+  ctx.fillStyle = 'rgba(255,244,214,.95)';
+  roundRect(2, -9, 5, 18, 2); ctx.fill();
+  // 红色按钮
+  ctx.fillStyle = '#c62f3b';
+  roundRect(-66, -17, 18, 8, 4); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.25)';
+  roundRect(-66, -17, 18, 3, 2); ctx.fill();
+  // 尾部挂环
+  ctx.strokeStyle = 'rgba(255,255,255,.2)';
+  ctx.beginPath(); ctx.arc(-104, 0, 5, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+  // 标签
+  const m = { x: F.x - d0.x * 58, y: F.y - d0.y * 58 };
+  ctx.fillStyle = 'rgba(174,184,198,.8)';
+  ctx.font = '11px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('手电筒（可拖动）', m.x, m.y + 32);
+}
+
+function drawScreen() {
+  const g = ctx.createLinearGradient(screenX - 8, 0, screenX + 8, 0);
+  g.addColorStop(0, '#454e61'); g.addColorStop(0.5, '#39404f'); g.addColorStop(1, '#232936');
+  ctx.fillStyle = g;
+  roundRect(screenX - 7, SCREEN_Y0, 14, SCREEN_Y1 - SCREEN_Y0, 5);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.07)';
+  ctx.fillRect(screenX - 7, SCREEN_Y0 + 3, 4, SCREEN_Y1 - SCREEN_Y0 - 6);
+  // 刻度线
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.beginPath();
+  for (let y = SCREEN_Y0 + 20; y < SCREEN_Y1 - 10; y += 40) {
+    ctx.moveTo(screenX - 7, y); ctx.lineTo(screenX - 2, y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#8a93a6';
+  ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('光屏（可拖动）', screenX, SCREEN_Y1 + 20);
+}
+
+function drawGuides(S) {
+  const { ns, E, d0, I, res } = S;
+  dashedNormal(E, ns.nL, 62);
+  const a1 = Math.atan2(-d0.y, -d0.x), a2 = Math.atan2(ns.nL.y, ns.nL.x);
+  angleArc(E.x, E.y, 36, a1, a2, 'i=' + I.toFixed(1) + '°', 58);
+  const g7 = res[3].tr;   // 用绿光标注折射角
+  if (g7.ok) {
+    const a3 = Math.atan2(-ns.nL.y, -ns.nL.x), a4 = Math.atan2(g7.r.y, g7.r.x);
+    angleArc(E.x, E.y, 22, a3, a4, 'r', 40);
+    if (g7.out && g7.exitFace === 'right') {
+      dashedNormal(g7.outP, ns.nR, 54);
+      const eAng = Math.acos(clamp(dot(g7.out, ns.nR), -1, 1)) / DEG;
+      const a5 = Math.atan2(ns.nR.y, ns.nR.x), a6 = Math.atan2(g7.out.y, g7.out.x);
+      angleArc(g7.outP.x, g7.outP.y, 28, a5, a6, 'e=' + eAng.toFixed(1) + '°', 52);
+    }
+  }
+}
+
+function drawBandDiscrete(S) {
+  const hits = S.res.filter(r => r.tr.screenY !== null);
+  if (!hits.length) return;
+  for (const r of hits) {
+    const y = r.tr.screenY;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(screenX, y, 0, screenX, y, 13);
+    g.addColorStop(0, r.c); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.globalAlpha = 0.95;
+    ctx.beginPath(); ctx.arc(screenX, y, 13, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = r.c;
+    roundRect(screenX - 6, y - 2, 12, 4, 2); ctx.fill();
+  }
+  const ys = hits.map(r => r.tr.screenY);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys), span = yMax - yMin;
+  ctx.save();
+  ctx.font = '10px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  if (span > 55) {
+    for (const r of hits) { ctx.fillStyle = r.c; ctx.fillText(r.name, screenX - 16, r.tr.screenY); }
+  } else if (span > 12) {
+    ctx.fillStyle = hits[0].c; ctx.fillText('红', screenX - 16, yMin - 8);
+    ctx.fillStyle = hits[hits.length - 1].c; ctx.fillText('紫', screenX - 16, yMax + 8);
+  }
+  ctx.restore();
+}
+
+function drawBandContinuous(samples) {
+  const hits = samples.filter(s => s.tr.screenY !== null);
+  if (!hits.length) return;
+  const ys = hits.map(s => s.tr.screenY);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const g = ctx.createLinearGradient(0, yMin - 3, 0, Math.max(yMax + 3, yMin + 4));
+  for (const s of hits) {
+    g.addColorStop(clamp((s.tr.screenY - yMin) / Math.max(1e-6, yMax - yMin), 0, 1), s.rgb);
+  }
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,255,255,.4)'; ctx.shadowBlur = 16;
+  ctx.fillStyle = g;
+  roundRect(screenX - 8, yMin - 3, 16, Math.max(yMax - yMin, 2) + 6, 7);
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.font = '10px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ff6b6b'; ctx.fillText('红', screenX - 16, yMin - 9);
+  ctx.fillStyle = '#c07bff'; ctx.fillText('紫', screenX - 16, yMax + 9);
+  ctx.restore();
+}
+
+/* ---------------- 读数区 ---------------- */
+const readout = document.getElementById('readout');
+function devText(tr) {
+  if (tr.dev !== null && tr.dev !== undefined) return '<b>' + tr.dev.toFixed(1) + '°</b>';
+  if (tr.tirRight) return '<b style="color:#ff8080">全反射</b>';
+  return '<b style="color:#ff8080">未到达光屏</b>';
+}
+function updateReadout(S) {
+  const rd = S.res[0].tr, vd = S.res[6].tr;
+  const dd = (rd.dev !== null && vd.dev !== null)
+    ? '<b>' + (vd.dev - rd.dev).toFixed(2) + '°</b>' : '<b>—</b>';
+  readout.innerHTML =
+    '入射角 i：<b>' + S.I.toFixed(1) + '°</b><br>' +
+    '红光偏折角 δ红：' + devText(rd) + '<br>' +
+    '紫光偏折角 δ紫：' + devText(vd) + '<br>' +
+    '色散角 Δδ：' + dd + '<br>' +
+    '<span style="color:#8a93a6;font-size:12px">n红=1.510　n紫=1.532</span>';
+}
+
+/* ---------------- 主渲染循环 ---------------- */
+function render() {
+  const tnow = performance.now() / 1000;
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#252d3d'); bg.addColorStop(1, '#1a2130');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  const S = computeAll();
+  const { v, ns, E, d0, I, res } = S;
+
+  drawPrism(v);
+
+  // 白色入射光束（手电筒 → 入射点 E）
+  const bs = { x: F.x + d0.x * 7, y: F.y + d0.y * 7 };
+  glowLine(bs.x, bs.y, E.x, E.y, 'rgba(255,255,255,.95)', 3, 14, 0.9);
+  // 流动光点动画
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.setLineDash([3, 30]);
+  ctx.lineDashOffset = -(tnow * 140) % 33;
+  ctx.strokeStyle = 'rgba(255,255,255,.55)';
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(bs.x, bs.y); ctx.lineTo(E.x, E.y); ctx.stroke();
+  ctx.restore();
+
+  // 色光光路
+  if (mode === 'discrete') {
+    for (const r of res) {
+      const tr = r.tr;
+      if (!tr.ok) continue;
+      strokePath(tr.pts, r.c, 2, 8, 0.8);
+      if (tr.out) {
+        const end = tr.screenY !== null
+          ? { x: screenX, y: tr.screenY }
+          : { x: tr.outP.x + tr.out.x * 560, y: tr.outP.y + tr.out.y * 560 };
+        glowLine(tr.outP.x, tr.outP.y, end.x, end.y, r.c, 2, 10, 0.85);
+      }
+    }
+  } else {
+    const samples = contSamples(S);
+    for (const s of samples) {
+      const tr = s.tr;
+      if (!tr.ok) continue;
+      strokePath(tr.pts, s.rgb, 1.2, 4, 0.35);
+      if (tr.out) {
+        const end = tr.screenY !== null
+          ? { x: screenX, y: tr.screenY }
+          : { x: tr.outP.x + tr.out.x * 560, y: tr.outP.y + tr.out.y * 560 };
+        glowLine(tr.outP.x, tr.outP.y, end.x, end.y, s.rgb, 1.2, 5, 0.4);
+      }
+    }
+    S._samples = samples;
+  }
+
+  // 入射点高光
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const ge = ctx.createRadialGradient(E.x, E.y, 0, E.x, E.y, 10);
+  ge.addColorStop(0, 'rgba(255,255,255,.9)'); ge.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = ge;
+  ctx.beginPath(); ctx.arc(E.x, E.y, 10, 0, 7); ctx.fill();
+  ctx.restore();
+
+  if (showGuides) drawGuides(S);
+  drawScreen();
+  if (mode === 'discrete') drawBandDiscrete(S);
+  else drawBandContinuous(S._samples);
+  drawFlashlight(d0);
+
+  // 同步控件与读数
+  updateReadout(S);
+  const incRange = document.getElementById('incRange');
+  if (document.activeElement !== incRange) incRange.value = Math.round(I);
+  document.getElementById('incVal').textContent = I.toFixed(1) + '°';
+}
+
+/* ---------------- 渲染循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ---------------- */
+let rafId = null, lastRender = 0, dirty = true;
+function loop(now) {
+  rafId = requestAnimationFrame(loop);
+  now = now || 0;
+  if (now - lastRender < 33) return;   // 30 FPS 闸（入射光流动虚线为永续动画，播放中逐帧渲染）
+  lastRender = now; dirty = false;
+  render();
+}
+function startLoop(){ if (rafId === null){ dirty = true; rafId = requestAnimationFrame(loop); } }
+function stopLoop(){ if (rafId !== null){ cancelAnimationFrame(rafId); rafId = null; } }
+document.addEventListener('visibilitychange', () => { document.hidden ? stopLoop() : startLoop(); });
+['pointerdown','pointermove','mousedown','mousemove','input','change','click','keydown'].forEach(ev => {
+  document.addEventListener(ev, () => { dirty = true; }, true);
+});
+window.addEventListener('resize', () => { dirty = true; });
+
+/* ---------------- 交互 ---------------- */
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+function distToSeg(m, a, b) {
+  const vx = b.x - a.x, vy = b.y - a.y;
+  const L2 = vx * vx + vy * vy;
+  let t = L2 < 1e-9 ? 0 : ((m.x - a.x) * vx + (m.y - a.y) * vy) / L2;
+  t = clamp(t, 0, 1);
+  return Math.hypot(m.x - (a.x + vx * t), m.y - (a.y + vy * t));
+}
+function flashDist() {
+  const E = entryPoint(verts());
+  return Math.hypot(E.x - F.x, E.y - F.y);
+}
+function placeFlash(Ideg, dist) {
+  const E = entryPoint(verts());
+  const d = dirFromI(Ideg);
+  F = { x: E.x - d.x * dist, y: E.y - d.y * dist };
+}
+
+canvas.addEventListener('mousedown', e => {
+  const m = getPos(e);
+  const S = computeAll();
+  // 光屏
+  if (Math.abs(m.x - screenX) < 16 && m.y > SCREEN_Y0 - 10 && m.y < SCREEN_Y1 + 10) {
+    dragging = 'screen'; canvas.style.cursor = 'ew-resize'; return;
+  }
+  // 手电筒（筒身线段附近）
+  const tail = { x: F.x - S.d0.x * 100, y: F.y - S.d0.y * 100 };
+  if (distToSeg(m, F, tail) < 22) {
+    dragging = 'flash';
+    grabOff = { x: m.x - F.x, y: m.y - F.y };
+    canvas.style.cursor = 'grabbing';
+  }
+});
+canvas.addEventListener('mousemove', e => {
+  const m = getPos(e);
+  const S = computeAll();
+  if (dragging === 'screen') {
+    screenX = clamp(m.x, 830, 1062);
+    return;
+  }
+  if (dragging === 'flash') {
+    const nf = {
+      x: clamp(m.x - grabOff.x, 50, S.E.x - 70),
+      y: clamp(m.y - grabOff.y, 90, 570)
+    };
+    const d = norm({ x: S.E.x - nf.x, y: S.E.y - nf.y });
+    const cosI = clamp(-(d.x * S.ns.nL.x + d.y * S.ns.nL.y), -1, 1);
+    const I = Math.acos(cosI) / DEG;
+    if (I >= 4 && I <= 86 && S.E.x - nf.x > 40) F = nf;   // 超出合理入射角则忽略
+    return;
+  }
+  // hover 光标
+  const tail = { x: F.x - S.d0.x * 100, y: F.y - S.d0.y * 100 };
+  if (Math.abs(m.x - screenX) < 16 && m.y > SCREEN_Y0 - 10 && m.y < SCREEN_Y1 + 10) {
+    canvas.style.cursor = 'ew-resize';
+  } else if (distToSeg(m, F, tail) < 22) {
+    canvas.style.cursor = 'grab';
+  } else {
+    canvas.style.cursor = 'default';
+  }
+});
+window.addEventListener('mouseup', () => { dragging = null; canvas.style.cursor = 'default'; });
+
+/* ---------------- 控件 ---------------- */
+const incRange = document.getElementById('incRange');
+const apexRange = document.getElementById('apexRange');
+const apexVal = document.getElementById('apexVal');
+incRange.addEventListener('input', () => {
+  const I = +incRange.value;
+  document.getElementById('incVal').textContent = I.toFixed(1) + '°';
+  placeFlash(I, flashDist());
+});
+apexRange.addEventListener('input', () => {
+  const Icur = +incRange.value, dist = flashDist();
+  A = +apexRange.value;
+  apexVal.textContent = A + '°';
+  placeFlash(Icur, dist);   // 顶角改变后保持入射角不变
+});
+document.querySelectorAll('input[name=mode]').forEach(r => {
+  r.addEventListener('change', () => { mode = r.value; });
+});
+document.getElementById('guidesChk').addEventListener('change', e => {
+  showGuides = e.target.checked;
+});
+document.getElementById('btnIntro').addEventListener('click', () => {
+  document.getElementById('modalMask').classList.add('open');
+});
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modalMask').classList.remove('open');
+});
+document.getElementById('modalMask').addEventListener('click', e => {
+  if (e.target.id === 'modalMask') e.target.classList.remove('open');
+});
+document.getElementById('btnSettings').addEventListener('click', () => {
+  document.getElementById('settings').classList.toggle('open');
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  A = 45; screenX = 1015; mode = 'discrete'; showGuides = true;
+  apexRange.value = 45; apexVal.textContent = '45°';
+  incRange.value = 40; document.getElementById('incVal').textContent = '40.0°';
+  document.querySelector('input[name=mode][value=discrete]').checked = true;
+  document.getElementById('guidesChk').checked = true;
+  placeFlash(40, 300);
+});
+
+/* ---------------- 启动 ---------------- */
+placeFlash(40, 300);
+startLoop();
+</script>
+</body>
+</html>

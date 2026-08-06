@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光学模拟仿真实验室 · 合集门户</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'PingFang SC','Microsoft YaHei',sans-serif;
+    background: #f2f5f9;
+    color: #233148;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== 顶部页头（浅色 PhET 风格） ===== */
+  header {
+    background: #ffffff;
+    border-bottom: 1px solid #e3e9f2;
+    padding: 40px 24px 0;
+  }
+  .header-inner { max-width: 1240px; margin: 0 auto; }
+  .hero { text-align: center; }
+  .hero h1 {
+    font-size: 34px;
+    font-weight: 800;
+    color: #16305e;
+    letter-spacing: 1px;
+  }
+  .hero h1 .accent { color: #f08300; }
+  .hero p {
+    margin-top: 12px;
+    font-size: 15px;
+    color: #6b7a90;
+    letter-spacing: .5px;
+  }
+
+  /* 搜索框 */
+  .search-wrap {
+    max-width: 520px;
+    margin: 24px auto 0;
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 16px; top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+    pointer-events: none;
+  }
+  #search {
+    width: 100%;
+    padding: 13px 18px 13px 46px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #233148;
+    background: #f6f8fb;
+    border: 1.5px solid #d9e2ee;
+    border-radius: 999px;
+    outline: none;
+    transition: border-color .18s, box-shadow .18s, background .18s;
+  }
+  #search:focus {
+    border-color: #f08300;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(240,131,0,.12);
+  }
+  #search::placeholder { color: #9aa8bc; }
+
+  /* 分类标签栏 */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 22px 0 18px;
+  }
+  .tab {
+    border: 1.5px solid #d9e2ee;
+    background: #fff;
+    color: #51627c;
+    font-size: 14px;
+    font-family: inherit;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tab .cnt {
+    font-size: 12px;
+    background: #eef2f8;
+    color: #6b7a90;
+    border-radius: 999px;
+    padding: 1px 8px;
+    transition: all .18s;
+  }
+  .tab:hover { border-color: #f08300; color: #f08300; transform: translateY(-1px); }
+  .tab.active {
+    background: #f08300;
+    border-color: #f08300;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(240,131,0,.28);
+  }
+  .tab.active .cnt { background: rgba(255,255,255,.25); color: #fff; }
+
+  /* ===== 卡片网格 ===== */
+  main { flex: 1; padding: 30px 24px 44px; }
+  .grid {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+  }
+  @media (max-width: 1080px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 800px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px)  { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: #fff;
+    border: 1px solid #e6ecf4;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 32px rgba(22,48,94,.14);
+    border-color: #ffd9a8;
+  }
+  .thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    background: #e9eff6;
+    border-bottom: 1px solid #edf1f7;
+  }
+  .thumb svg { width: 100%; height: 100%; display: block; }
+  .card-body { padding: 14px 16px 16px; }
+  .card-title {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: #16305e;
+  }
+  .card-desc {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #6b7a90;
+    min-height: 40px;
+  }
+  .badges {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+  .badge-html5 { background: #24303f; color: #ffb03a; }
+  .badge-2d    { background: #e8f0fb; color: #3a6fb8; }
+  .badge-3d    { background: #fdeede; color: #d97706; }
+  .badge-23d   { background: #e0f5f1; color: #0f9d8a; }
+  .cat-tag {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #7d8ba0;
+  }
+  .cat-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  /* 空结果提示 */
+  .empty {
+    display: none;
+    max-width: 1240px;
+    margin: 40px auto 0;
+    text-align: center;
+    color: #8b99ad;
+    font-size: 15px;
+  }
+  .empty.show { display: block; }
+
+  /* ===== 页脚 ===== */
+  footer {
+    border-top: 1px solid #e3e9f2;
+    background: #fff;
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 12.5px;
+    color: #93a1b5;
+    letter-spacing: .5px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="hero">
+      <h1>光学模拟<span class="accent">仿真</span>实验室</h1>
+      <p>NoBook 风格场景 · HTML5 Canvas 交互仿真 · 单文件离线运行</p>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9aa8bc" stroke-width="2.4" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+      </svg>
+      <input id="search" type="text" placeholder="搜索实验名称或简介…" autocomplete="off">
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">没有找到匹配的实验，换个关键词试试 🔍</div>
+</main>
+
+<footer>纯前端单文件合集 · 双击任意实验离线运行</footer>
+
+<script>
+/* ================= 缩略图（内联 SVG，逐张按物理准确性重绘，viewBox 统一 400×240） ================= */
+/* 统一规范：光线=直线段＋线段中央三角箭头（指向传播方向，物理课本光线图样式）；
+   法线=细虚线 #8494ab、严格垂直界面、穿过入射点并向两侧延伸；
+   反射 i=r 分居法线两侧；折射按介质疏密偏折且水平分量不变向（绝不横穿法线）；
+   光纤=界面间锯齿折线全反射（严禁平滑弯曲）；棱镜色散红上紫下；凸透镜只画会聚。 */
+var RAYC = '#e63b3b', YEL = '#f2b500', NORMAL = '#8494ab', BG = '#e9eff6';
+var MEDIA_FILL = 'rgba(150,200,255,0.30)', MEDIA_LINE = '#7fb3e0';
+var SVG_OPEN = '<svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">';
+function r1(v){ return Math.round(v * 10) / 10; }
+/* 光线段：直线 + 位于线段中央的三角箭头（箭头置于中点、指向传播方向） */
+function ray(x1, y1, x2, y2, c, w, op) {
+  var mx = (x1 + x2) / 2, my = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1;
+  var L = Math.sqrt(dx * dx + dy * dy), ux = dx / L, uy = dy / L, px = -uy, py = ux;
+  var tx = mx + ux * 6, ty = my + uy * 6;
+  var b1x = mx - ux * 5 + px * 4, b1y = my - uy * 5 + py * 4;
+  var b2x = mx - ux * 5 - px * 4, b2y = my - uy * 5 - py * 4;
+  var o = (op === undefined) ? 1 : op;
+  return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round" opacity="' + o + '"/>'
+    + '<polygon points="' + r1(tx) + ',' + r1(ty) + ' ' + r1(b1x) + ',' + r1(b1y) + ' ' + r1(b2x) + ',' + r1(b2y) + '" fill="' + c + '" opacity="' + o + '"/>';
+}
+function dot(x, y, r, c){ return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + c + '"/>'; }
+function txt(x, y, s, c, size, anchor){
+  return '<text x="' + x + '" y="' + y + '" font-size="' + (size || 12) + '" fill="' + c + '" text-anchor="' + (anchor || 'middle') + '" font-family="PingFang SC,Microsoft YaHei,sans-serif">' + s + '</text>';
+}
+
+/* 01 镜面反射：入射 (110,43)→P(200,150)，反射 P→(290,43)；
+   与竖直法线夹角均为 atan(90/107)=40.1°，i=r 且分居法线两侧；镜面下带背面斜纹 */
+var SVG_01 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<rect x="60" y="150" width="280" height="7" rx="2" fill="#aeb8c6"/>';
+  var h = '';
+  for (var x = 78; x <= 332; x += 24) h += '<line x1="' + x + '" y1="158" x2="' + (x - 9) + '" y2="170"/>';
+  s += '<g stroke="#8ea0b4" stroke-width="1.6">' + h + '</g>';
+  s += '<line x1="200" y1="30" x2="200" y2="166" stroke="' + NORMAL + '" stroke-width="1.6" stroke-dasharray="4 4"/>';
+  s += '<path d="M200,120 A30,30 0 0 0 180.7,127" fill="none" stroke="#e8a13a" stroke-width="2"/>';
+  s += '<path d="M200,120 A30,30 0 0 1 219.3,127" fill="none" stroke="#e8a13a" stroke-width="2"/>';
+  s += ray(110, 43, 200, 150, RAYC, 3) + ray(200, 150, 290, 43, RAYC, 3);
+  s += dot(200, 150, 3, '#233148');
+  return s + '</svg>';
+})();
+
+/* 02 漫反射：三束平行光 d=(0.26,0.966) 射向锯齿粗糙面；
+   每束在各自微面用反射公式逐束计算（保证局部 i=r）后向不同方向散射；P2/P3 画局部法线 */
+var SVG_02 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<polyline points="28,150 50,140 72,142 94,152 116,151 138,139 160,150 182,141 204,152 226,140 248,151 270,142 292,150" fill="none" stroke="#aeb8c6" stroke-width="4" stroke-linejoin="round"/>';
+  s += '<g stroke="#8ea0b4" stroke-width="1.5">'
+    + '<line x1="50" y1="141" x2="43" y2="152"/><line x1="94" y1="153" x2="87" y2="164"/>'
+    + '<line x1="138" y1="140" x2="131" y2="151"/><line x1="182" y1="142" x2="175" y2="153"/>'
+    + '<line x1="226" y1="141" x2="219" y2="152"/><line x1="270" y1="143" x2="263" y2="154"/></g>';
+  s += '<line x1="101" y1="112" x2="71" y2="178" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<line x1="155" y1="103" x2="124" y2="165" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += ray(25, 46, 50, 140, RAYC, 2.8) + ray(54, 46, 83, 152, RAYC, 2.8) + ray(113, 46, 138, 139, RAYC, 2.8);
+  s += ray(50, 140, 12, 84, RAYC, 2.8) + ray(83, 152, 146, 122, RAYC, 2.8) + ray(138, 139, 203, 113, RAYC, 2.8);
+  return s + '</svg>';
+})();
+
+/* 03 潜望镜：Z 形光路；45° 镜 M1(131,35)-(165,69)、M2(131,115)-(165,149) 斜率均 +1（"\" 形，分别过反射点 (148,52)、(148,132)）；
+   验算：水平光 d=(1,0) 经 M1（单位切向 t=(0.707,0.707)）反射 r=2(d·t)t-d=(0,1) 竖直向下，经 M2 同理反射回 (1,0) 水平向右；
+   法线斜率 -1 与镜垂直：N1(114,86)-(182,18)、N2(114,166)-(182,98)；背纹在镜面背光侧（M1 右上、M2 左下），不与镜面共线 */
+var SVG_03 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<path d="M28,52 H148 V132 H372" fill="none" stroke="#d9e1ec" stroke-width="36" stroke-linejoin="round"/>';
+  s += '<path d="M28,52 H148 V132 H372" fill="none" stroke="#b9c5d4" stroke-width="36" stroke-linejoin="round" opacity="0.25"/>';
+  s += '<line x1="114" y1="86" x2="182" y2="18" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<line x1="114" y1="166" x2="182" y2="98" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<line x1="131" y1="35" x2="165" y2="69" stroke="#7d8ba0" stroke-width="5" stroke-linecap="round"/>';
+  s += '<line x1="131" y1="115" x2="165" y2="149" stroke="#7d8ba0" stroke-width="5" stroke-linecap="round"/>';
+  s += '<g stroke="#8ea0b4" stroke-width="1.6">'
+    + '<line x1="139.5" y1="43.5" x2="143.7" y2="39.3"/><line x1="148" y1="52" x2="152.2" y2="47.8"/><line x1="156.5" y1="60.5" x2="160.7" y2="56.3"/>'
+    + '<line x1="139.5" y1="123.5" x2="135.3" y2="127.7"/><line x1="148" y1="132" x2="143.8" y2="136.2"/><line x1="156.5" y1="140.5" x2="152.3" y2="144.7"/></g>';
+  s += ray(30, 52, 148, 52, RAYC, 3) + ray(148, 52, 148, 132, RAYC, 3) + ray(148, 132, 366, 132, RAYC, 3);
+  s += dot(148, 52, 2.5, '#233148') + dot(148, 132, 2.5, '#233148');
+  s += '<circle cx="30" cy="52" r="8" fill="#ffd34d" opacity="0.35"/><circle cx="30" cy="52" r="4.5" fill="#ffd34d"/>';
+  return s + '</svg>';
+})();
+
+/* 04 自行车尾灯：互成 90° 角反射器 M1(214,38)-(296,120) 斜率1、M2(296,120)-(214,202) 斜率-1，角朝右开口朝左；
+   光路 (36,94)→H1(249.7,73.7)→H2(239.9,176.1)→(50.8,194.1)：H1 在 M1 线 y=x-176 上（249.7-176=73.7）、
+   H2 在 M2 线 y=-x+416 上（-239.9+416=176.1）；法线 N1 斜率-1⊥M1、N2 斜率+1⊥M2，均过对应入射点；
+   验算：d=(0.9955,-0.0946) 经 M1(45°) 反射为 (-0.0941,0.9956)，经 M2(-45°) 反射为 (-0.9955,0.0948)=-d（严格回射、箭头反向） */
+var SVG_04 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<line x1="233.7" y1="89.7" x2="265.7" y2="57.7" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<line x1="223.9" y1="160.1" x2="255.9" y2="192.1" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<line x1="214" y1="38" x2="296" y2="120" stroke="#7d8ba0" stroke-width="5" stroke-linecap="round"/>';
+  s += '<line x1="296" y1="120" x2="214" y2="202" stroke="#7d8ba0" stroke-width="5" stroke-linecap="round"/>';
+  s += '<g stroke="#8ea0b4" stroke-width="1.6">'
+    + '<line x1="245" y1="69" x2="250" y2="64"/><line x1="275" y1="99" x2="280" y2="94"/>'
+    + '<line x1="245" y1="171" x2="250" y2="176"/><line x1="275" y1="141" x2="280" y2="146"/></g>';
+  s += ray(36, 94, 249.7, 73.7, YEL, 3) + ray(249.7, 73.7, 239.9, 176.1, YEL, 3) + ray(239.9, 176.1, 50.8, 194.1, YEL, 3);
+  s += dot(249.7, 73.7, 2.5, '#233148') + dot(239.9, 176.1, 2.5, '#233148');
+  return s + '</svg>';
+})();
+
+/* 05 探究光的折射：半圆砖平边朝上，圆心 O(200,75) 即入射点；
+   θ1=atan(58/48)=50.4° → θ2=30°（sin50.4/sin30=1.54≈玻璃），折射光在法线同侧向法线偏折、不横穿法线；
+   沿半径直达弧面出射点 O+85·(sin30,cos30)=(242.5,148.6)，垂直弧面射出不再偏折（第三段共线延伸）；
+   「玻璃」标签 (244,134)：距圆心 √(44²+59²)=73.6 < 半径 85，在砖内 */
+var SVG_05 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<path d="M115,75 A85,85 0 0 0 285,75 Z" fill="' + MEDIA_FILL + '" stroke="' + MEDIA_LINE + '" stroke-width="2"/>';
+  s += '<line x1="200" y1="20" x2="200" y2="168" stroke="' + NORMAL + '" stroke-width="1.6" stroke-dasharray="4 4"/>';
+  s += ray(142, 27, 200, 75, RAYC, 3);
+  s += ray(200, 75, 242.5, 148.6, RAYC, 3);
+  s += ray(242.5, 148.6, 254.5, 169.4, RAYC, 3);
+  s += dot(200, 75, 3, '#233148');
+  s += txt(272, 62, '空气', '#93a1b5', 12) + txt(244, 134, '玻璃', '#93a1b5', 12);
+  return s + '</svg>';
+})();
+
+/* 06 光的偏折：空气→水 θ1=atan(90/52)=60° → θ2=asin(sin60/1.33)=40.6°；
+   折射段 (200,95)→(269,175)：atan(69/80)=40.8°≈40.6°（n=1.33 定量正确），向法线偏折且水平分量仍向右；
+   弱反射光 60° 分居法线另一侧（低透明度） */
+var SVG_06 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<rect x="50" y="95" width="300" height="80" fill="' + MEDIA_FILL + '"/>';
+  s += '<path d="M50,95 V175 H350 V95" fill="none" stroke="' + MEDIA_LINE + '" stroke-width="2"/>';
+  s += '<line x1="50" y1="95" x2="350" y2="95" stroke="' + MEDIA_LINE + '" stroke-width="2.5"/>';
+  s += '<line x1="200" y1="30" x2="200" y2="170" stroke="' + NORMAL + '" stroke-width="1.6" stroke-dasharray="4 4"/>';
+  s += ray(110, 43, 200, 95, RAYC, 3);
+  s += ray(200, 95, 290, 43, RAYC, 2, 0.5);
+  s += ray(200, 95, 269, 175, RAYC, 3);
+  s += dot(200, 95, 3, '#233148');
+  s += txt(318, 64, '空气', '#93a1b5', 12) + txt(318, 152, '水', '#93a1b5', 12);
+  return s + '</svg>';
+})();
+
+/* 07 观察筷子的折射：实际筷 (193,21)-(175,80)-(150,162) 成一直线（斜率均≈-3.28，水下段淡虚线）；
+   视筷 (175,80)-(158,121) 在水面处向上弯折（视尖精确落在折射视线反向延长线上）；光从筷尖 (150,162)→折射点 R(210,80)：水下 atan(60/82)=36.2°
+   → 空气 asin(1.33·sin36.2)=51.7°（出射段 atan(80/63.3)=51.6°，sin 比 1.328≈1.33，远离法线），折向右上入眼（终点即瞳孔） */
+var SVG_07 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<polygon points="112.5,80 242.4,80 224,172 102,172" fill="' + MEDIA_FILL + '"/>';
+  s += '<path d="M118,32 L102,172 L224,172 L252,32" fill="none" stroke="' + MEDIA_LINE + '" stroke-width="2.5" stroke-linejoin="round"/>';
+  s += '<line x1="112.5" y1="80" x2="242.4" y2="80" stroke="' + MEDIA_LINE + '" stroke-width="2.5"/>';
+  s += '<line x1="175" y1="80" x2="150" y2="162" stroke="#a06a3a" stroke-width="4" stroke-linecap="round" opacity="0.28" stroke-dasharray="5 4"/>';
+  s += '<line x1="175" y1="80" x2="158" y2="121" stroke="#a06a3a" stroke-width="7" stroke-linecap="round"/>';
+  s += '<line x1="175" y1="80" x2="158" y2="121" stroke="#c08a52" stroke-width="2.5" stroke-linecap="round"/>';
+  s += '<line x1="175" y1="80" x2="193" y2="21" stroke="#a06a3a" stroke-width="7" stroke-linecap="round"/>';
+  s += '<line x1="175" y1="80" x2="193" y2="21" stroke="#c08a52" stroke-width="2.5" stroke-linecap="round"/>';
+  s += '<line x1="210" y1="52" x2="210" y2="108" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += ray(150, 162, 210, 80, YEL, 2.5) + ray(210, 80, 290, 16.7, YEL, 2.5);
+  s += dot(150, 162, 2.5, '#233148') + dot(210, 80, 2.5, '#233148');
+  s += '<path d="M279,17 Q289,8 299,17 Q289,26 279,17 Z" fill="none" stroke="#51627c" stroke-width="2"/>' + dot(289, 17, 3, '#51627c');
+  return s + '</svg>';
+})();
+
+/* 08 光导纤维：锯齿折线在纤芯上下壁间多次全反射（每段直线、各反射点处与壁夹角相等、四段均带中央箭头），
+   顶点精确落在壁曲线上 (90,58.4)(190,96.3)(292,61.4)，绝非平滑弯曲；左端入射、右端出射光斑 */
+var SVG_08 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<path d="M30,60 Q200,54 368,66 L368,104 Q200,92 30,98 Z" fill="rgba(150,200,255,0.22)"/>';
+  s += '<path d="M30,60 Q200,54 368,66" fill="none" stroke="#8fb9e2" stroke-width="2.5"/>';
+  s += '<path d="M30,98 Q200,92 368,104" fill="none" stroke="#8fb9e2" stroke-width="2.5"/>';
+  s += ray(38, 79, 90, 58.4, RAYC, 3);
+  s += ray(90, 58.4, 190, 96.3, RAYC, 3);
+  s += ray(190, 96.3, 292, 61.4, RAYC, 3) + ray(292, 61.4, 368, 95.7, RAYC, 3);
+  s += '<circle cx="38" cy="79" r="8" fill="#ffd34d" opacity="0.35"/><circle cx="38" cy="79" r="4.5" fill="#ffd34d"/>';
+  s += '<circle cx="368" cy="95.7" r="8" fill="#ffd34d" opacity="0.35"/><circle cx="368" cy="95.7" r="4.5" fill="#ffd34d"/>';
+  return s + '</svg>';
+})();
+
+/* 09 光的色散：三棱镜 (200,42)(133,158)(267,158) 顶角 60°；
+   白光 (70,135)→入射点 E(166.5,100)；法线 (131.9,80)-(201.1,120) 方向 (0.866,0.5) 斜率 +0.577，
+   与左侧面（斜率 -1.731）严格垂直（0.577×1.731≈1）；θ1=49.9°→θ2=29.2°（sin 比 1.57≈玻璃）向法线偏折不横穿；
+   内部光带中央箭头 → 右侧面出射点 (234,101)（棱线 (200,42)-(267,158) 上，t=0.509）；
+   出射扇 14°(红)…22°(紫) 均向底边偏折、红光最上偏折最小、紫光最下偏折最大 */
+var SVG_09 = (function(){
+  var cols = ['#ff3b30', '#ff9500', '#ffd60a', '#34c759', '#32ade6', '#0a84ff', '#8e44ad'];
+  var ys = [129.4, 132.2, 135.2, 138, 140.9, 144.1, 147.1];
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<polygon points="200,42 133,158 267,158" fill="' + MEDIA_FILL + '" stroke="#9fb2c8" stroke-width="2"/>';
+  s += '<line x1="131.9" y1="80" x2="201.1" y2="120" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += ray(70, 135, 166.5, 100, YEL, 3.5);
+  s += ray(166.5, 100, 234, 101, YEL, 2.5);
+  for (var i = 0; i < cols.length; i++) s += ray(234, 101, 348, ys[i], cols[i], 3);
+  s += dot(166.5, 100, 2.5, '#233148');
+  s += txt(60, 160, '白光', '#93a1b5', 11);
+  return s + '</svg>';
+})();
+
+/* 10 光的三原色：深色面板 + RGB 圆 mix-blend-mode:screen：R+G=黄、G+B=青、B+R=品红、中心白；无光线无箭头 */
+var SVG_10 = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>'
+  + '<rect x="95" y="36" width="210" height="158" rx="18" fill="#202733"/>'
+  + '<g style="mix-blend-mode:screen">'
+  + '<circle cx="172" cy="94" r="50" fill="#ff3b30" fill-opacity="0.9"/>'
+  + '<circle cx="228" cy="94" r="50" fill="#2ecc40" fill-opacity="0.9"/>'
+  + '<circle cx="200" cy="142" r="50" fill="#0a84ff" fill-opacity="0.9"/>'
+  + '</g></svg>';
+
+/* 11 颜料的三基色：浅色面板 + CMY 圆 mix-blend-mode:multiply：C+M=蓝、M+Y=红、Y+C=绿、中心近黑；无光线无箭头 */
+var SVG_11 = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>'
+  + '<rect x="95" y="36" width="210" height="158" rx="18" fill="#fbfcfe" stroke="#dde5ef"/>'
+  + '<g style="mix-blend-mode:multiply">'
+  + '<circle cx="172" cy="94" r="50" fill="#00bcd4" fill-opacity="0.85"/>'
+  + '<circle cx="228" cy="94" r="50" fill="#e84393" fill-opacity="0.85"/>'
+  + '<circle cx="200" cy="142" r="50" fill="#ffd32a" fill-opacity="0.85"/>'
+  + '</g></svg>';
+
+/* 12 透镜对光的作用：三条水平平行光 (30,55/120/185) 过双凸透镜后严格共点于焦点 F(295,120)；
+   演算：(225,55)→F 方向 (70,65)，延长 1.85 倍得 (354.5,175.3)，共线；主轴光线 (220,120)→(340,120) 不偏折；
+   过焦点后继续短延伸发散；只表达「会聚」 */
+var SVG_12 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<line x1="24" y1="120" x2="376" y2="120" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<path d="M220,42 Q254,120 220,198 Q186,120 220,42 Z" fill="rgba(150,200,255,0.40)" stroke="' + MEDIA_LINE + '" stroke-width="2.5"/>';
+  s += ray(30, 55, 225, 55, RAYC, 3) + ray(30, 120, 220, 120, RAYC, 3) + ray(30, 185, 225, 185, RAYC, 3);
+  s += ray(225, 55, 354.5, 175.3, RAYC, 3) + ray(220, 120, 340, 120, RAYC, 3) + ray(225, 185, 354.5, 64.8, RAYC, 3);
+  s += dot(295, 120, 3.5, '#233148') + txt(295, 143, 'F', '#233148', 13);
+  s += txt(220, 224, '凸透镜', '#93a1b5', 12);
+  return s + '</svg>';
+})();
+
+/* 13 凸透镜成像规律：f=60px、u=150px → v=100px（1/v=1/f-1/u），像高=物高×2/3=26.7；
+   平行主轴光线 (90,85)→(240,85)→折射一段直达 (376.5,176.1)，过右焦点 F(300,125)（方向 (60,40) 共线、焦点处无分段）；
+   过光心 O(240,125) 光线直线不偏折 (90,85)→(240,125)→(365.5,158.5)（斜率均 4/15）；
+   两线严格交于像点 (340,151.7)：倒立缩小实像，像箭头尖端 y=152≈计算像高；F(180/300)、2F(120/360) 按 f=60 等距刻度 */
+var SVG_13 = (function(){
+  var s = SVG_OPEN + '<rect width="400" height="240" fill="' + BG + '"/>';
+  s += '<line x1="24" y1="125" x2="376" y2="125" stroke="' + NORMAL + '" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s += '<path d="M240,45 Q274,125 240,205 Q206,125 240,45 Z" fill="rgba(150,200,255,0.40)" stroke="' + MEDIA_LINE + '" stroke-width="2.5"/>';
+  s += '<path d="M90,85 C83,93 83,100 90,104 C97,100 97,93 90,85 Z" fill="#ff9f43"/>';
+  s += '<rect x="86" y="104" width="8" height="21" rx="2" fill="#f6c343"/>';
+  s += ray(90, 85, 240, 85, RAYC, 2.6) + ray(240, 85, 376.5, 176.1, RAYC, 2.6);
+  s += ray(90, 85, 240, 125, RAYC, 2.6) + ray(240, 125, 365.5, 158.5, RAYC, 2.6);
+  s += '<line x1="340" y1="125" x2="340" y2="152" stroke="#3a6fb8" stroke-width="3.5"/>';
+  s += '<polygon points="340,152 334.5,143 345.5,143" fill="#3a6fb8"/>';
+  s += dot(180, 125, 2.5, '#233148') + dot(120, 125, 2.5, '#233148') + dot(300, 125, 2.5, '#233148') + dot(360, 125, 2.5, '#233148');
+  s += dot(240, 125, 3, '#233148');
+  s += txt(180, 147, 'F', '#51627c', 11) + txt(120, 147, '2F', '#51627c', 11) + txt(300, 147, 'F', '#51627c', 11) + txt(360, 147, '2F', '#51627c', 11) + txt(240, 147, 'O', '#51627c', 11);
+  return s + '</svg>';
+})();
+
+/* ================= 实验数据 ================= */
+var CAT_COLORS = {
+  '光的反射':   '#4a90d9',
+  '光的折射':   '#2bb3a3',
+  '全反射应用': '#e8833a',
+  '色散与颜色': '#b05cc9',
+  '透镜':       '#5aa84f'
+};
+var CATEGORIES = ['全部', '光的反射', '光的折射', '全反射应用', '色散与颜色', '透镜'];
+
+var EXPS = [
+  { f: '01-mirror-reflection.html',       n: '镜面反射',       d: '激光照射平面镜，改变入射角验证反射定律',   c: '光的反射',   m: '2D',      svg: SVG_01 },
+  { f: '02-diffuse-reflection.html',         n: '漫反射',         d: '平行光射向毛玻璃，每条光线仍遵循反射定律', c: '光的反射',   m: '2D',      svg: SVG_02 },
+  { f: '03-periscope.html',         n: '潜望镜',         d: '两块 45° 平面镜让光路竖直平移',           c: '光的反射',   m: '3D 拖拽', svg: SVG_03 },
+  { f: '04-bicycle-taillight.html',     n: '自行车尾灯',     d: '角反射器把灯光沿原方向反射回去',           c: '光的反射',   m: '2D+3D',   svg: SVG_04 },
+  { f: '05-refraction-lab.html',   n: '探究光的折射',   d: '半圆玻璃砖定量验证折射定律与全反射',       c: '光的折射',   m: '2D',      svg: SVG_05 },
+  { f: '06-light-bending.html',       n: '光的偏折',       d: '激光斜射入水中，观察反射与折射并存',       c: '光的折射',   m: '2D',      svg: SVG_06 },
+  { f: '07-chopstick-refraction.html', n: '观察筷子的折射', d: '水中筷子为什么看起来弯折了',               c: '光的折射',   m: '3D 拖拽', svg: SVG_07 },
+  { f: '08-optical-fiber.html',       n: '光导纤维',       d: '光在弯曲光纤中全反射前进',                 c: '全反射应用', m: '3D 拖拽', svg: SVG_08 },
+  { f: '09-dispersion.html',       n: '光的色散',       d: '白光过三棱镜展开七色光谱',                 c: '色散与颜色', m: '2D',      svg: SVG_09 },
+  { f: '10-rgb-color-mixing.html',     n: '光的三原色',     d: '红绿蓝色光加色混合成白光',                 c: '色散与颜色', m: '2D',      svg: SVG_10 },
+  { f: '11-pigment-cmy.html',   n: '颜料的三基色',   d: '品红黄青颜料减色混合',                     c: '色散与颜色', m: '2D',      svg: SVG_11 },
+  { f: '12-lens-rays.html', n: '透镜对光的作用', d: '凸透镜会聚、凹透镜发散与三种特殊光线',     c: '透镜',       m: '2D',      svg: SVG_12 },
+  { f: '13-lens-imaging.html', n: '凸透镜成像规律', d: '拖动蜡烛探究五种成像情况',                 c: '透镜',       m: '2D',      svg: SVG_13 }
+];
+
+/* ================= 状态与渲染 ================= */
+var state = { q: '', cat: '全部' };
+
+var gridEl  = document.getElementById('grid');
+var tabsEl  = document.getElementById('tabs');
+var emptyEl = document.getElementById('empty');
+var searchEl = document.getElementById('search');
+
+function dimBadgeClass(m) {
+  if (m === '3D 拖拽') return 'badge-3d';
+  if (m === '2D+3D')   return 'badge-23d';
+  return 'badge-2d';
+}
+
+function renderTabs() {
+  var html = '';
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    var c = CATEGORIES[i];
+    var cnt = (c === '全部') ? EXPS.length
+      : EXPS.filter(function (e) { return e.c === c; }).length;
+    html += '<button class="tab' + (state.cat === c ? ' active' : '') + '" data-cat="' + c + '">'
+      + c + '<span class="cnt">' + cnt + '</span></button>';
+  }
+  tabsEl.innerHTML = html;
+}
+
+function filtered() {
+  var q = state.q.trim().toLowerCase();
+  return EXPS.filter(function (e) {
+    var okCat = (state.cat === '全部') || (e.c === state.cat);
+    var okQ = !q || e.n.toLowerCase().indexOf(q) !== -1 || e.d.toLowerCase().indexOf(q) !== -1;
+    return okCat && okQ;
+  });
+}
+
+function renderGrid() {
+  var list = filtered();
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var e = list[i];
+    html += '<a class="card" href="' + e.f + '" target="_blank" rel="noopener" title="在新标签页打开：' + e.n + '">'
+      + '<div class="thumb">' + e.svg + '</div>'
+      + '<div class="card-body">'
+      + '<div class="card-title">' + e.n + '</div>'
+      + '<div class="card-desc">' + e.d + '</div>'
+      + '<div class="badges">'
+      + '<span class="badge badge-html5">HTML5</span>'
+      + '<span class="badge ' + dimBadgeClass(e.m) + '">' + e.m + '</span>'
+      + '<span class="cat-tag"><span class="cat-dot" style="background:' + CAT_COLORS[e.c] + '"></span>' + e.c + '</span>'
+      + '</div></div></a>';
+  }
+  gridEl.innerHTML = html;
+  emptyEl.className = 'empty' + (list.length ? '' : ' show');
+}
+
+tabsEl.addEventListener('click', function (ev) {
+  var btn = ev.target.closest('.tab');
+  if (!btn) return;
+  state.cat = btn.getAttribute('data-cat');
+  renderTabs();
+  renderGrid();
+});
+
+searchEl.addEventListener('input', function () {
+  state.q = searchEl.value;
+  renderGrid();
+});
+
+renderTabs();
+renderGrid();
+</script>
+<a href="../../index.html" style="position:fixed;top:14px;left:14px;z-index:9999;color:#9DB2CE;text-decoration:none;font:13px/1 'PingFang SC','Microsoft YaHei',sans-serif;padding:8px 14px;border:1px solid rgba(120,150,190,.35);border-radius:10px;background:rgba(10,14,22,.72);backdrop-filter:blur(8px);">&#9002; 合集</a>
+</body>
+</html>

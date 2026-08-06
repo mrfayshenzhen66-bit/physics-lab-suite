@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>物理仿真实验室 · 合集</title>
+<style>
+:root{--bg:#0A0A0F;--panel:rgba(255,255,255,.045);--border:rgba(255,255,255,.09);--text:#E8ECF4;--text2:#9DB2CE;--text3:#5C6B84}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(1000px 500px at 15% -10%,rgba(0,240,255,.07),transparent 60%),
+                   radial-gradient(900px 500px at 85% 0%,rgba(155,77,255,.06),transparent 60%),
+                   radial-gradient(800px 600px at 50% 110%,rgba(255,107,53,.05),transparent 60%)}
+header{position:sticky;top:0;z-index:50;background:rgba(10,10,15,.85);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+.hwrap{max-width:1180px;margin:0 auto;padding:14px 26px;display:flex;align-items:center;gap:18px}
+.logo{font-size:21px;font-weight:800;letter-spacing:.5px}
+.logo small{display:block;font-size:10.5px;font-weight:400;color:var(--text3);letter-spacing:2.5px;margin-top:2px}
+.search{margin-left:auto;position:relative}
+.search input{width:250px;padding:9px 14px 9px 34px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:13.5px;outline:none;transition:.2s}
+.search input:focus{border-color:rgba(0,240,255,.45);box-shadow:0 0 0 3px rgba(0,240,255,.08)}
+.search::before{content:"⌕";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+main{max-width:1180px;margin:0 auto;padding:34px 26px 60px}
+.hero{margin-bottom:30px}
+.hero h1{font-size:30px;font-weight:800;letter-spacing:1px}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#00F0FF,#9B4DFF,#FF6B35);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin-top:10px;color:var(--text2);font-size:14.5px;line-height:1.8;max-width:760px}
+.hero p b{color:var(--text)}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
+.tabs button{padding:8px 18px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--text2);font-size:13.5px;cursor:pointer;transition:.18s;font-family:inherit}
+.tabs button:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+.tabs button.on{color:#fff;border-color:var(--ac);box-shadow:0 0 14px -3px var(--ac);background:rgba(255,255,255,.07)}
+.tabs button .n{opacity:.65;font-size:11.5px;margin-left:5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.card{position:relative;display:block;text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:18px;background:var(--panel);padding:22px 22px 18px;overflow:hidden;transition:.22s;backdrop-filter:blur(8px)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac);box-shadow:0 0 16px var(--ac)}
+.card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--ac) 55%,transparent);box-shadow:0 14px 40px -14px var(--ac)}
+.card .top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.badge{font-size:11.5px;padding:3px 11px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ac) 55%,transparent);color:var(--ac);letter-spacing:1px}
+.card .date{margin-left:auto;font-size:11.5px;color:var(--text3)}
+.card h2{font-size:19px;font-weight:800;margin-bottom:9px}
+.card p{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:14px}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.tags span{font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--text2)}
+.card .go{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;color:var(--ac)}
+.card .go .sec{color:var(--text3);font-weight:400;font-size:11.5px}
+.soon{border-style:dashed;opacity:.75;cursor:default}
+.soon::before{background:var(--ac);opacity:.35;box-shadow:none}
+.soon:hover{transform:none;border-color:var(--border);box-shadow:none}
+.soon h2{color:var(--text2)}
+.soon p{color:var(--text3)}
+.soon .go{color:var(--text3)}
+.manage{margin-top:44px;border:1px solid var(--border);border-radius:18px;background:var(--panel);padding:24px 26px}
+.manage h3{font-size:16px;font-weight:800;margin-bottom:12px;color:#FFD166}
+.manage ol{margin-left:20px;color:var(--text2);font-size:13.5px;line-height:2.1}
+.manage code{background:rgba(255,255,255,.08);padding:2px 8px;border-radius:7px;font-size:12px;color:#00F0FF;font-family:"JetBrains Mono",Consolas,monospace}
+.manage .tip{margin-top:12px;font-size:12.5px;color:var(--text3)}
+footer{border-top:1px solid var(--border);padding:20px;text-align:center;color:var(--text3);font-size:12px;letter-spacing:1.5px}
+.empty{display:none;text-align:center;color:var(--text3);padding:50px 0;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="logo">物理仿真实验室 · 合集<small>PHYSICS LAB SUITE</small></div>
+    <div class="search"><input id="q" type="text" placeholder="搜索实验 / 关键词…"></div>
+  </div>
+</header>
+<main>
+  <div class="hero">
+    <h1>交互式教学仿真 <em>一页一实验 · 持续更新</em></h1>
+    <p>每个实验室都是<b>独立单文件页面</b>，点开即用、离线可用。按模块归档：力学已上线，电学、热学、光学等模块陆续更新。新页面只需放入 <b>labs/</b> 目录并在登记表加一行，即可出现在这里。</p>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">没有匹配的实验室，换个关键词试试。</div>
+  <div class="manage">
+    <h3>📁 合集管理规范（新增实验页两步走）</h3>
+    <ol>
+      <li>把新页面放入子目录：<code>labs/电学-xxx/index.html</code>（每个实验仍是独立单文件 HTML，互不影响）；</li>
+      <li>在本页顶部 <code>LABS</code> 数组里加一条登记：<code>{module:'电学', title:'…', path:'labs/电学-xxx/index.html', …}</code>，门户自动生成卡片、模块计数与搜索索引。</li>
+    </ol>
+    <div class="tip">提示：也可以直接把做好的页面发给我，说一声“登记进合集”，我会自动完成归档与登记。模块配色在 MODULES 数组统一维护。</div>
+  </div>
+</main>
+<footer>PHYSICS LAB SUITE · 单文件仿真 · 离线可用 · 持续更新</footer>
+
+<script>
+/* ================= 合集登记表（新增实验页只改这里） ================= */
+const MODULES=[
+  {name:'力学',color:'#00F0FF'},
+  {name:'电学',color:'#FFB800'},
+  {name:'热学',color:'#FF6B35'},
+  {name:'声学',color:'#4D9FFF'},
+  {name:'光学',color:'#9B4DFF'},
+  {name:'原子与近代物理',color:'#00E5A0'},
+];
+const LABS=[
+  {id:'plank-conveyor',module:'力学',title:'板块·传送带实验室',
+   desc:'板块相对滑动临界判据 · f—F 三段图象探究 · 水平+倾斜传送带双减速模型 · 慢动作动画与 v-t 图同步演绎 · 规范解答卡——两道统考压轴题的可视化讲评',
+   tags:['牛顿第二定律','板块模型','传送带模型','v-t 图象','压轴题'],
+   color:'#00F0FF',path:'labs/plank-conveyor/index.html',date:'2026-08-06',sections:6},
+  {id:'3d-force',module:'力学',title:'三维受力分析实验室',
+   desc:'四球垛空间汇交力系 · 斜面挡板三维分解 · 木板双翻转静摩擦 · 晾衣绳动态平衡（B 参考系速度合成） · V形槽圆柱三维摩擦 · 图解法动态平衡三剑客',
+   tags:['共点力平衡','3D 可视化','动态平衡','图解法','速度合成'],
+   color:'#00F0FF',path:'labs/3d-force/index.html',date:'2026-08-03',sections:6},
+  {id:'ac-dc',module:'电学',title:'交流变直流实验室',
+   desc:'交流电的产生 · 三相电 · 半波/桥式整流 · 滤波稳压 · 换流站 · 一度电的"变形记"——从发电机到 5V 电源的完整旅程',
+   tags:['交流电','整流滤波','二极管','示波器','一站式自学'],
+   color:'#FFB800',path:'labs/ac-dc/index.html',date:'2026-08-03',sections:7},
+  {id:'sound',module:'声学',title:'声波实验室 SoundLab',
+   desc:'声音三要素 · 乐音与噪声 · 纵波与波形可视化 · 乐器演奏与频谱——初中声现象的交互式探索（站内四个实验区自由切换）',
+   tags:['声现象','初中物理','纵波','波形','音调响度音色'],
+   color:'#4D9FFF',path:'labs/sound/index.html',date:'2026-08-03',sections:4},
+  {id:'optics',module:'光学',title:'光现象仿真实验室（13 合 1）',
+   desc:'镜面反射 · 漫反射 · 潜望镜 · 自行车尾灯 · 折射探究 · 光的偏折 · 筷子折射 · 光导纤维 · 色散 · 光的三原色 · 颜料三基色 · 透镜作用 · 凸透镜成像',
+   tags:['光的反射','光的折射','全反射','色散','透镜','合集门户'],
+   color:'#9B4DFF',path:'labs/optics/index.html',date:'2026-08-03',sections:13},
+  {id:'lens-scope',module:'光学',title:'光的旅途 · 望远镜与显微镜',
+   desc:'3D 交互式光学实验室——光在透镜中的旅程，望远镜与显微镜的结构与成像原理探秘',
+   tags:['透镜成像','望远镜','显微镜','3D 交互','光学仪器'],
+   color:'#9B4DFF',path:'labs/lens-scope/index.html',date:'2026-08-03',sections:1},
+  {id:'lc-osc',module:'电学',title:'电磁振荡实验室',
+   desc:'LC 振荡电路（电场能⇌磁场能） · 日光灯启辉器自感高压 · 电磁炉涡流加热 · 收音机电谐振选台 · 金属探测器——振荡电路的生活应用全景，3D 拟物场景可转视角',
+   tags:['电磁振荡','自感','涡流','电谐振','3D 拟物','选必二'],
+   color:'#FFB800',path:'labs/lc-osc/index.html',date:'2026-08-03',sections:5},
+];
+/* ================= 渲染 ================= */
+const tabsEl=document.getElementById('tabs'),grid=document.getElementById('grid'),empty=document.getElementById('empty');
+let cur='全部',kw='';
+function modColor(m){const f=MODULES.find(x=>x.name===m);return f?f.color:'#9DB2CE';}
+function renderTabs(){
+  const counts={};LABS.forEach(l=>counts[l.module]=(counts[l.module]||0)+1);
+  const all=[{name:'全部',color:'#00F0FF',n:LABS.length}]
+    .concat(MODULES.map(m=>({name:m.name,color:m.color,n:counts[m.name]||0})));
+  tabsEl.innerHTML='';
+  all.forEach(t=>{
+    const b=document.createElement('button');
+    b.innerHTML=t.name+'<span class="n">'+t.n+'</span>';
+    b.style.setProperty('--ac',t.color);
+    b.classList.toggle('on',cur===t.name);
+    b.onclick=()=>{cur=t.name;renderTabs();renderGrid();};
+    tabsEl.appendChild(b);
+  });
+}
+function renderGrid(){
+  const list=LABS.filter(l=>(cur==='全部'||l.module===cur)&&
+    (!kw||(l.title+l.desc+l.tags.join('')+l.module).toLowerCase().includes(kw)));
+  grid.innerHTML='';
+  list.forEach(l=>{
+    const a=document.createElement('a');
+    a.className='card';a.href=l.path;a.style.setProperty('--ac',l.color||modColor(l.module));
+    a.innerHTML=
+      '<div class="top"><span class="badge">'+l.module+'</span><span class="date">'+l.date+'</span></div>'+
+      '<h2>'+l.title+'</h2>'+
+      '<p>'+l.desc+'</p>'+
+      '<div class="tags">'+l.tags.map(t=>'<span>'+t+'</span>').join('')+'</div>'+
+      '<div class="go"><span>'+(l.sections?l.sections+' 个栏目':'')+'</span><span>进入实验室 →</span></div>';
+    grid.appendChild(a);
+  });
+  /* 当前筛选模块无实验时，给出筹备中占位卡 */
+  const mods=MODULES.filter(m=>(cur==='全部'||m.name===cur)&&!(list.some(l=>l.module===m.name)));
+  if(!kw)mods.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='card soon';d.style.setProperty('--ac',m.color);
+    d.innerHTML='<div class="top"><span class="badge">'+m.name+'</span></div>'+
+      '<h2>'+m.name+'模块 · 筹备中</h2>'+
+      '<p>该模块的仿真实验正在制作中，后续更新后会自动出现在合集里。</p>'+
+      '<div class="go"><span></span><span>敬请期待</span></div>';
+    grid.appendChild(d);
+  });
+  empty.style.display=list.length?'none':'block';
+}
+document.getElementById('q').oninput=e=>{kw=e.target.value.trim().toLowerCase();renderGrid();};
+renderTabs();renderGrid();
+</script>
+</body>
+</html>

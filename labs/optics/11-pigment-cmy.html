@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>颜料的三基色 - 光学模拟仿真实验室合集</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#10141d;color:#e8ecf3;font-family:'PingFang SC','Microsoft YaHei',sans-serif;overflow-x:hidden}
+  #topbar{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(20,26,38,.9);border-bottom:1px solid rgba(255,255,255,.08)}
+  #topbar a{color:#fff;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:8px;white-space:nowrap}
+  #topbar a:hover{background:rgba(255,255,255,.1)}
+  #topbar .name{font-size:16px;font-weight:600;letter-spacing:1px;white-space:nowrap}
+  #topbar .tip{font-size:12px;color:#9aa4b5;white-space:nowrap}
+  #stage{position:relative;width:min(1100px,100%);margin:10px auto 24px}
+  canvas{display:block;width:100%;height:auto;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.45);touch-action:none}
+  #toolbar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:10px;background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:8px 14px;backdrop-filter:blur(4px);z-index:10}
+  #toolbar button{background:rgba(255,255,255,.06);color:#e8ecf3;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:7px 18px;font-size:14px;cursor:pointer;font-family:inherit;transition:background .15s}
+  #toolbar button:hover{background:rgba(255,255,255,.18)}
+  .overlay{position:fixed;inset:0;background:rgba(8,10,16,.62);display:none;align-items:center;justify-content:center;z-index:30}
+  .card{width:min(640px,92vw);max-height:86vh;overflow:auto;background:#1c2333;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:22px 24px;box-shadow:0 18px 60px rgba(0,0,0,.6)}
+  .card h2{font-size:18px;margin-bottom:12px;letter-spacing:1px}
+  .card p{font-size:14px;line-height:1.85;color:#cfd6e2;margin-bottom:10px}
+  .card table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+  .card th,.card td{border:1px solid rgba(255,255,255,.14);padding:8px 10px;text-align:center;line-height:1.6}
+  .card th{background:rgba(255,255,255,.07);font-weight:600}
+  .card .closeRow{text-align:right;margin-top:14px}
+  .card .closeRow button{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:7px 22px;font-size:14px;cursor:pointer;font-family:inherit}
+  .card .closeRow button:hover{background:rgba(255,255,255,.18)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 2px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
+  #settingsPanel{position:absolute;right:14px;bottom:66px;width:276px;background:#1c2333;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:none;z-index:20;box-shadow:0 10px 34px rgba(0,0,0,.5)}
+  #settingsPanel h3{font-size:15px;margin-bottom:12px;letter-spacing:1px}
+  #settingsPanel .row{margin-bottom:12px;font-size:13px;color:#cfd6e2}
+  #settingsPanel .row .lab{display:flex;justify-content:space-between;margin-bottom:4px}
+  #settingsPanel .row .lab span{color:#8fa2c0}
+  #settingsPanel input[type=range]{width:100%;accent-color:#4d9fff;cursor:pointer}
+  #settingsPanel .chk label{display:flex;align-items:center;gap:7px;cursor:pointer}
+  #settingsPanel .chk input{accent-color:#4d9fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <a href="index.html">← 返回合集</a>
+  <div class="name">实验十一 · 颜料的三基色（减色混合）</div>
+  <div class="tip">操作提示：点击或按住滴管，向调色盘滴加颜料</div>
+</div>
+<div id="stage">
+  <canvas id="cv" width="1100" height="640"></canvas>
+  <div id="toolbar">
+    <button id="btnIntro">简介</button>
+    <button id="btnSettings">设置</button>
+    <button id="btnReset">重置</button>
+  </div>
+  <div id="settingsPanel">
+    <h3>设置</h3>
+    <div class="row">
+      <div class="lab"><label for="rgStrength">每滴浓度</label><span id="strengthVal"></span></div>
+      <input type="range" id="rgStrength" min="0.04" max="0.2" step="0.01" value="0.09">
+    </div>
+    <div class="row">
+      <div class="lab"><label for="rgSpeed">按住滴加速度</label><span id="speedVal"></span></div>
+      <input type="range" id="rgSpeed" min="90" max="400" step="10" value="170">
+    </div>
+    <div class="row chk"><label><input type="checkbox" id="ckRipples" checked> 涟漪动画</label></div>
+    <div class="row chk"><label><input type="checkbox" id="ckCounts" checked> 显示滴数统计</label></div>
+    <div class="row chk"><label><input type="checkbox" id="ckDiagram" checked> 显示角落混合示意图</label></div>
+  </div>
+</div>
+<div class="overlay" id="introOverlay">
+  <div class="card">
+    <h2>实验简介 · 颜料的三基色</h2>
+    <p>品红、黄、青被称为颜料的三基色。颜料本身不发光，它吸收（“减去”）照射光中的一部分色光，再反射其余色光进入眼睛，因此颜料混合属于<b>减色混合</b>。</p>
+    <p>品红颜料吸收绿光、黄颜料吸收蓝光、青颜料吸收红光。多种颜料混在一起时，被吸收的色光更多、反射的更少，所以颜色<b>越混越暗</b>：品红＋黄→红，黄＋青→绿，青＋品红→蓝；三色足量混合时几乎吸收全部色光，趋近黑色（印刷 CMYK 即由此而来，另配黑色油墨弥补纯度不足）。</p>
+    <p>减色换算：R = 255×(1−C)，G = 255×(1−M)，B = 255×(1−Y)，其中 C、M、Y 为青、品红、黄的浓度（0~1）。</p>
+    <p>操作：点击或按住上方滴管向调色盘中滴加颜料，观察盘中颜色、右侧分量条与混合色名称的变化；点击「重置」清空调色盘。</p>
+    <table>
+      <tr><th style="width:24%">对比项</th><th style="width:38%">色光三原色</th><th style="width:38%">颜料三基色</th></tr>
+      <tr><td>三种基色</td><td><span class="dot" style="background:#ff3b30"></span><span class="dot" style="background:#34c759"></span><span class="dot" style="background:#3b82f6"></span> 红、绿、蓝（RGB）</td><td><span class="dot" style="background:#ff4fc3"></span><span class="dot" style="background:#ffd92e"></span><span class="dot" style="background:#35d6f5"></span> 品红、黄、青（CMY）</td></tr>
+      <tr><td>混合方式</td><td>加色混合（色光叠加）</td><td>减色混合（吸收色光）</td></tr>
+      <tr><td>三色全混</td><td>白色，越混越亮</td><td>近黑色，越混越暗</td></tr>
+      <tr><td>典型应用</td><td>显示屏、舞台灯光</td><td>绘画调色、彩色印刷</td></tr>
+    </table>
+    <div class="closeRow"><button id="btnIntroClose">关闭</button></div>
+  </div>
+</div>
+<script>
+'use strict';
+/* ================= 基础 ================= */
+var W=1100,H=640;
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var DPR=Math.min(1.5,window.devicePixelRatio||1);
+cv.width=W*DPR;cv.height=H*DPR;ctx.scale(DPR,DPR);
+var F='"PingFang SC","Microsoft YaHei",sans-serif';
+
+/* 调色盘（椭圆金属盘）与滴管布局 */
+var PAL={cx:545,cy:470,rx:210,ry:68,irx:182,iry:53};
+var LAND_Y=446;                 /* 液滴落入液面的 y 坐标 */
+var TIP_Y=212;                  /* 滴管尖端 y 坐标 */
+var DROPPERS=[
+  {key:'m',name:'品红',x:435,liquid:'#ff4fc3',c1:'#ff8fdc',c2:'#a11e6d',squash:0},
+  {key:'y',name:'黄',  x:545,liquid:'#ffd92e',c1:'#ffe873',c2:'#b78f00',squash:0},
+  {key:'c',name:'青',  x:655,liquid:'#35d6f5',c1:'#7fe8fb',c2:'#0e7e97',squash:0}
+];
+
+var state={
+  c:0,m:0,y:0,            /* 各色已滴加滴数 */
+  drops:[],               /* 下落中的液滴 */
+  ripples:[],             /* 液面涟漪 */
+  strength:0.09,          /* 每滴浓度（约 11 滴饱和） */
+  dripInterval:170,       /* 按住时每滴间隔 ms */
+  showCounts:true,
+  showRipples:true,
+  showDiagram:true
+};
+var hoverKey=null;
+var pressed={};           /* key -> 下一次滴加时间戳 */
+
+/* ================= 工具函数 ================= */
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function ellipse(x,y,rx,ry){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);}
+function shadeStr(r,g,b,f){ /* f>0 向白提亮，f<0 向黑压暗 */
+  function s(v){v=f>=0?v+(255-v)*f:v*(1+f);return Math.round(clamp(v,0,255));}
+  return 'rgb('+s(r)+','+s(g)+','+s(b)+')';
+}
+/* 浓度 = min(1, 滴数 × 每滴浓度) */
+function conc(){
+  var s=state.strength;
+  return {c:Math.min(1,state.c*s),m:Math.min(1,state.m*s),y:Math.min(1,state.y*s)};
+}
+/* 减色混合：青吸红、品红吸绿、黄吸蓝 */
+function mixedRGB(){
+  var k=conc();
+  return [Math.round(255*(1-k.c)),Math.round(255*(1-k.m)),Math.round(255*(1-k.y))];
+}
+/* RGB -> 中文颜色名 */
+function colorName(r,g,b){
+  var rn=r/255,gn=g/255,bn=b/255;
+  var mx=Math.max(rn,gn,bn),mn=Math.min(rn,gn,bn);
+  var l=(mx+mn)/2,dd=mx-mn;
+  var s=dd===0?0:dd/(1-Math.abs(2*l-1));
+  if(l<0.09)return '黑色';
+  if(s<0.12){
+    if(l>0.9)return '白色';
+    return l<0.3?'深灰色':(l<0.62?'灰色':'浅灰色');
+  }
+  var h=0;
+  if(mx===rn)h=((gn-bn)/dd)%6;
+  else if(mx===gn)h=(bn-rn)/dd+2;
+  else h=(rn-gn)/dd+4;
+  h*=60;if(h<0)h+=360;
+  var base;
+  if(h<14||h>=346)base='红';else if(h<42)base='橙';else if(h<72)base='黄';
+  else if(h<96)base='黄绿';else if(h<156)base='绿';else if(h<176)base='青绿';
+  else if(h<196)base='青';else if(h<258)base='蓝';else if(h<288)base='紫';
+  else base='品红';
+  var pre='';
+  if(l<0.28)pre='深';else if(l>0.72)pre='浅';
+  return pre+base+'色';
+}
+function wrapText(text,x,y,maxW,lh){
+  var line='',yy=y;
+  for(var i=0;i<text.length;i++){
+    var t=line+text[i];
+    if(ctx.measureText(t).width>maxW&&line!==''){ctx.fillText(line,x,yy);line=text[i];yy+=lh;}
+    else line=t;
+  }
+  if(line)ctx.fillText(line,x,yy);
+  return yy;
+}
+
+/* ================= 场景绘制 ================= */
+function drawBG(){
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#252d3d');g.addColorStop(1,'#1a2130');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+function drawTopHint(){
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.font='12px '+F;ctx.fillStyle='rgba(255,255,255,.42)';
+  ctx.fillText('操作：点击 / 按住滴管，向调色盘滴加颜料（减色混合）',20,26);
+}
+/* 滴管悬挂架 */
+function drawStand(){
+  var g=ctx.createLinearGradient(0,28,0,44);
+  g.addColorStop(0,'#3a3f4b');g.addColorStop(1,'#20242e');
+  rr(385,28,320,16,8);ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.stroke();
+  for(var i=0;i<DROPPERS.length;i++){
+    ctx.fillStyle='#2b303b';
+    rr(DROPPERS[i].x-5,40,10,26,3);ctx.fill();
+  }
+}
+/* 单支滴管：橡皮头 + 玻璃管 + 颜料 + 尖嘴 */
+function drawDropper(dp){
+  var x=dp.x,hov=hoverKey===dp.key;
+  ctx.save();
+  if(hov){ctx.shadowColor=dp.liquid;ctx.shadowBlur=14;}
+  /* 橡皮头（按压时压扁） */
+  var sq=dp.squash||0;
+  ctx.save();
+  ctx.translate(x,84);ctx.scale(1+0.14*sq,1-0.2*sq);
+  var bg=ctx.createRadialGradient(-5,-6,2,0,0,16);
+  bg.addColorStop(0,dp.c1);bg.addColorStop(1,dp.c2);
+  ctx.beginPath();ctx.arc(0,0,14.5,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(-4.5,-5.5,4.2,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fill();
+  ctx.restore();
+  /* 玻璃管 */
+  rr(x-9,100,18,80,9);
+  ctx.fillStyle='rgba(255,255,255,.07)';ctx.fill();
+  ctx.strokeStyle=hov?'rgba(255,255,255,.6)':'rgba(255,255,255,.32)';
+  ctx.lineWidth=1.2;ctx.stroke();
+  /* 管内颜料液柱 */
+  var lg=ctx.createLinearGradient(x-6,0,x+6,0);
+  lg.addColorStop(0,dp.c2);lg.addColorStop(.45,dp.liquid);lg.addColorStop(1,dp.c2);
+  rr(x-5.5,116,11,56,5);ctx.fillStyle=lg;ctx.fill();
+  ctx.beginPath();ctx.ellipse(x,116,5.5,2.4,0,0,Math.PI*2);
+  ctx.fillStyle=dp.c1;ctx.fill();
+  /* 玻璃高光 */
+  ctx.fillStyle='rgba(255,255,255,.28)';
+  rr(x-6.5,104,2.6,68,1.3);ctx.fill();
+  /* 尖嘴 */
+  ctx.beginPath();
+  ctx.moveTo(x-8,178);ctx.lineTo(x-2.2,TIP_Y);ctx.lineTo(x+2.2,TIP_Y);ctx.lineTo(x+8,178);ctx.closePath();
+  ctx.fillStyle='rgba(255,255,255,.09)';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x-3.6,192);ctx.lineTo(x-1.6,TIP_Y-1);ctx.lineTo(x+1.6,TIP_Y-1);ctx.lineTo(x+3.6,192);ctx.closePath();
+  ctx.fillStyle=dp.liquid;ctx.fill();
+  ctx.restore();
+  /* 名称与滴数 */
+  ctx.textAlign='center';
+  ctx.font='bold 14px '+F;
+  ctx.fillStyle=hov?'#ffffff':dp.liquid;
+  ctx.fillText(dp.name+'滴管',x,234);
+  if(state.showCounts){
+    ctx.font='11px '+F;ctx.fillStyle='#8d97a9';
+    ctx.fillText('已滴 '+state[dp.key]+' 滴',x,251);
+  }
+}
+/* 调色盘金属体 */
+function drawPalette(){
+  var cx=PAL.cx,cy=PAL.cy,rx=PAL.rx,ry=PAL.ry;
+  ellipse(cx,cy+14,rx+10,ry+6);
+  ctx.fillStyle='rgba(0,0,0,.38)';ctx.fill();
+  ellipse(cx,cy+7,rx,ry);
+  ctx.fillStyle='#454b55';ctx.fill();
+  var g=ctx.createLinearGradient(0,cy-ry,0,cy+ry);
+  g.addColorStop(0,'#e6ebf2');g.addColorStop(.45,'#aeb6c2');g.addColorStop(1,'#6b7280');
+  ellipse(cx,cy,rx,ry);ctx.fillStyle=g;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1.5;ctx.stroke();
+  /* 内凹 */
+  ellipse(cx,cy-2,PAL.irx,PAL.iry);
+  ctx.fillStyle='#1e222a';ctx.fill();
+}
+/* 盘内混合色液体 + 涟漪 + 光泽 */
+function drawLiquid(t){
+  var cx=PAL.cx,cy=PAL.cy-2,rx=PAL.irx-4,ry=PAL.iry-4;
+  var rgb=mixedRGB(),r=rgb[0],g=rgb[1],b=rgb[2];
+  ctx.save();
+  ellipse(cx,cy,rx,ry);ctx.clip();
+  var lg=ctx.createLinearGradient(0,cy-ry,0,cy+ry);
+  lg.addColorStop(0,shadeStr(r,g,b,0.26));
+  lg.addColorStop(.5,'rgb('+r+','+g+','+b+')');
+  lg.addColorStop(1,shadeStr(r,g,b,-0.14));
+  ctx.fillStyle=lg;ctx.fillRect(cx-rx,cy-ry,rx*2,ry*2);
+  if(state.showRipples){
+    for(var i=0;i<state.ripples.length;i++){
+      var rp=state.ripples[i],age=(t-rp.t0)/900;
+      if(age>1)continue;
+      var a=(1-age)*0.45;
+      ctx.strokeStyle='rgba(255,255,255,'+a.toFixed(3)+')';ctx.lineWidth=2;
+      ctx.beginPath();ctx.ellipse(rp.x,cy,6+age*64,(6+age*64)*0.28,0,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,'+(a*0.6).toFixed(3)+')';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.ellipse(rp.x,cy,3+age*34,(3+age*34)*0.28,0,0,Math.PI*2);ctx.stroke();
+    }
+  }
+  var gx=cx-rx*0.35+Math.sin(t/900)*8;
+  ctx.fillStyle='rgba(255,255,255,.1)';
+  ctx.beginPath();ctx.ellipse(gx,cy-ry*0.42,rx*0.42,ry*0.24,-0.15,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=1.5;
+  ellipse(cx,cy,rx,ry);ctx.stroke();
+  /* 盘沿高光 */
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.ellipse(cx,PAL.cy,rx+2,ry+2,0,Math.PI*1.08,Math.PI*1.92);ctx.stroke();
+}
+/* 下落中的液滴 */
+function drawDrops(){
+  for(var i=0;i<state.drops.length;i++){
+    var d=state.drops[i];
+    ctx.save();
+    ctx.shadowColor=d.color;ctx.shadowBlur=8;
+    ctx.fillStyle=d.color;
+    ctx.beginPath();ctx.ellipse(d.x,d.y,4.4,6,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+}
+/* 右侧：分量条 + 当前混合色 */
+function drawPanel(){
+  var x0=792,y0=64,w=288,h=380;
+  rr(x0,y0,w,h,14);
+  ctx.fillStyle='rgba(20,26,38,.55)';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.stroke();
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.font='bold 15px '+F;ctx.fillStyle='#e8ecf3';
+  ctx.fillText('颜料分量（浓度）',x0+18,y0+30);
+  var rows=[['品红','m','#ff4fc3'],['黄','y','#ffd92e'],['青','c','#35d6f5']];
+  var k=conc(),i,y,v;
+  for(i=0;i<rows.length;i++){
+    y=y0+62+i*46;
+    ctx.fillStyle=rows[i][2];
+    ctx.beginPath();ctx.arc(x0+26,y-4,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#cfd6e2';ctx.font='13px '+F;
+    ctx.fillText(rows[i][0],x0+40,y);
+    rr(x0+70,y-15,168,14,7);
+    ctx.fillStyle='rgba(255,255,255,.08)';ctx.fill();
+    v=k[rows[i][1]];
+    if(v>0){
+      rr(x0+70,y-15,Math.max(10,168*v),14,7);
+      ctx.fillStyle=rows[i][2];ctx.fill();
+    }
+    ctx.textAlign='right';ctx.fillStyle='#e8ecf3';ctx.font='12px '+F;
+    ctx.fillText(Math.round(v*100)+'%',x0+w-16,y);
+    ctx.textAlign='left';
+    if(state.showCounts){
+      ctx.fillStyle='#8d97a9';ctx.font='10px '+F;
+      ctx.fillText(state[rows[i][1]]+' 滴',x0+70,y+13);
+    }
+  }
+  ctx.strokeStyle='rgba(255,255,255,.1)';
+  ctx.beginPath();ctx.moveTo(x0+18,y0+196);ctx.lineTo(x0+w-18,y0+196);ctx.stroke();
+  /* 当前混合色 */
+  var rgb=mixedRGB(),r=rgb[0],g=rgb[1],b=rgb[2];
+  ctx.font='bold 15px '+F;ctx.fillStyle='#e8ecf3';
+  ctx.fillText('当前混合色',x0+18,y0+222);
+  rr(x0+18,y0+238,72,56,10);
+  ctx.fillStyle='rgb('+r+','+g+','+b+')';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.font='bold 20px '+F;ctx.fillStyle='#ffffff';
+  ctx.fillText(colorName(r,g,b),x0+104,y0+264);
+  ctx.font='11px '+F;ctx.fillStyle='#9aa4b5';
+  ctx.fillText('RGB('+r+', '+g+', '+b+')',x0+104,y0+284);
+  ctx.fillText('总滴数 '+(state.c+state.m+state.y)+' · 每色约 '+Math.round(1/state.strength)+' 滴饱和',x0+18,y0+322);
+  ctx.fillStyle='#7c8698';ctx.font='11px '+F;
+  wrapText('减色混合：颜料吸收部分色光，混得越多、吸收越多，颜色越暗。',x0+18,y0+346,w-36,16);
+}
+
+/* ================= 角落静态混合示意图 ================= */
+function mix2(cx,cy,colA,colB,colR){
+  ctx.save();
+  ctx.beginPath();ctx.arc(cx-9,cy,12,0,Math.PI*2);ctx.fillStyle=colA;ctx.fill();
+  ctx.beginPath();ctx.arc(cx+9,cy,12,0,Math.PI*2);ctx.fillStyle=colB;ctx.fill();
+  ctx.beginPath();ctx.arc(cx-9,cy,12,0,Math.PI*2);ctx.clip();
+  ctx.beginPath();ctx.arc(cx+9,cy,12,0,Math.PI*2);ctx.fillStyle=colR;ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx-9,cy,12,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+9,cy,12,0,Math.PI*2);ctx.stroke();
+}
+function mix3(cx,cy){
+  var p=[[cx-8,cy+5],[cx+8,cy+5],[cx,cy-7]];
+  var cols=['#ff4fc3','#ffd92e','#35d6f5'];
+  var i;
+  for(i=0;i<3;i++){
+    ctx.beginPath();ctx.arc(p[i][0],p[i][1],11,0,Math.PI*2);
+    ctx.fillStyle=cols[i];ctx.fill();
+  }
+  ctx.save();
+  ctx.beginPath();ctx.arc(p[0][0],p[0][1],11,0,Math.PI*2);ctx.clip();
+  ctx.beginPath();ctx.arc(p[1][0],p[1][1],11,0,Math.PI*2);ctx.clip();
+  ctx.beginPath();ctx.arc(p[2][0],p[2][1],11,0,Math.PI*2);
+  ctx.fillStyle='#0c0c0c';ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;
+  for(i=0;i<3;i++){
+    ctx.beginPath();ctx.arc(p[i][0],p[i][1],11,0,Math.PI*2);ctx.stroke();
+  }
+}
+function drawDiagram(){
+  if(!state.showDiagram)return;
+  var x0=20,y0=470,w=300,h=150;
+  rr(x0,y0,w,h,14);
+  ctx.fillStyle='rgba(20,26,38,.55)';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.stroke();
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.font='bold 13px '+F;ctx.fillStyle='#e8ecf3';
+  ctx.fillText('减色混合示意',x0+14,y0+22);
+  ctx.font='11px '+F;ctx.fillStyle='#c7cfdb';ctx.textAlign='center';
+  var c1=x0+62,c2=x0+218,r1=y0+52,r2=y0+106;
+  mix2(c1,r1,'#ff4fc3','#ffd92e','#ff3b30');
+  mix2(c2,r1,'#ffd92e','#35d6f5','#34c759');
+  mix2(c1,r2,'#35d6f5','#ff4fc3','#3b82f6');
+  mix3(c2,r2);
+  ctx.fillText('品红+黄=红',c1,r1+30);
+  ctx.fillText('黄+青=绿',c2,r1+30);
+  ctx.fillText('青+品红=蓝',c1,r2+30);
+  ctx.fillText('三色全混≈黑',c2,r2+30);
+}
+
+/* ================= 主绘制 ================= */
+function draw(t){
+  drawBG();
+  drawTopHint();
+  drawDiagram();
+  drawPanel();
+  drawStand();
+  drawPalette();
+  drawLiquid(t);
+  drawDrops();
+  for(var i=0;i<DROPPERS.length;i++)drawDropper(DROPPERS[i]);
+}
+
+/* ================= 逻辑更新 ================= */
+function spawnDrop(dp,now){
+  state.drops.push({x:dp.x+(Math.random()*4-2),y:TIP_Y+4,vy:30,color:dp.liquid,key:dp.key});
+  dp.squash=1;
+}
+var last=performance.now();
+/* ================= 渲染循环（30 FPS 上限 + 切后台自动暂停） ================= */
+var rafId=null,lastRender=0,dirty=true;
+function frame(now){
+  rafId=requestAnimationFrame(frame);
+  now=now||0;
+  if(now-lastRender<33) return;    // 30 FPS 闸（液面光泽为永续动画，播放中逐帧渲染）
+  lastRender=now; dirty=false;
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  var k,dp,i;
+  for(k in pressed){
+    if(now>=pressed[k]){
+      for(i=0;i<DROPPERS.length;i++)if(DROPPERS[i].key===k)dp=DROPPERS[i];
+      if(dp){spawnDrop(dp,now);pressed[k]=now+state.dripInterval;}
+    }
+  }
+  for(i=state.drops.length-1;i>=0;i--){
+    var d=state.drops[i];
+    d.vy+=1600*dt;d.y+=d.vy*dt;
+    if(d.y>=LAND_Y){
+      state[d.key]++;
+      state.ripples.push({x:d.x,t0:now});
+      state.drops.splice(i,1);
+    }
+  }
+  state.ripples=state.ripples.filter(function(r){return now-r.t0<900;});
+  for(i=0;i<DROPPERS.length;i++){
+    if(DROPPERS[i].squash)DROPPERS[i].squash=Math.max(0,DROPPERS[i].squash-dt*6);
+  }
+  draw(now);
+}
+function startLoop(){ if(rafId===null){ dirty=true; last=performance.now(); rafId=requestAnimationFrame(frame); } }
+function stopLoop(){ if(rafId!==null){ cancelAnimationFrame(rafId); rafId=null; } }
+document.addEventListener('visibilitychange',function(){ document.hidden?stopLoop():startLoop(); });
+['pointerdown','pointermove','input','change','click','keydown'].forEach(function(ev){
+  document.addEventListener(ev,function(){ dirty=true; },true);
+});
+window.addEventListener('resize',function(){ dirty=true; });
+
+/* ================= 交互 ================= */
+function posOf(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+function hitDropper(x,y){
+  for(var i=0;i<DROPPERS.length;i++){
+    if(Math.abs(x-DROPPERS[i].x)<27&&y>46&&y<TIP_Y+10)return DROPPERS[i];
+  }
+  return null;
+}
+cv.addEventListener('pointerdown',function(e){
+  var p=posOf(e),dp=hitDropper(p[0],p[1]);
+  if(dp){
+    e.preventDefault();
+    try{cv.setPointerCapture(e.pointerId);}catch(err){}
+    spawnDrop(dp,performance.now());
+    pressed[dp.key]=performance.now()+state.dripInterval;
+  }
+});
+cv.addEventListener('pointermove',function(e){
+  var p=posOf(e),dp=hitDropper(p[0],p[1]);
+  hoverKey=dp?dp.key:null;
+  cv.style.cursor=dp?'pointer':'default';
+});
+function endPress(){for(var k in pressed)delete pressed[k];}
+cv.addEventListener('pointerup',endPress);
+cv.addEventListener('pointercancel',endPress);
+
+/* ================= 工具栏 / 面板 ================= */
+var introOverlay=document.getElementById('introOverlay');
+var settingsPanel=document.getElementById('settingsPanel');
+document.getElementById('btnIntro').addEventListener('click',function(){
+  introOverlay.style.display='flex';
+});
+document.getElementById('btnIntroClose').addEventListener('click',function(){
+  introOverlay.style.display='none';
+});
+introOverlay.addEventListener('click',function(e){
+  if(e.target===introOverlay)introOverlay.style.display='none';
+});
+document.getElementById('btnSettings').addEventListener('click',function(){
+  settingsPanel.style.display=settingsPanel.style.display==='block'?'none':'block';
+});
+document.getElementById('btnReset').addEventListener('click',function(){
+  state.c=state.m=state.y=0;
+  state.drops.length=0;
+  state.ripples.length=0;
+  endPress();
+});
+var rgStrength=document.getElementById('rgStrength');
+var rgSpeed=document.getElementById('rgSpeed');
+function refreshSettingLabels(){
+  document.getElementById('strengthVal').textContent='约 '+Math.round(1/state.strength)+' 滴饱和';
+  document.getElementById('speedVal').textContent=state.dripInterval+' ms/滴';
+}
+rgStrength.addEventListener('input',function(){
+  state.strength=parseFloat(rgStrength.value);refreshSettingLabels();
+});
+rgSpeed.addEventListener('input',function(){
+  state.dripInterval=parseInt(rgSpeed.value,10);refreshSettingLabels();
+});
+document.getElementById('ckRipples').addEventListener('change',function(e){state.showRipples=e.target.checked;});
+document.getElementById('ckCounts').addEventListener('change',function(e){state.showCounts=e.target.checked;});
+document.getElementById('ckDiagram').addEventListener('change',function(e){state.showDiagram=e.target.checked;});
+refreshSettingLabels();
+startLoop();
+</script>
+</body>
+</html>

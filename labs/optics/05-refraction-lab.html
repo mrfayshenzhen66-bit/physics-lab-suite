@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>探究光的折射 - 光学模拟仿真实验室</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; background:#161c29; overflow:hidden;
+    font-family:'PingFang SC','Microsoft YaHei',sans-serif; color:#e8ecf3; }
+  body { display:flex; flex-direction:column; }
+
+  /* ===== 顶栏 ===== */
+  header { height:46px; flex:0 0 46px; display:flex; align-items:center; justify-content:space-between;
+    background:rgba(20,26,38,.9); border-bottom:1px solid rgba(255,255,255,.07); padding:0 16px; z-index:10; }
+  header a { color:#fff; text-decoration:none; font-size:14px; opacity:.9; }
+  header a:hover { opacity:1; text-decoration:underline; }
+  header .title { font-size:16px; font-weight:600; letter-spacing:1px; }
+  header .hint { font-size:12px; color:#8b93a3; }
+
+  main { flex:1; display:flex; min-height:0; }
+
+  /* ===== 画布区 ===== */
+  #stage { flex:1; position:relative; min-width:0; display:flex; align-items:center; justify-content:center;
+    background:#1a2130; }
+  canvas { width:100%; height:auto; max-height:100%; display:block; cursor:default; }
+
+  /* ===== 底部工具栏 ===== */
+  #toolbar { position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    display:flex; gap:8px; background:rgba(20,26,38,.85); border:1px solid rgba(255,255,255,.08);
+    border-radius:12px; padding:8px 12px; z-index:5; }
+  #toolbar button { background:rgba(255,255,255,.06); color:#dfe5ee; border:1px solid rgba(255,255,255,.1);
+    border-radius:8px; padding:6px 18px; font-size:13px; cursor:pointer; font-family:inherit; }
+  #toolbar button:hover { background:rgba(255,255,255,.14); }
+
+  /* ===== 设置面板 ===== */
+  #settingsPanel { position:absolute; left:50%; bottom:70px; transform:translateX(-50%);
+    background:rgba(20,26,38,.95); border:1px solid rgba(255,255,255,.1); border-radius:12px;
+    padding:14px 20px; z-index:6; min-width:240px; }
+  #settingsPanel label { display:flex; align-items:center; gap:8px; font-size:13px; padding:5px 0; cursor:pointer; }
+  #settingsPanel input { accent-color:#4d8dff; }
+
+  /* ===== 简介弹窗 ===== */
+  #introMask { position:absolute; inset:0; background:rgba(0,0,0,.45); z-index:8; display:flex;
+    align-items:center; justify-content:center; }
+  #introCard { width:min(520px,86%); background:rgba(24,31,46,.98); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:24px 26px; box-shadow:0 14px 50px rgba(0,0,0,.5); }
+  #introCard h2 { font-size:18px; margin-bottom:12px; color:#ffd34d; }
+  #introCard p { font-size:13.5px; line-height:1.85; color:#cfd6e2; margin-bottom:8px; }
+  #introCard .closeBtn { margin-top:10px; width:100%; background:#3a6fd8; border:none; color:#fff;
+    padding:8px 0; border-radius:8px; font-size:14px; cursor:pointer; font-family:inherit; }
+  #introCard .closeBtn:hover { background:#4a7fe8; }
+
+  .hidden { display:none !important; }
+
+  /* ===== 右侧控制/数据面板 ===== */
+  aside { flex:0 0 300px; background:rgba(20,26,38,.55); border-left:1px solid rgba(255,255,255,.07);
+    padding:14px 14px 10px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+  aside h3 { font-size:14px; color:#ffd34d; font-weight:600; letter-spacing:1px; }
+  .group { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:10px 12px; }
+  .group .g-title { font-size:12px; color:#8b93a3; margin-bottom:8px; }
+  .radioRow { display:flex; align-items:center; gap:6px; font-size:13px; padding:4px 0; cursor:pointer; }
+  .radioRow input { accent-color:#4d8dff; }
+  .sliderRow { display:flex; align-items:center; gap:8px; font-size:12px; color:#aeb8c6; margin-top:6px; }
+  .sliderRow input[type=range] { flex:1; accent-color:#4d8dff; }
+  .sliderRow input[type=range]:disabled { opacity:.35; }
+  .sliderRow .val { min-width:42px; text-align:right; color:#ffd34d; font-variant-numeric:tabular-nums; }
+
+  .switchRow { display:flex; align-items:center; justify-content:space-between; font-size:13px; padding:2px 0; }
+  .switch { position:relative; width:40px; height:22px; flex:0 0 40px; }
+  .switch input { opacity:0; width:0; height:0; }
+  .track { position:absolute; inset:0; background:#3a4152; border-radius:22px; transition:.2s; cursor:pointer; }
+  .track::after { content:''; position:absolute; left:3px; top:3px; width:16px; height:16px; border-radius:50%;
+    background:#cfd6e2; transition:.2s; }
+  .switch input:checked + .track { background:#3a6fd8; }
+  .switch input:checked + .track::after { transform:translateX(18px); background:#fff; }
+  .subNote { font-size:11px; color:#778092; margin-top:6px; line-height:1.6; }
+
+  .btnRow { display:flex; gap:8px; }
+  .btnRow button { flex:1; border:none; border-radius:8px; padding:8px 0; font-size:13px; cursor:pointer; font-family:inherit; }
+  #btnRecord { background:#3a6fd8; color:#fff; }
+  #btnRecord:hover { background:#4a7fe8; }
+  #btnClear { background:rgba(255,255,255,.08); color:#cfd6e2; border:1px solid rgba(255,255,255,.12) !important; }
+  #btnClear:hover { background:rgba(255,80,80,.25); }
+
+  table { width:100%; border-collapse:collapse; font-size:11.5px; color:#cfd6e2; }
+  th,td { border-bottom:1px solid rgba(255,255,255,.07); padding:5px 3px; text-align:center;
+    font-variant-numeric:tabular-nums; }
+  th { color:#8b93a3; font-weight:500; position:sticky; top:0; background:rgba(24,31,46,.95); }
+  #tableWrap { max-height:220px; overflow-y:auto; border-radius:6px; }
+  #emptyTip { font-size:12px; color:#5d6675; text-align:center; padding:10px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html">← 返回合集</a>
+  <div class="title">探究光的折射</div>
+  <div class="hint">拖拽激光笔改变入射角 · 或用右侧滑块精确调节</div>
+</header>
+
+<main>
+  <div id="stage">
+    <canvas id="cv" width="1100" height="640"></canvas>
+
+    <div id="toolbar">
+      <button id="btnIntro">简介</button>
+      <button id="btnSettings">设置</button>
+      <button id="btnReset">重置</button>
+    </div>
+
+    <div id="settingsPanel" class="hidden">
+      <label><input type="checkbox" id="chkNormal" checked> 显示法线</label>
+      <label><input type="checkbox" id="chkAngles" checked> 显示角度标注</label>
+      <label><input type="checkbox" id="chkAnim" checked> 光线传播动画（流动光点）</label>
+    </div>
+
+    <div id="introMask" class="hidden">
+      <div id="introCard">
+        <h2>探究光的折射</h2>
+        <p>光从一种介质斜射入另一种介质时，传播方向发生偏折，遵循折射定律：<b>n₁sinθ₁ = n₂sinθ₂</b>（θ 为光线与法线的夹角）。从空气射入玻璃时，折射角小于入射角。</p>
+        <p>半圆形玻璃砖的入射点固定在圆心，砖内光线沿半径方向射向圆弧面，与该处法线重合，因此垂直射出、不再偏折，便于准确测量折射角。</p>
+        <p>改变入射角并点击「记录」，可发现 sinθ₁/sinθ₂ 的比值始终等于介质折射率 n。</p>
+        <p>打开「光路可逆」开关后，光从玻璃内射向空气；当入射角大于临界角 θc = arcsin(1/n) 时发生<b>全反射</b>，折射光消失。</p>
+        <p>操作：拖拽激光笔绕圆心旋转，或用右侧滑块改变入射角（0~89°）；可切换水/玻璃/自定义折射率。</p>
+        <button class="closeBtn" id="btnCloseIntro">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <h3>实验控制</h3>
+
+    <div class="group">
+      <div class="g-title">介质（折射率 n）</div>
+      <label class="radioRow"><input type="radio" name="medium" value="water"> 水（n = 1.33）</label>
+      <label class="radioRow"><input type="radio" name="medium" value="glass" checked> 玻璃（n = 1.50）</label>
+      <label class="radioRow"><input type="radio" name="medium" value="custom"> 自定义</label>
+      <div class="sliderRow">
+        <span>n</span>
+        <input type="range" id="nSlider" min="1.00" max="2.00" step="0.01" value="1.50" disabled>
+        <span class="val" id="nVal">1.50</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="g-title">入射角 θ₁（0° ~ 89°）</div>
+      <div class="sliderRow" style="margin-top:0">
+        <input type="range" id="angSlider" min="0" max="89" step="0.5" value="30">
+        <span class="val" id="angVal">30.0°</span>
+      </div>
+      <div class="subNote" id="angNote">光从空气斜射入介质</div>
+    </div>
+
+    <div class="group">
+      <div class="switchRow">
+        <span>光路可逆（玻璃 → 空气）</span>
+        <label class="switch"><input type="checkbox" id="chkReverse"><span class="track"></span></label>
+      </div>
+      <div class="subNote">开启后光从介质内射向空气；入射角超过临界角时发生全反射。</div>
+    </div>
+
+    <div class="group">
+      <div class="g-title">数据记录</div>
+      <div class="btnRow">
+        <button id="btnRecord">记录</button>
+        <button id="btnClear">清空</button>
+      </div>
+    </div>
+
+    <div class="group" style="flex:1; min-height:120px; display:flex; flex-direction:column;">
+      <div class="g-title">实验数据表</div>
+      <div id="tableWrap">
+        <table>
+          <thead><tr><th>#</th><th>方向</th><th>介质</th><th>θ₁°</th><th>θ₂°</th><th>sinθ₁/sinθ₂</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="emptyTip">暂无数据，点击「记录」添加</div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+'use strict';
+/* ============================================================
+ * 探究光的折射 —— 半圆形玻璃砖 + 折射定律定量验证 + 光路可逆/全反射
+ * 物理核心: n1·sinθ1 = n2·sinθ2 ；临界角 θc = arcsin(n2/n1)
+ * ============================================================ */
+const canvas = document.getElementById('cv');
+const ctx = canvas.getContext('2d');
+const W = 1100, H = 640;
+const OX = 540, OY = 300;   // 圆心（入射点，固定）
+const R  = 250;             // 半圆玻璃砖半径
+const PD = 275;             // 激光笔到圆心距离
+
+const state = {
+  theta1: 30,        // 入射角（度），0~89
+  side: 1,           // 1 = 法线左侧，-1 = 右侧
+  n: 1.50,
+  medium: 'glass',   // water | glass | custom
+  reversed: false,   // 光路可逆：介质 → 空气
+  showNormal: true,
+  showAngles: true,
+  animate: true
+};
+let dragging = false, flowT = 0, lastT = performance.now();
+
+const MEDIUM_NAMES = { water: '水', glass: '玻璃', custom: '自定义' };
+const rad = d => d * Math.PI / 180;
+const deg = r => r * 180 / Math.PI;
+
+/* ---------- 物理计算 ---------- */
+function physics() {
+  const t1 = rad(state.theta1), n = state.n;
+  const ncrit = n > 1 ? Math.asin(1 / n) : Math.PI / 2;   // 临界角（介质→空气）
+  if (!state.reversed) {                                   // 空气 → 介质
+    const s2 = Math.sin(t1) / n;
+    const t2 = Math.asin(Math.min(1, s2));
+    return { theta1: t1, theta2: t2, tir: false, ncrit,
+             ratio: state.theta1 > 1e-6 ? Math.sin(t1) / Math.sin(t2) : null };
+  }
+  const s2 = n * Math.sin(t1);                             // 介质 → 空气
+  if (s2 > 1) return { theta1: t1, theta2: null, tir: true, ncrit, ratio: null };
+  const t2 = Math.asin(s2);
+  return { theta1: t1, theta2: t2, tir: false, ncrit,
+           ratio: state.theta1 > 1e-6 ? Math.sin(t1) / Math.sin(t2) : null };
+}
+
+/* ---------- 绘图工具 ---------- */
+function roundRectPath(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function glowLine(ax, ay, bx, by, alpha = 1, lw = 2.5) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#ff3b3b';
+  ctx.lineWidth = lw;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = 'rgba(255,60,60,.8)';
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+  ctx.restore();
+}
+function arrowOn(ax, ay, bx, by) {
+  const f = 0.55, x = ax + (bx - ax) * f, y = ay + (by - ay) * f;
+  const a = Math.atan2(by - ay, bx - ax);
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+  ctx.fillStyle = '#ff7070';
+  ctx.beginPath(); ctx.moveTo(8, 0); ctx.lineTo(-4, -4.5); ctx.lineTo(-4, 4.5); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function flowDots(ax, ay, bx, by) {
+  if (!state.animate) return;
+  const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy);
+  if (len < 20) return;
+  const sp = 46, off = (flowT * 85) % sp;
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,215,215,.95)';
+  ctx.shadowBlur = 8; ctx.shadowColor = 'rgba(255,90,90,.9)';
+  for (let d = off; d < len; d += sp) {
+    ctx.beginPath(); ctx.arc(ax + dx * d / len, ay + dy * d / len, 2.4, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+function ray(ax, ay, bx, by, alpha = 1, withArrow = true) {
+  glowLine(ax, ay, bx, by, alpha);
+  if (withArrow && alpha > 0.5) arrowOn(ax, ay, bx, by);
+  if (alpha > 0.5) flowDots(ax, ay, bx, by);
+}
+
+/* ---------- 场景绘制 ---------- */
+function drawBG() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#252d3d'); g.addColorStop(1, '#1a2130');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function drawBlock() {
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(OX - R, OY);
+  ctx.lineTo(OX + R, OY);
+  ctx.arc(OX, OY, R, 0, Math.PI, false);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(150,200,255,.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(150,200,255,.55)';
+  ctx.lineWidth = 1.5; ctx.stroke();
+  // 平边（折射界面）高亮
+  ctx.strokeStyle = 'rgba(200,225,255,.75)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(OX - R, OY); ctx.lineTo(OX + R, OY); ctx.stroke();
+  // 介质标注
+  ctx.fillStyle = 'rgba(200,220,245,.5)';
+  ctx.font = '14px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('空气  n = 1.00', OX - R, OY - 18);
+  ctx.fillText(MEDIUM_NAMES[state.medium] + '  n = ' + state.n.toFixed(2), OX - R + 12, OY + R - 22);
+  ctx.restore();
+}
+function drawNormal() {
+  if (!state.showNormal) return;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath(); ctx.moveTo(OX, 42); ctx.lineTo(OX, OY + R); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('法线', OX + 6, 56);
+  ctx.restore();
+}
+
+/* 激光笔：尖端位于 (px,py)，指向圆心 */
+function drawPen(px, py) {
+  const a = Math.atan2(OY - py, OX - px);
+  ctx.save();
+  ctx.translate(px, py); ctx.rotate(a);
+  const g = ctx.createLinearGradient(0, -11, 0, 11);
+  g.addColorStop(0, '#3a3f4b'); g.addColorStop(0.5, '#2a2e38'); g.addColorStop(1, '#20242e');
+  ctx.fillStyle = g;
+  roundRectPath(-80, -11, 80, 22, 7); ctx.fill();
+  ctx.strokeStyle = '#10131a'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(-34, -11, 5, 22);
+  ctx.fillStyle = '#d8342c';                       // 红色按钮
+  roundRectPath(-56, -16, 18, 7, 3); ctx.fill();
+  ctx.fillStyle = '#ff3b3b';                       // 发光笔头
+  ctx.shadowBlur = 16; ctx.shadowColor = 'rgba(255,60,60,.95)';
+  ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+function angleArc(a0, a1, r, label) {
+  ctx.beginPath(); ctx.arc(OX, OY, r, a0, a1, a1 < a0); ctx.stroke();
+  const mid = (a0 + a1) / 2;
+  const lx = OX + Math.cos(mid) * (r + 30), ly = OY + Math.sin(mid) * (r + 26);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, lx, ly);
+}
+function drawAngles(p) {
+  if (!state.showAngles) return;
+  const s = state.side, t1 = rad(state.theta1);
+  ctx.save();
+  ctx.strokeStyle = '#ffd34d'; ctx.fillStyle = '#ffd34d';
+  ctx.lineWidth = 1.6;
+  ctx.font = '13.5px "PingFang SC","Microsoft YaHei",sans-serif';
+  if (!state.reversed) {
+    if (t1 > 0.004) angleArc(-Math.PI / 2, -Math.PI / 2 - s * t1, 82, 'θ₁=' + state.theta1.toFixed(1) + '°');
+    if (p.theta2 > 0.004) angleArc(Math.PI / 2, Math.PI / 2 - s * p.theta2, 60, 'θ₂=' + deg(p.theta2).toFixed(1) + '°');
+  } else {
+    if (t1 > 0.004) angleArc(Math.PI / 2, Math.PI / 2 + s * t1, 60, 'θ₁=' + state.theta1.toFixed(1) + '°');
+    if (!p.tir && p.theta2 > 0.004) angleArc(-Math.PI / 2, -Math.PI / 2 + s * p.theta2, 82, 'θ₂=' + deg(p.theta2).toFixed(1) + '°');
+  }
+  ctx.restore();
+}
+
+function drawRays(p) {
+  const s = state.side, t1 = rad(state.theta1);
+  if (!state.reversed) {
+    /* 空气 → 介质 */
+    const px = OX - s * Math.sin(t1) * PD, py = OY - Math.cos(t1) * PD;
+    ray(px, py, OX, OY);                                            // 入射光
+    const ex = OX + s * Math.sin(p.theta2) * (R + 62);                // 折射光：沿半径垂直射出圆弧面
+    const ey = OY + Math.cos(p.theta2) * (R + 62);
+    ray(OX, OY, ex, ey);
+    // 界面处微弱的反射光（物理真实存在）
+    glowLine(OX, OY, OX + s * Math.sin(t1) * 150, OY - Math.cos(t1) * 150, 0.16, 2);
+    drawPen(px, py);
+  } else {
+    /* 介质 → 空气（光路可逆） */
+    const px = OX - s * Math.sin(t1) * (R - 48), py = OY + Math.cos(t1) * (R - 48);
+    ray(px, py, OX, OY);                                            // 介质内入射光
+    if (p.tir) {
+      const ex = OX + s * Math.sin(t1) * (R + 62);                    // 全反射：反射光沿半径射出圆弧面
+      const ey = OY + Math.cos(t1) * (R + 62);
+      ray(OX, OY, ex, ey);
+    } else {
+      const L = Math.min(330, (OY - 46) / Math.cos(p.theta2));        // 折射到空气
+      ray(OX, OY, OX + s * Math.sin(p.theta2) * L, OY - Math.cos(p.theta2) * L);
+      glowLine(OX, OY, OX + s * Math.sin(t1) * 140, OY + Math.cos(t1) * 140, 0.16, 2); // 微弱内反射
+    }
+    drawPen(px, py);
+  }
+}
+
+function badge(lines, x, y, w) {
+  ctx.save();
+  ctx.font = '13px "PingFang SC","Microsoft YaHei",sans-serif';
+  const h = 16 + lines.length * 22;
+  ctx.fillStyle = 'rgba(15,20,32,.78)';
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  roundRectPath(x, y, w, h, 10); ctx.fill(); ctx.stroke();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  lines.forEach((ln, i) => {
+    ctx.fillStyle = ln.c || '#dfe5ee';
+    ctx.fillText(ln.t, x + 14, y + 16 + i * 22 + 3);
+  });
+  ctx.restore();
+}
+
+function drawReadouts(p) {
+  const name = MEDIUM_NAMES[state.medium];
+  const lines = [];
+  lines.push({ t: '介质：' + name + '   n = ' + state.n.toFixed(2), c: '#9fb7dd' });
+  if (!state.reversed) {
+    lines.push({ t: 'θ₁（空气）= ' + state.theta1.toFixed(1) + '°    θ₂（' + name + '）= ' + deg(p.theta2).toFixed(1) + '°' });
+    if (p.ratio !== null)
+      lines.push({ t: 'sinθ₁ / sinθ₂ = ' + p.ratio.toFixed(3) + ' ≈ n', c: '#ffd34d' });
+    else
+      lines.push({ t: '垂直入射：光线不偏折（θ₂ = 0°）', c: '#8fd0a0' });
+    lines.push({ t: '验证折射定律 n₁sinθ₁ = n₂sinθ₂', c: '#8b93a3' });
+  } else {
+    lines.push({ t: 'θ₁（' + name + '）= ' + state.theta1.toFixed(1) + '°    临界角 θc = ' + deg(p.ncrit).toFixed(1) + '°', c: '#9fb7dd' });
+    if (p.tir) {
+      lines.push({ t: 'θ₁ > θc ，折射光消失，发生全反射！', c: '#ff7a6e' });
+      lines.push({ t: '临界角 θc = arcsin(1/n) = arcsin(1/' + state.n.toFixed(2) + ') = ' + deg(p.ncrit).toFixed(1) + '°', c: '#ffd34d' });
+    } else {
+      lines.push({ t: 'θ₂（空气）= ' + deg(p.theta2).toFixed(1) + '°' });
+      if (p.ratio !== null)
+        lines.push({ t: 'sinθ₁ / sinθ₂ = ' + p.ratio.toFixed(3) + ' ≈ 1/n', c: '#ffd34d' });
+      else
+        lines.push({ t: '垂直入射：光线不偏折（θ₂ = 0°）', c: '#8fd0a0' });
+    }
+  }
+  badge(lines, 24, H - 24 - (16 + lines.length * 22), 400);
+}
+
+function drawTIRFlash() {
+  const a = 0.55 + 0.45 * Math.sin(flowT * 7);
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.font = 'bold 32px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff5148';
+  ctx.shadowBlur = 22; ctx.shadowColor = 'rgba(255,60,60,.9)';
+  ctx.fillText('⚠ 全反射！', OX, OY - 170);
+  ctx.restore();
+}
+
+function drawHint() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(139,147,163,.8)';
+  ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('提示：按住拖拽激光笔可绕入射点旋转', W - 22, H - 18);
+  ctx.restore();
+}
+
+/* ---------- 主循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ---------- */
+let rafId = null, lastRender = 0, dirty = true;
+function animating(){ return state.animate || physics().tir; } // 传播光点/全反射闪光中逐帧渲染；停止后仅交互触发重绘
+function frame(now) {
+  rafId = requestAnimationFrame(frame);
+  now = now || 0;
+  if (!animating() && !dirty) return;   // 静止且画面已最新：本帧跳过
+  if (now - lastRender < 33) return;    // 30 FPS 闸（dirty 保持到下一帧）
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now; lastRender = now; dirty = false;
+  flowT += dt;
+  const p = physics();
+  drawBG();
+  drawBlock();
+  drawNormal();
+  drawRays(p);
+  drawAngles(p);
+  drawReadouts(p);
+  if (p.tir) drawTIRFlash();
+  drawHint();
+}
+function startLoop(){ if (rafId === null){ dirty = true; lastT = performance.now(); rafId = requestAnimationFrame(frame); } }
+function stopLoop(){ if (rafId !== null){ cancelAnimationFrame(rafId); rafId = null; } }
+document.addEventListener('visibilitychange', () => { document.hidden ? stopLoop() : startLoop(); });
+['pointerdown','pointermove','input','change','click','keydown'].forEach(ev => {
+  document.addEventListener(ev, () => { dirty = true; }, true);
+});
+window.addEventListener('resize', () => { dirty = true; });
+startLoop();
+
+/* ---------- 交互：拖拽激光笔 ---------- */
+function toCanvas(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+function penPos() {
+  const s = state.side, t1 = rad(state.theta1);
+  if (!state.reversed) return { x: OX - s * Math.sin(t1) * PD, y: OY - Math.cos(t1) * PD };
+  return { x: OX - s * Math.sin(t1) * (R - 48), y: OY + Math.cos(t1) * (R - 48) };
+}
+function distToPen(m) {
+  const p = penPos();
+  const a = Math.atan2(OY - p.y, OX - p.x);
+  const tx = p.x - Math.cos(a) * 80, ty = p.y - Math.sin(a) * 80; // 笔尾
+  const dx = tx - p.x, dy = ty - p.y, len2 = dx * dx + dy * dy;
+  let t = ((m.x - p.x) * dx + (m.y - p.y) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const cx = p.x + dx * t, cy = p.y + dy * t;
+  return Math.hypot(m.x - cx, m.y - cy);
+}
+function applyDrag(m) {
+  const dx = m.x - OX, dy = m.y - OY;
+  let theta;
+  if (!state.reversed) {
+    const dyy = Math.min(dy, -8);
+    theta = deg(Math.atan2(Math.abs(dx), -dyy));
+  } else {
+    const dyy = Math.max(dy, 8);
+    theta = deg(Math.atan2(Math.abs(dx), dyy));
+  }
+  if (Math.abs(dx) > 4) state.side = dx < 0 ? 1 : -1;
+  state.theta1 = Math.max(0, Math.min(89, theta));
+  syncAngleUI();
+}
+canvas.addEventListener('pointerdown', e => {
+  if (distToPen(toCanvas(e)) < 26) { dragging = true; canvas.setPointerCapture(e.pointerId); }
+});
+canvas.addEventListener('pointermove', e => {
+  const m = toCanvas(e);
+  if (dragging) { applyDrag(m); canvas.style.cursor = 'grabbing'; }
+  else canvas.style.cursor = distToPen(m) < 26 ? 'grab' : 'default';
+});
+canvas.addEventListener('pointerup', () => { dragging = false; });
+canvas.addEventListener('pointercancel', () => { dragging = false; });
+
+/* ---------- 面板控件 ---------- */
+const angSlider = document.getElementById('angSlider');
+const angVal = document.getElementById('angVal');
+const nSlider = document.getElementById('nSlider');
+const nVal = document.getElementById('nVal');
+const angNote = document.getElementById('angNote');
+
+function syncAngleUI() {
+  angSlider.value = state.theta1;
+  angVal.textContent = state.theta1.toFixed(1) + '°';
+}
+angSlider.addEventListener('input', () => {
+  state.theta1 = parseFloat(angSlider.value);
+  angVal.textContent = state.theta1.toFixed(1) + '°';
+});
+document.querySelectorAll('input[name=medium]').forEach(r => {
+  r.addEventListener('change', () => {
+    state.medium = r.value;
+    if (r.value === 'water') { state.n = 1.33; nSlider.value = 1.33; }
+    if (r.value === 'glass') { state.n = 1.50; nSlider.value = 1.50; }
+    nSlider.disabled = r.value !== 'custom';
+    if (r.value === 'custom') state.n = parseFloat(nSlider.value);
+    nVal.textContent = state.n.toFixed(2);
+  });
+});
+nSlider.addEventListener('input', () => {
+  state.n = parseFloat(nSlider.value);
+  nVal.textContent = state.n.toFixed(2);
+});
+document.getElementById('chkReverse').addEventListener('change', e => {
+  state.reversed = e.target.checked;
+  angNote.textContent = state.reversed ? '光从介质内射向空气（θ₁ 为介质内入射角）' : '光从空气斜射入介质';
+});
+document.getElementById('chkNormal').addEventListener('change', e => state.showNormal = e.target.checked);
+document.getElementById('chkAngles').addEventListener('change', e => state.showAngles = e.target.checked);
+document.getElementById('chkAnim').addEventListener('change', e => state.animate = e.target.checked);
+
+/* ---------- 数据表 ---------- */
+const tbody = document.getElementById('tbody');
+const emptyTip = document.getElementById('emptyTip');
+let recCount = 0;
+document.getElementById('btnRecord').addEventListener('click', () => {
+  const p = physics();
+  recCount++;
+  const tr = document.createElement('tr');
+  const dir = state.reversed ? '介质→空气' : '空气→介质';
+  const med = MEDIUM_NAMES[state.medium] + '(' + state.n.toFixed(2) + ')';
+  const t2 = p.tir ? '—' : deg(p.theta2).toFixed(1);
+  const ratio = p.tir ? '全反射' : (p.ratio === null ? '—' : p.ratio.toFixed(3));
+  [recCount, dir, med, state.theta1.toFixed(1), t2, ratio].forEach(v => {
+    const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+  });
+  if (p.tir) tr.style.color = '#ff7a6e';
+  tbody.appendChild(tr);
+  emptyTip.style.display = 'none';
+  tr.scrollIntoView({ block: 'nearest' });
+});
+document.getElementById('btnClear').addEventListener('click', () => {
+  tbody.innerHTML = ''; recCount = 0;
+  emptyTip.style.display = 'block';
+});
+
+/* ---------- 工具栏 ---------- */
+document.getElementById('btnIntro').addEventListener('click', () => {
+  document.getElementById('introMask').classList.remove('hidden');
+  document.getElementById('settingsPanel').classList.add('hidden');
+});
+document.getElementById('btnCloseIntro').addEventListener('click', () => {
+  document.getElementById('introMask').classList.add('hidden');
+});
+document.getElementById('btnSettings').addEventListener('click', () => {
+  document.getElementById('settingsPanel').classList.toggle('hidden');
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  state.theta1 = 30; state.side = 1;
+  state.medium = 'glass'; state.n = 1.50;
+  state.reversed = false;
+  document.querySelector('input[name=medium][value=glass]').checked = true;
+  nSlider.value = 1.50; nSlider.disabled = true; nVal.textContent = '1.50';
+  document.getElementById('chkReverse').checked = false;
+  angNote.textContent = '光从空气斜射入介质';
+  syncAngleUI();
+});
+
+syncAngleUI();
+</script>
+</body>
+</html>

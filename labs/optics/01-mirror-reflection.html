@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>镜面反射</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; background:#141a26; font-family:'PingFang SC','Microsoft YaHei',sans-serif; overflow:hidden; }
+  body { display:flex; flex-direction:column; align-items:center; }
+
+  /* 顶栏 */
+  #topbar {
+    width:100%; height:46px; flex:0 0 46px;
+    background:rgba(20,26,38,.9);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; border-bottom:1px solid rgba(255,255,255,.06);
+    z-index:10;
+  }
+  #topbar a { color:#fff; text-decoration:none; font-size:14px; }
+  #topbar a:hover { color:#ffd34d; }
+  #expName { color:#e8ecf4; font-size:16px; font-weight:600; letter-spacing:2px; }
+  #topHint { color:#8a93a6; font-size:12px; }
+
+  /* 舞台 */
+  #stage { position:relative; flex:1 1 auto; width:100%; display:flex; align-items:center; justify-content:center; }
+  #cv {
+    width:min(1100px, 98vw); height:auto; display:block;
+    border-radius:10px; box-shadow:0 12px 40px rgba(0,0,0,.45);
+    touch-action:none;
+  }
+
+  /* 底部工具栏 */
+  #toolbar {
+    position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+    background:rgba(20,26,38,.85); border:1px solid rgba(255,255,255,.08);
+    border-radius:24px; padding:6px 10px; display:flex; gap:8px; z-index:20;
+  }
+  #toolbar button {
+    background:rgba(255,255,255,.06); color:#dfe5ef; border:none;
+    border-radius:16px; padding:7px 20px; font-size:13px; cursor:pointer;
+    font-family:inherit; transition:background .15s;
+  }
+  #toolbar button:hover { background:rgba(255,255,255,.18); }
+
+  /* 入射角滑块 */
+  #angleCtl {
+    position:absolute; right:22px; bottom:18px; z-index:20;
+    background:rgba(20,26,38,.85); border:1px solid rgba(255,255,255,.08);
+    border-radius:18px; padding:8px 14px; color:#cfd6e4; font-size:12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  #angleCtl input[type=range] { width:130px; accent-color:#ff5b5b; cursor:pointer; }
+  #angVal { color:#ffd34d; font-weight:600; min-width:36px; text-align:right; }
+
+  /* 设置面板 */
+  #setPanel {
+    position:absolute; left:50%; bottom:66px; transform:translateX(-50%);
+    width:280px; background:rgba(22,28,42,.96); border:1px solid rgba(255,255,255,.1);
+    border-radius:12px; padding:14px 16px; z-index:30; color:#dfe5ef; font-size:13px;
+    display:none; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #setPanel h3 { font-size:14px; margin-bottom:10px; color:#fff; font-weight:600; }
+  #setPanel label { display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer; }
+  #setPanel input { accent-color:#ff5b5b; cursor:pointer; }
+  #setPanel .row { border-top:1px solid rgba(255,255,255,.07); margin-top:6px; padding-top:6px; }
+  #setPanel .grp { display:flex; gap:16px; }
+
+  /* 简介弹窗 */
+  #introMask {
+    position:absolute; inset:0; background:rgba(8,10,16,.55); z-index:40; display:none;
+  }
+  #introCard {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:440px; max-width:88%; background:rgba(24,30,46,.98);
+    border:1px solid rgba(255,255,255,.12); border-radius:14px;
+    padding:22px 24px; z-index:50; display:none; color:#e6ebf5;
+    box-shadow:0 18px 50px rgba(0,0,0,.6);
+  }
+  #introCard h2 { font-size:17px; margin-bottom:12px; color:#fff; }
+  #introCard p { font-size:13.5px; line-height:1.9; color:#c9d2e2; margin-bottom:8px; }
+  #introCard b { color:#ffd34d; }
+  #introClose {
+    margin-top:8px; background:#ff5b5b; color:#fff; border:none; border-radius:8px;
+    padding:7px 22px; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  #introClose:hover { background:#ff7373; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <a href="index.html">← 返回合集</a>
+  <span id="expName">镜面反射</span>
+  <span id="topHint">拖拽激光笔改变入射角 · 拖拽镜面手柄调整镜子倾角</span>
+</div>
+
+<div id="stage">
+  <canvas id="cv" width="1100" height="640"></canvas>
+
+  <div id="angleCtl">
+    激光方向 <input type="range" id="angSlider" min="0" max="80" step="1" value="45">
+    <span id="angVal">45°</span>
+  </div>
+
+  <div id="toolbar">
+    <button id="btnIntro">简介</button>
+    <button id="btnSet">设置</button>
+    <button id="btnReset">重置</button>
+  </div>
+
+  <div id="setPanel">
+    <h3>设置</h3>
+    <label><input type="checkbox" id="ckNormal" checked> 显示法线</label>
+    <label><input type="checkbox" id="ckAngle" checked> 显示角度</label>
+    <div class="row">
+      <div style="padding:4px 0 2px;">激光束数量</div>
+      <div class="grp">
+        <label><input type="radio" name="beams" value="1"> 1 束</label>
+        <label><input type="radio" name="beams" value="3" checked> 3 束</label>
+      </div>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="ckAnim" checked> 传播动画</label>
+    </div>
+  </div>
+
+  <div id="introMask"></div>
+  <div id="introCard">
+    <h2>实验简介 · 镜面反射</h2>
+    <p>光射到光滑的平面镜表面时会发生<b>反射</b>。反射定律：反射光线、入射光线和法线在<b>同一平面</b>内；反射光线和入射光线分居<b>法线两侧</b>；<b>反射角等于入射角</b>。</p>
+    <p>入射角是入射光线与法线的夹角，反射角是反射光线与法线的夹角，均从法线量起。</p>
+    <p>操作：按住<b>激光笔</b>绕入射点旋转（或用右下角滑块）改变激光方向；拖动<b>镜顶手柄</b>在 ±30° 内倾斜镜面——激光笔保持不动，入射角随镜面倾斜<b>自动改变</b>，反射光线跟着改变，且反射角始终等于入射角。</p>
+    <button id="introClose">关闭</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var W = 1100, H = 640;
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var DPR = Math.max(1, Math.min(1.5, window.devicePixelRatio || 1));
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // ---------- 常量 ----------
+  var TABLE_Y = 560;                 // 桌面高度
+  var BASE = { x: 690, y: TABLE_Y }; // 镜座底点
+  var MIRROR_LEN = 280;              // 镜长
+  var HIT_FRAC = 0.54;               // 入射点在镜面上的位置比例
+  var LASER_DIST = 330;              // 激光笔到入射点的默认距离
+  var TILT_MAX = 30 * Math.PI / 180; // 镜面倾角范围 ±30°
+  var BEAM_GAP = 26;                 // 并排光束间距
+
+  // ---------- 状态 ----------
+  var st = {
+    tilt: 0,          // 镜面倾角（弧度，+ 顶部向右）
+    laserDeg: 45,     // 激光方向（世界坐标，度，0=水平向左垂直入射，+ 向上偏，0~80）
+    beams: 3,         // 激光束数量 1/3
+    showNormal: true,
+    showAngles: true,
+    anim: true
+  };
+
+  // ---------- 工具 ----------
+  function rot(v, a){ var c=Math.cos(a), s=Math.sin(a); return { x: v.x*c - v.y*s, y: v.x*s + v.y*c }; }
+  function cross(a,b){ return a.x*b.y - a.y*b.x; }
+  function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+  function dist(a,b){ var dx=a.x-b.x, dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+
+  // ---------- 几何（每帧重算，保证物理一致） ----------
+  function geom(){
+    var g = {};
+    g.m = rot({x:0,y:-1}, st.tilt);          // 镜面方向（底→顶）
+    g.n = rot({x:-1,y:0}, st.tilt);          // 法线方向（朝向激光一侧）
+    g.top = { x: BASE.x + g.m.x*MIRROR_LEN, y: BASE.y + g.m.y*MIRROR_LEN };
+    g.P   = { x: BASE.x + g.m.x*MIRROR_LEN*HIT_FRAC, y: BASE.y + g.m.y*MIRROR_LEN*HIT_FRAC };
+    var iRad = st.laserDeg * Math.PI / 180;
+    g.laserDir = rot({x:-1,y:0}, iRad);       // 入射点 → 激光笔方向（世界坐标固定，不随镜子转；0=水平向左垂直入射，80=接近竖直向上掠射）
+    g.dIn  = { x: -g.laserDir.x, y: -g.laserDir.y }; // 光线传播方向（射向镜面）
+    var dn = g.dIn.x*g.n.x + g.dIn.y*g.n.y;
+    if (dn > 0){ g.n = { x: -g.n.x, y: -g.n.y }; dn = -dn; } // 法线始终朝向入射光一侧
+    g.dOut = { x: g.dIn.x - 2*dn*g.n.x, y: g.dIn.y - 2*dn*g.n.y }; // 反射定律：d_out = d_in - 2(d_in·n)n
+    g.incRad = Math.acos(clamp(-dn, -1, 1));  // 入射角（派生量：随镜面倾角自动变化）
+    g.perp = { x: -g.laserDir.y, y: g.laserDir.x };  // 光束排列方向
+    // 激光笔距离（保证笔不钻到桌面以下、不出画面）
+    var dl = LASER_DIST;
+    if (g.laserDir.y > 1e-6) dl = Math.min(dl, (TABLE_Y - 56 - g.P.y) / g.laserDir.y);
+    if (g.laserDir.x > 1e-6) dl = Math.min(dl, (W - 60 - g.P.x) / g.laserDir.x);
+    if (g.laserDir.x < -1e-6) dl = Math.min(dl, (60 - g.P.x) / g.laserDir.x);
+    g.dl = clamp(dl, 100, LASER_DIST);
+    return g;
+  }
+
+  // 光线 LP + dIn*t 与镜面线段 BASE + m*s 求交
+  function intersect(LP, g){
+    var den = cross(g.dIn, g.m);
+    if (Math.abs(den) < 1e-9) return null;
+    var w = { x: BASE.x - LP.x, y: BASE.y - LP.y };
+    var t = cross(w, g.m) / den;
+    var s = cross(w, g.dIn) / den;
+    if (t < 0 || s < 0 || s > MIRROR_LEN) return null;
+    return { x: LP.x + g.dIn.x*t, y: LP.y + g.dIn.y*t, t: t, s: s };
+  }
+
+  // 反射光线终点（到桌面或画面边缘）
+  function reflectEnd(Hp, g){
+    var t = 820, tt;
+    if (g.dOut.y > 1e-6){ tt = (TABLE_Y - Hp.y) / g.dOut.y; if (tt>0) t = Math.min(t, tt); }
+    if (g.dOut.x > 1e-6){ tt = (W-24 - Hp.x) / g.dOut.x; if (tt>0) t = Math.min(t, tt); }
+    if (g.dOut.x < -1e-6){ tt = (24 - Hp.x) / g.dOut.x; if (tt>0) t = Math.min(t, tt); }
+    return { x: Hp.x + g.dOut.x*t, y: Hp.y + g.dOut.y*t };
+  }
+
+  function beamOffsets(){
+    return st.beams === 3 ? [-BEAM_GAP, 0, BEAM_GAP] : [0];
+  }
+
+  // ---------- 绘制 ----------
+  function drawBg(){
+    var gr = ctx.createLinearGradient(0,0,0,H);
+    gr.addColorStop(0,'#252d3d'); gr.addColorStop(1,'#1a2130');
+    ctx.fillStyle = gr; ctx.fillRect(0,0,W,H);
+    // 桌面
+    var tg = ctx.createLinearGradient(0,TABLE_Y,0,H);
+    tg.addColorStop(0,'#2c3547'); tg.addColorStop(1,'#1c2433');
+    ctx.fillStyle = tg; ctx.fillRect(0,TABLE_Y,W,H-TABLE_Y);
+    ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0,TABLE_Y); ctx.lineTo(W,TABLE_Y); ctx.stroke();
+    // 桌面淡淡反光
+    ctx.fillStyle = 'rgba(255,255,255,.03)';
+    ctx.fillRect(0, TABLE_Y+2, W, 10);
+  }
+
+  function drawMirror(g){
+    // 镜座（梯形底座）
+    ctx.beginPath();
+    ctx.moveTo(BASE.x-50, TABLE_Y); ctx.lineTo(BASE.x+50, TABLE_Y);
+    ctx.lineTo(BASE.x+28, TABLE_Y-26); ctx.lineTo(BASE.x-28, TABLE_Y-26);
+    ctx.closePath();
+    ctx.fillStyle = '#2b3242'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(BASE.x, TABLE_Y-13, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#4a5468'; ctx.fill();
+
+    // 背面 45° 斜线纹理（在法线反侧）
+    var hatch = { x: -g.n.x + g.m.x, y: -g.n.y + g.m.y };
+    var hl = Math.sqrt(hatch.x*hatch.x + hatch.y*hatch.y);
+    hatch.x /= hl; hatch.y /= hl;
+    ctx.strokeStyle = 'rgba(174,184,198,.55)'; ctx.lineWidth = 1.5;
+    for (var s = 10; s < MIRROR_LEN - 4; s += 15){
+      var qx = BASE.x + g.m.x*s, qy = BASE.y + g.m.y*s;
+      ctx.beginPath(); ctx.moveTo(qx, qy);
+      ctx.lineTo(qx + hatch.x*11, qy + hatch.y*11); ctx.stroke();
+    }
+
+    // 镜体
+    ctx.beginPath(); ctx.moveTo(BASE.x, BASE.y); ctx.lineTo(g.top.x, g.top.y);
+    ctx.strokeStyle = '#aeb8c6'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(BASE.x, BASE.y); ctx.lineTo(g.top.x, g.top.y);
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.stroke();
+
+    // 镜面手柄（可拖拽）
+    ctx.beginPath(); ctx.arc(g.top.x, g.top.y, 12, 0, Math.PI*2);
+    ctx.fillStyle = '#3a4356'; ctx.fill();
+    ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(g.top.x, g.top.y, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#ffd34d'; ctx.fill();
+
+    // 镜面倾角读数
+    if (Math.abs(st.tilt) > 0.005){
+      ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.65)';
+      ctx.textAlign = 'center';
+      var td = st.tilt * 180 / Math.PI;
+      ctx.fillText('镜面倾角 ' + (td>0?'+':'') + td.toFixed(1) + '°', BASE.x, TABLE_Y + 24);
+    }
+  }
+
+  function drawNormal(g){
+    if (!st.showNormal) return;
+    var p = g.P, a = { x: p.x + g.n.x*150, y: p.y + g.n.y*150 };
+    var b = { x: p.x - g.n.x*70,  y: p.y - g.n.y*70  };
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    ctx.restore();
+    ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.textAlign = 'left';
+    ctx.fillText('法线', a.x + 6, a.y - 4);
+  }
+
+  function drawAngles(g){
+    if (!st.showAngles) return;
+    var p = g.P, r = 52;
+    var aN = Math.atan2(g.n.y, g.n.x);           // 法线角
+    var aIn = Math.atan2(g.laserDir.y, g.laserDir.x); // 入射光线方向（P → 激光笔）
+    var aOut = Math.atan2(g.dOut.y, g.dOut.x);   // 反射光线方向
+    var iRad = g.incRad;                          // 派生入射角（弧度）
+    var iDeg = iRad * 180 / Math.PI;
+    // 由 a0 到 a1 的角弧（自动选择扫描方向）
+    function arcBetween(a0, a1, rr){
+      var d = (a1 - a0) % (Math.PI*2);
+      if (d > Math.PI) d -= Math.PI*2;
+      if (d < -Math.PI) d += Math.PI*2;
+      ctx.beginPath(); ctx.arc(p.x, p.y, rr, a0, a0 + d, d < 0); ctx.stroke();
+      return a0 + d/2;
+    }
+    ctx.save();
+    ctx.strokeStyle = '#ffd34d'; ctx.fillStyle = '#ffd34d'; ctx.lineWidth = 2;
+    ctx.font = 'bold 14px "PingFang SC","Microsoft YaHei",sans-serif';
+    var mI = arcBetween(aN, aIn, r);              // 入射角弧：法线 → 入射光线
+    var mR = arcBetween(aN, aOut, r + 12);        // 反射角弧：法线 → 反射光线
+    var li = { x: p.x + Math.cos(mI)*(r+28), y: p.y + Math.sin(mI)*(r+28) };
+    var lr = { x: p.x + Math.cos(mR)*(r+42), y: p.y + Math.sin(mR)*(r+42) };
+    ctx.textAlign = 'center';
+    ctx.fillText('入射角 ' + iDeg.toFixed(1) + '°', li.x, li.y);
+    ctx.fillText('反射角 ' + iDeg.toFixed(1) + '°', lr.x, lr.y);
+    ctx.restore();
+  }
+
+  function strokeGlow(x1,y1,x2,y2){
+    ctx.save();
+    ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 12; ctx.shadowColor = 'rgba(255,60,60,.8)';
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDot(x, y){
+    ctx.save();
+    ctx.fillStyle = '#ffb0b0'; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,80,80,.9)';
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawLaserPen(LP, g){
+    var ang = Math.atan2(g.dIn.y, g.dIn.x); // 笔身朝向镜面
+    ctx.save();
+    ctx.translate(LP.x, LP.y); ctx.rotate(ang);
+    // 笔身（金属圆柱渐变）
+    var gr = ctx.createLinearGradient(0,-13,0,13);
+    gr.addColorStop(0,'#3a3f4b'); gr.addColorStop(.5,'#2a2f3a'); gr.addColorStop(1,'#20242e');
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-96,-13,86,26,6); else ctx.rect(-96,-13,86,26);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1; ctx.stroke();
+    // 笔头
+    ctx.fillStyle = '#171b23';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-12,-8,14,16,3); else ctx.rect(-12,-8,14,16);
+    ctx.fill();
+    ctx.fillStyle = '#ff3b3b'; ctx.fillRect(-3,-3,4,6); // 出光口
+    // 红色按钮
+    ctx.beginPath(); ctx.arc(-58,-13,5.5,0,Math.PI*2);
+    ctx.fillStyle = '#e23434'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBeams(g, now){
+    var offs = beamOffsets();
+    var speed = 200, gap = 62;
+    var phase = st.anim ? (now*speed/1000) % gap : 0;
+    for (var k = 0; k < offs.length; k++){
+      var LP = { x: g.P.x + g.laserDir.x*g.dl + g.perp.x*offs[k],
+                 y: g.P.y + g.laserDir.y*g.dl + g.perp.y*offs[k] };
+      var hit = intersect(LP, g);
+      if (!hit) continue;
+      var end = reflectEnd(hit, g);
+      // 入射光线 + 反射光线
+      strokeGlow(LP.x, LP.y, hit.x, hit.y);
+      strokeGlow(hit.x, hit.y, end.x, end.y);
+      // 传播动画：光点沿 入射段 → 反射段 流动
+      if (st.anim){
+        var L1 = dist(LP, hit), L2 = dist(hit, end), total = L1 + L2;
+        for (var d = phase; d < total; d += gap){
+          var x, y;
+          if (d <= L1){ x = LP.x + g.dIn.x*d; y = LP.y + g.dIn.y*d; }
+          else { var d2 = d - L1; x = hit.x + g.dOut.x*d2; y = hit.y + g.dOut.y*d2; }
+          drawDot(x, y);
+        }
+      }
+      drawLaserPen(LP, g);
+    }
+  }
+
+  function drawHints(g, now){
+    var offs = beamOffsets();
+    var cx = 0, cy = 0;
+    for (var k = 0; k < offs.length; k++){
+      cx += g.P.x + g.laserDir.x*g.dl + g.perp.x*offs[k];
+      cy += g.P.y + g.laserDir.y*g.dl + g.perp.y*offs[k];
+    }
+    cx /= offs.length; cy /= offs.length;
+    var pulse = 0.72 + 0.28*Math.sin(now/450);
+    ctx.save();
+    ctx.font = 'bold 17px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,235,160,' + pulse.toFixed(3) + ')';
+    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,211,77,.5)';
+    var hy = Math.max(52, cy - 78);
+    ctx.fillText('改变入射角度', cx, hy);
+    ctx.font = '12px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillStyle = 'rgba(200,208,222,.75)'; ctx.shadowBlur = 0;
+    ctx.fillText('按住激光笔绕入射点旋转，或拖动右下角滑块', cx, hy + 20);
+    ctx.fillText('拖动黄色手柄倾斜镜面', g.top.x + 4, g.top.y - 22);
+    ctx.restore();
+  }
+
+  function draw(now){
+    ctx.clearRect(0,0,W,H);
+    var g = geom();
+    drawBg();
+    drawNormal(g);
+    drawAngles(g);
+    drawBeams(g, now);
+    drawMirror(g);
+    drawHints(g, now);
+  }
+
+  // ---------- 交互 ----------
+  function toLocal(e){
+    var r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+  }
+
+  var dragMode = null; // 'laser' | 'handle'
+
+  function hitTest(p, g){
+    if (dist(p, g.top) < 22) return 'handle';
+    var offs = beamOffsets();
+    for (var k = 0; k < offs.length; k++){
+      var LP = { x: g.P.x + g.laserDir.x*g.dl + g.perp.x*offs[k],
+                 y: g.P.y + g.laserDir.y*g.dl + g.perp.y*offs[k] };
+      // 笔身附近
+      var dx = p.x - LP.x, dy = p.y - LP.y;
+      var along = dx*(-g.laserDir.x) + dy*(-g.laserDir.y);
+      var side  = Math.abs(dx*g.perp.x + dy*g.perp.y);
+      if (along > -8 && along < 100 && side < 22) return 'laser';
+      // 入射光线附近也可拖拽
+      var hit = intersect(LP, g);
+      if (hit){
+        var t = clamp((dx*g.dIn.x + dy*g.dIn.y), 0, hit.t);
+        var qx = LP.x + g.dIn.x*t, qy = LP.y + g.dIn.y*t;
+        if (dist(p, {x:qx, y:qy}) < 14) return 'laser';
+      }
+    }
+    return null;
+  }
+
+  function applyLaserDrag(p, g){
+    var v = { x: p.x - g.P.x, y: p.y - g.P.y };
+    if (Math.abs(v.x) < 1e-6 && Math.abs(v.y) < 1e-6) return;
+    // 世界坐标：0=水平向左（垂直入射），+ 向上偏转（80=接近掠射）；激光笔只留在镜面左侧
+    st.laserDeg = clamp(Math.atan2(-v.y, -v.x) * 180 / Math.PI, 0, 80);
+    syncSlider();
+  }
+
+  function applyHandleDrag(p){
+    var vx = p.x - BASE.x, vy = p.y - BASE.y;
+    var t = Math.atan2(vx, -vy); // 相对竖直方向的偏角
+    st.tilt = clamp(t, -TILT_MAX, TILT_MAX);
+  }
+
+  cv.addEventListener('pointerdown', function(e){
+    var p = toLocal(e), g = geom();
+    dragMode = hitTest(p, g);
+    if (dragMode){ cv.setPointerCapture(e.pointerId); e.preventDefault(); }
+  });
+  cv.addEventListener('pointermove', function(e){
+    var p = toLocal(e), g = geom();
+    if (dragMode === 'laser'){ applyLaserDrag(p, g); }
+    else if (dragMode === 'handle'){ applyHandleDrag(p); }
+    else {
+      var h = hitTest(p, g);
+      cv.style.cursor = h ? 'grab' : 'default';
+    }
+  });
+  cv.addEventListener('pointerup', function(){ dragMode = null; });
+  cv.addEventListener('pointercancel', function(){ dragMode = null; });
+
+  // ---------- UI 控件 ----------
+  var angSlider = document.getElementById('angSlider');
+  var angVal = document.getElementById('angVal');
+  function syncSlider(){ angSlider.value = Math.round(st.laserDeg); angVal.textContent = Math.round(st.laserDeg) + '°'; }
+  angSlider.addEventListener('input', function(){
+    st.laserDeg = clamp(parseFloat(angSlider.value) || 0, 0, 80);
+    angVal.textContent = Math.round(st.laserDeg) + '°';
+  });
+
+  var setPanel = document.getElementById('setPanel');
+  document.getElementById('btnSet').addEventListener('click', function(){
+    setPanel.style.display = setPanel.style.display === 'block' ? 'none' : 'block';
+  });
+  document.getElementById('ckNormal').addEventListener('change', function(){ st.showNormal = this.checked; });
+  document.getElementById('ckAngle').addEventListener('change', function(){ st.showAngles = this.checked; });
+  document.getElementById('ckAnim').addEventListener('change', function(){ st.anim = this.checked; });
+  var beamRadios = document.getElementsByName('beams');
+  for (var b = 0; b < beamRadios.length; b++){
+    beamRadios[b].addEventListener('change', function(){ st.beams = parseInt(this.value, 10); });
+  }
+
+  document.getElementById('btnReset').addEventListener('click', function(){
+    st.tilt = 0; st.laserDeg = 45; st.beams = 3;
+    st.showNormal = true; st.showAngles = true; st.anim = true;
+    document.getElementById('ckNormal').checked = true;
+    document.getElementById('ckAngle').checked = true;
+    document.getElementById('ckAnim').checked = true;
+    beamRadios[1].checked = true;
+    syncSlider();
+  });
+
+  var introMask = document.getElementById('introMask');
+  var introCard = document.getElementById('introCard');
+  document.getElementById('btnIntro').addEventListener('click', function(){
+    introMask.style.display = 'block'; introCard.style.display = 'block';
+  });
+  function closeIntro(){ introMask.style.display = 'none'; introCard.style.display = 'none'; }
+  document.getElementById('introClose').addEventListener('click', closeIntro);
+  introMask.addEventListener('click', closeIntro);
+
+  // ---------- 主循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ----------
+  var rafId = null, lastRender = 0, dirty = true;
+  function animating(){ return st.anim; } // 传播动画开启时逐帧渲染；关闭后仅交互触发重绘
+  function loop(now){
+    rafId = requestAnimationFrame(loop);
+    now = now || 0;
+    if (!animating() && !dirty) return;   // 静止且画面已最新：本帧跳过
+    if (now - lastRender < 33) return;    // 30 FPS 闸（dirty 保持到下一帧）
+    lastRender = now; dirty = false;
+    draw(now);
+  }
+  function startLoop(){ if (rafId === null){ dirty = true; rafId = requestAnimationFrame(loop); } }
+  function stopLoop(){ if (rafId !== null){ cancelAnimationFrame(rafId); rafId = null; } }
+  document.addEventListener('visibilitychange', function(){ document.hidden ? stopLoop() : startLoop(); });
+  ['pointerdown','pointermove','input','change','click','keydown'].forEach(function(ev){
+    document.addEventListener(ev, function(){ dirty = true; }, true);
+  });
+  window.addEventListener('resize', function(){ dirty = true; });
+  syncSlider();
+  startLoop();
+})();
+</script>
+</body>
+</html>

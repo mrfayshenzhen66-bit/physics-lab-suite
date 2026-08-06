@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>透镜对光的作用 · 光学模拟仿真实验室</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#141a26;font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#e8eef7}
+  #topbar{height:46px;display:flex;align-items:center;background:rgba(20,26,38,.9);border-bottom:1px solid rgba(255,255,255,.07);padding:0 16px;position:sticky;top:0;z-index:10}
+  #topbar .back{color:#fff;text-decoration:none;font-size:14px;white-space:nowrap}
+  #topbar .back:hover{color:#ffd34d}
+  #topbar .title{flex:1;text-align:center;font-size:15px;font-weight:600;letter-spacing:.5px}
+  #topbar .hint{color:#8b96a8;font-size:12px;white-space:nowrap}
+  #wrap{padding:14px 0 30px}
+  #stage{position:relative;width:min(1140px,97vw);margin:0 auto;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(255,255,255,.06);box-shadow:0 12px 44px rgba(0,0,0,.5);touch-action:none}
+  .seg{display:flex;background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.1);border-radius:9px;overflow:hidden}
+  .seg button{background:transparent;border:0;color:#c7d2e3;font-family:inherit;font-size:13px;padding:6px 14px;cursor:pointer;white-space:nowrap}
+  .seg button:hover{background:rgba(255,255,255,.07)}
+  .seg button.on{background:#46536e;color:#fff}
+  .seg.disabled{opacity:.35;pointer-events:none}
+  .seg.mini button{padding:4px 12px;font-size:12px}
+  #quick{position:absolute;top:12px;left:12px;display:flex;gap:10px;flex-wrap:wrap}
+  #rayCard{position:absolute;top:12px;right:12px;background:rgba(20,26,38,.88);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 14px;font-size:13px;display:none}
+  #rayCard .rc-title{color:#ffd34d;font-size:12px;margin-bottom:6px}
+  #rayCard label{display:flex;align-items:center;gap:7px;color:#dbe4f0;padding:3px 0;cursor:pointer}
+  #rayCard input{accent-color:#e14b4b}
+  #toolbar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:10px;background:rgba(20,26,38,.85);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 14px}
+  #toolbar button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#e8eef7;font-family:inherit;font-size:13px;padding:6px 20px;border-radius:8px;cursor:pointer}
+  #toolbar button:hover{background:rgba(255,255,255,.15)}
+  #setPanel{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);width:580px;max-width:94%;background:rgba(20,26,38,.96);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 20px;display:none;font-size:13px;z-index:4}
+  #setPanel .row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.06);flex-wrap:wrap}
+  #setPanel .row:last-child{border-bottom:0}
+  #setPanel .lab{width:92px;color:#9fb0c8;flex:none}
+  #setPanel input[type=range]{width:230px;accent-color:#e14b4b}
+  #setPanel .val{color:#ffd34d;min-width:120px}
+  #setPanel .chk{display:flex;align-items:center;gap:6px;color:#dbe4f0;cursor:pointer;margin-right:12px}
+  #setPanel input[type=checkbox]{accent-color:#e14b4b}
+  #setPanel .note{color:#7c8798;font-size:12px;line-height:1.7}
+  #introModal{position:absolute;inset:0;background:rgba(10,14,22,.6);display:none;align-items:center;justify-content:center;border-radius:10px;z-index:5}
+  #introModal .card{width:540px;max-width:92%;background:#1c2333;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:22px 26px;position:relative;box-shadow:0 16px 50px rgba(0,0,0,.5)}
+  #introModal h3{font-size:16px;margin-bottom:10px;color:#fff}
+  #introModal p{font-size:14px;line-height:1.9;color:#d7e0ee}
+  #introModal .closeBtn{position:absolute;top:10px;right:12px;background:transparent;border:0;color:#8b96a8;font-size:18px;cursor:pointer}
+  #introModal .closeBtn:hover{color:#fff}
+</style>
+</head>
+<body>
+<header id="topbar">
+  <a class="back" href="index.html">← 返回合集</a>
+  <div class="title">透镜对光的作用 —— 凸透镜会聚 · 凹透镜发散 · 三种特殊光线</div>
+  <div class="hint">拖拽激光笔组 / 点光源 · 设置中调焦距与光束数量</div>
+</header>
+<main id="wrap">
+  <div id="stage">
+    <canvas id="cv" width="1100" height="640"></canvas>
+
+    <div id="quick">
+      <div class="seg" id="segLens"><button data-v="convex" class="on">凸透镜</button><button data-v="concave">凹透镜</button></div>
+      <div class="seg" id="segMode"><button data-v="parallel" class="on">平行光束</button><button data-v="special">三种特殊光线</button></div>
+    </div>
+
+    <div id="rayCard">
+      <div class="rc-title">特殊光线（勾选高亮）</div>
+      <label><input type="checkbox" id="cR1" checked><span>① 过光心 O → 方向不变</span></label>
+      <label><input type="checkbox" id="cR2" checked><span id="r2txt">② 平行主轴 → 折射后过焦点 F</span></label>
+      <label><input type="checkbox" id="cR3" checked><span id="r3txt">③ 过焦点 F → 折射后平行主轴</span></label>
+    </div>
+
+    <div id="toolbar">
+      <button id="btnIntro">简介</button><button id="btnSet">设置</button><button id="btnReset">重置</button>
+    </div>
+
+    <div id="setPanel">
+      <div class="row"><span class="lab">焦距 |f|</span>
+        <input type="range" id="fSlider" min="80" max="200" step="5" value="140">
+        <span class="val" id="fVal">f = +140 px</span>
+      </div>
+      <div class="row"><span class="lab">光束数量</span>
+        <div class="seg mini" id="segCount"><button data-v="1">1 支</button><button data-v="3" class="on">3 支</button><button data-v="5">5 支</button></div>
+        <span class="note">（仅平行光束模式）</span>
+      </div>
+      <div class="row"><span class="lab">显示选项</span>
+        <label class="chk"><input type="checkbox" id="chkF" checked>焦点与 2F 标注</label>
+        <label class="chk"><input type="checkbox" id="chkExt" checked>反向延长线</label>
+        <label class="chk"><input type="checkbox" id="chkImg" checked>像点</label>
+      </div>
+      <div class="row"><div class="note">焦距越短，透镜越弯曲，对光的偏折越强。平行光束模式：拖动激光笔组整体上下移动，超出透镜口径的光将直线通过。三种特殊光线模式：拖动点光源 S 改变物距，像的位置会自动标出（实像亮点 / 虚像空心点）。</div></div>
+    </div>
+
+    <div id="introModal">
+      <div class="card">
+        <button class="closeBtn" id="btnCloseIntro">✕</button>
+        <h3>透镜对光的作用</h3>
+        <p>凸透镜对光有会聚作用：平行于主光轴的光经折射后通过焦点 F；凹透镜对光有发散作用，折射光的反向延长线通过同侧虚焦点。通过光心 O 的光线传播方向不变。焦距越短，透镜越弯曲，对光的偏折本领越强。三条特殊光线——过光心、平行主轴、过（虚）焦点——是作图确定像的位置的基础。操作：拖动左侧激光笔组整体上下移动；切换到「三种特殊光线」模式后拖动点光源 S，观察三条典型光线及其像点。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+'use strict';
+/* ============ 常量与状态 ============ */
+var W=1100,H=640,CX=560,CY=320,LH=170;   // 画布逻辑尺寸、透镜中心、透镜半高
+var FONT='"PingFang SC","Microsoft YaHei",sans-serif';
+var cv=document.getElementById('cv');
+var ctx=cv.getContext('2d');
+
+var S={
+  lens:'convex',        // 'convex' | 'concave'
+  fAbs:140,             // |f|，凸 80~200，凹 -200~-80（符号由类型决定）
+  mode:'parallel',      // 'parallel' | 'special'
+  count:3,              // 激光笔数量 1/3/5
+  dy:0,                 // 笔组整体竖直偏移
+  rays:{r1:true,r2:true,r3:true},
+  showF:true,showExt:true,showImg:true,
+  src:{x:230,y:210}     // 点光源（物）位置，u=330, 高 110
+};
+var DEF=JSON.parse(JSON.stringify(S));
+var PEN_OFF={1:[-70],3:[-70,0,70],5:[-140,-70,0,70,140]};
+var growStart=performance.now()/1000;
+var DOT_SPEED=150,DOT_GAP=95;
+
+function restartGrow(){growStart=performance.now()/1000;}
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function fSigned(){return S.lens==='convex'?S.fAbs:-S.fAbs;}
+function dist(ax,ay,bx,by){return Math.hypot(bx-ax,by-ay);}
+
+/* 从 (px,py) 沿 (dx,dy) 延伸到画布边界 */
+function toBounds(px,py,dx,dy){
+  var t=1e9;
+  if(dx>1e-9)t=Math.min(t,(1092-px)/dx);
+  if(dx<-1e-9)t=Math.min(t,(8-px)/dx);
+  if(dy>1e-9)t=Math.min(t,(632-py)/dy);
+  if(dy<-1e-9)t=Math.min(t,(8-py)/dy);
+  if(t>1e8||t<0)t=0;
+  return [px+dx*t,py+dy*t];
+}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function tri(x1,y1,x2,y2,x3,y3){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.closePath();ctx.fill();}
+
+/* ============ 透镜轮廓（曲率随焦距变化） ============ */
+function lensOutline(){
+  var pts=[],N=44,i,th;
+  var s=clamp(26+(200-S.fAbs)*0.28,22,62);   // 每面矢高：焦距越短越弯
+  if(S.lens==='convex'){
+    var R=(LH*LH+s*s)/(2*s);
+    var cenX=CX-(R-s);
+    var a=Math.atan2(LH,R-s);
+    for(i=0;i<=N;i++){th=-a+2*a*i/N;pts.push([cenX+R*Math.cos(th),CY+R*Math.sin(th)]);}
+  }else{
+    var d=7;                                  // 凹透镜中心半厚
+    var Rc=(LH*LH+s*s)/(2*s);
+    var cenX2=CX+d+Rc;
+    var aT=Math.atan2(-LH,s-Rc);
+    var aE=Math.atan2(LH,s-Rc)-2*Math.PI;
+    for(i=0;i<=N;i++){th=aT+(aE-aT)*i/N;pts.push([cenX2+Rc*Math.cos(th),CY+Rc*Math.sin(th)]);}
+  }
+  var left=[];
+  for(i=pts.length-1;i>=0;i--){left.push([2*CX-pts[i][0],pts[i][1]]);}
+  return pts.concat(left);
+}
+function drawLens(){
+  var o=lensOutline(),i;
+  ctx.beginPath();ctx.moveTo(o[0][0],o[0][1]);
+  for(i=1;i<o.length;i++)ctx.lineTo(o[i][0],o[i][1]);
+  ctx.closePath();
+  ctx.fillStyle='rgba(150,200,255,.15)';ctx.fill();
+  ctx.strokeStyle='rgba(150,200,255,.55)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#9fb4cc';
+  if(S.lens==='convex'){   // 端部箭头朝外
+    tri(CX,CY-LH-14,CX-6,CY-LH-3,CX+6,CY-LH-3);
+    tri(CX,CY+LH+14,CX-6,CY+LH+3,CX+6,CY+LH+3);
+  }else{                   // 端部箭头朝内
+    tri(CX,CY-LH-3,CX-6,CY-LH-14,CX+6,CY-LH-14);
+    tri(CX,CY+LH+3,CX-6,CY+LH+14,CX+6,CY+LH+14);
+  }
+  ctx.fillStyle='#cfe0f5';ctx.font='13px '+FONT;ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText(S.lens==='convex'?'凸透镜':'凹透镜',CX,CY-LH-24);
+}
+
+/* ============ 光路构建（核心物理：薄透镜光线偏折） ============
+ * 统一公式（近轴薄透镜，对凸/凹均精确）：出射角 θ_out = θ_in − h/f
+ * 画布坐标（y 向下）下斜率 m = (CY − y_hit)/f：
+ *   平行光 h>0（轴上方）：凸 f>0 → m>0 向下汇聚，过 (CX+f, CY)；
+ *                       凹 f<0 → m<0 向上发散，反向延长线过 (CX−|f|, CY)。
+ */
+function buildScene(){
+  var solid=[],dash=[],i,yp,m,pts,end;
+  var f=fSigned();
+  if(S.mode==='parallel'){
+    var offs=PEN_OFF[S.count];
+    for(i=0;i<offs.length;i++){
+      yp=CY+S.dy+offs[i];
+      m=(CY-yp)/f;
+      pts=[[216,yp],[CX,yp]];
+      var dim=Math.abs(yp-CY)>LH;      // 超出透镜口径：直线通过
+      if(dim){pts.push([1092,yp]);}
+      else{end=toBounds(CX,yp,1,m);pts.push(end);}
+      solid.push({pts:pts,dim:dim});
+      if(!dim&&S.lens==='concave'&&S.showExt){
+        dash.push({pts:[[CX,yp],[CX-S.fAbs-70,yp-m*(S.fAbs+70)]]});  // 反向延长线过虚焦点
+      }
+    }
+  }else{
+    var sx=S.src.x,sy=S.src.y,u=CX-sx,Ys=CY-sy;
+    /* ① 过光心 O：不偏折 */
+    if(S.rays.r1){
+      solid.push({pts:[[sx,sy],toBounds(sx,sy,CX-sx,CY-sy)],dim:false});
+    }
+    /* ② 平行主轴 → 折射后过焦点（凹：反向延长线过虚焦点） */
+    if(S.rays.r2){
+      m=(CY-sy)/f;
+      solid.push({pts:[[sx,sy],[CX,sy],toBounds(CX,sy,1,m)],dim:false});
+      if(S.lens==='concave'&&S.showExt){
+        dash.push({pts:[[CX,sy],[CX-S.fAbs-70,sy-m*(S.fAbs+70)]]});
+      }
+    }
+    /* ③ 过焦点 → 折射后平行主轴（凹：对准对侧虚焦点 → 平行） */
+    if(S.rays.r3){
+      if(S.lens==='convex'){
+        var d=u-S.fAbs;
+        if(Math.abs(d)<10){           // u≈f：出射趋于无穷远，仅示入射线
+          solid.push({pts:[[sx,sy],toBounds(sx,sy,CX-S.fAbs-sx,CY-sy)],dim:true});
+        }else if(d>0){                // u>f：穿左侧焦点射向透镜，命中点在轴另一侧
+          var y3=sy+Ys*u/d;
+          pts=[[sx,sy],[CX,y3]];
+          if(Math.abs(y3-CY)<=LH){pts.push([1092,y3]);solid.push({pts:pts,dim:false});}
+          else{pts.push(toBounds(CX,y3,CX-sx,y3-sy));solid.push({pts:pts,dim:true});}
+        }else{                        // u<f：入射线反向延长线过焦点
+          var Y3=Ys*S.fAbs/(S.fAbs-u),y3b=CY-Y3;
+          pts=[[sx,sy],[CX,y3b]];
+          if(S.showExt){dash.push({pts:[[sx,sy],[sx+(CX-S.fAbs-sx)*1.3,sy+(CY-sy)*1.3]]});}
+          if(Math.abs(y3b-CY)<=LH){pts.push([1092,y3b]);solid.push({pts:pts,dim:false});}
+          else{pts.push(toBounds(CX,y3b,CX-sx,y3b-sy));solid.push({pts:pts,dim:true});}
+        }
+      }else{                          // 凹透镜：对准右侧虚焦点 → 折射后平行
+        var t=u/(u+S.fAbs),y3c=sy+t*(CY-sy);
+        solid.push({pts:[[sx,sy],[CX,y3c],[1092,y3c]],dim:false});
+        if(S.showExt){dash.push({pts:[[CX,y3c],[CX+S.fAbs*1.15,y3c+(CY-y3c)*1.15]]});}
+      }
+    }
+  }
+  return {solid:solid,dash:dash};
+}
+
+/* 按比例绘制折线（光线生长动画） */
+function strokePartial(pts,g){
+  var total=0,cum=[0],i;
+  for(i=1;i<pts.length;i++){total+=dist(pts[i-1][0],pts[i-1][1],pts[i][0],pts[i][1]);cum.push(total);}
+  var target=total*g;
+  ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+  for(i=1;i<pts.length;i++){
+    if(cum[i]<=target){ctx.lineTo(pts[i][0],pts[i][1]);}
+    else{
+      var seg=cum[i]-cum[i-1],r=seg>0?(target-cum[i-1])/seg:0;
+      ctx.lineTo(pts[i-1][0]+(pts[i][0]-pts[i-1][0])*r,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*r);
+      break;
+    }
+  }
+  ctx.stroke();
+}
+/* 沿线流动光点 */
+function drawDots(ray,now,idx){
+  var pts=ray.pts;if(pts.length<2)return;
+  var cum=[0],total=0,i;
+  for(i=1;i<pts.length;i++){total+=dist(pts[i-1][0],pts[i-1][1],pts[i][0],pts[i][1]);cum.push(total);}
+  if(total<60)return;
+  var n=Math.max(1,Math.round(total/DOT_GAP));
+  for(var k=0;k<n;k++){
+    var s=(now*DOT_SPEED+k*DOT_GAP+idx*53)%total;
+    var seg=1;while(seg<cum.length-1&&cum[seg]<s)seg++;
+    var segLen=cum[seg]-cum[seg-1],r=segLen>0?(s-cum[seg-1])/segLen:0;
+    var x=pts[seg-1][0]+(pts[seg][0]-pts[seg-1][0])*r;
+    var y=pts[seg-1][1]+(pts[seg][1]-pts[seg-1][1])*r;
+    ctx.beginPath();ctx.arc(x,y,2.2,0,Math.PI*2);ctx.fill();
+  }
+}
+
+/* ============ 标注 ============ */
+function tickY(x,y){ctx.beginPath();ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.stroke();}
+function drawFoci(){
+  var fa=S.fAbs;
+  ctx.save();
+  ctx.font='12px '+FONT;ctx.textAlign='center';
+  var xs=[[CX-fa,'F'],[CX+fa,'F'],[CX-2*fa,'2F'],[CX+2*fa,'2F']];
+  for(var i=0;i<4;i++){
+    var x=xs[i][0];if(x<24||x>1076)continue;
+    ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,CY-4);ctx.lineTo(x,CY+4);ctx.stroke();
+    ctx.fillStyle='#ffd34d';ctx.fillText(xs[i][1],x,CY+19);
+  }
+  var yb=CY+44;
+  ctx.strokeStyle='rgba(255,211,77,.75)';ctx.lineWidth=1;
+  if(S.lens==='convex'){
+    ctx.beginPath();ctx.moveTo(CX,yb);ctx.lineTo(CX+fa,yb);ctx.stroke();
+    tickY(CX,yb);tickY(CX+fa,yb);
+    ctx.fillStyle='#ffd34d';ctx.fillText('f = +'+fa+' px',CX+fa/2,yb+15);
+  }else{
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(CX-fa,yb);ctx.lineTo(CX,yb);ctx.stroke();
+    ctx.setLineDash([]);
+    tickY(CX-fa,yb);tickY(CX,yb);
+    ctx.fillStyle='#ffd34d';ctx.fillText('f = -'+fa+' px',CX-fa/2,yb+15);
+  }
+  ctx.restore();
+}
+function drawFocusDots(){
+  var fa=S.fAbs;
+  if(S.mode!=='parallel')return;
+  if(S.lens==='convex'){   // 会聚焦点：亮点
+    ctx.save();
+    ctx.shadowBlur=14;ctx.shadowColor='rgba(255,211,77,.9)';
+    ctx.fillStyle='#fff3b0';
+    ctx.beginPath();ctx.arc(CX+fa,CY,4.5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }else{                    // 虚焦点：空心点
+    ctx.save();
+    ctx.strokeStyle='#ffd34d';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(CX-fa,CY,4.5,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,211,77,.85)';ctx.font='11px '+FONT;ctx.textAlign='center';
+    ctx.fillText('虚焦点',CX-fa,CY-12);
+    ctx.restore();
+  }
+}
+function drawImagePoint(){
+  var sx=S.src.x,sy=S.src.y,u=CX-sx,Ys=CY-sy,f=fSigned();
+  if(Math.abs(u-f)<10)return;
+  var v=f*u/(u-f);                 // 薄透镜公式 1/u+1/v=1/f
+  var xi=CX+v,yi=CY+Ys*v/u;
+  if(xi<16||xi>1084||yi<16||yi>624)return;
+  ctx.save();
+  ctx.font='12px '+FONT;ctx.textAlign='left';
+  if(v>0){
+    ctx.shadowBlur=12;ctx.shadowColor='rgba(255,211,77,.9)';
+    ctx.fillStyle='#ffd34d';
+    ctx.beginPath();ctx.arc(xi,yi,4,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.fillText('像',xi+9,yi-8);
+  }else{
+    ctx.strokeStyle='rgba(255,211,77,.9)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(xi,yi,4,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,211,77,.8)';ctx.fillText('虚像',xi+9,yi-8);
+  }
+  ctx.restore();
+}
+function drawRayLabels(){
+  var sx=S.src.x,sy=S.src.y,u=CX-sx,Ys=CY-sy;
+  ctx.save();
+  ctx.fillStyle='#ffd34d';ctx.font='bold 14px '+FONT;ctx.textAlign='center';
+  ctx.shadowBlur=4;ctx.shadowColor='rgba(0,0,0,.7)';
+  if(S.rays.r1)ctx.fillText('①',(sx+CX)/2-16,(sy+CY)/2-8);
+  if(S.rays.r2)ctx.fillText('②',(sx+CX)/2,sy-12);
+  if(S.rays.r3){
+    if(S.lens==='convex'){
+      var d=u-S.fAbs;
+      if(d>10){var y3=sy+Ys*u/d;ctx.fillText('③',(sx+CX)/2+10,(sy+y3)/2+18);}
+      else if(d<-10){ctx.fillText('③',(sx+CX-S.fAbs)/2,(sy+CY)/2+18);}
+    }else{
+      var y3c=sy+Ys*u/(u+S.fAbs);
+      ctx.fillText('③',(sx+CX)/2+14,(sy+y3c)/2+6);
+    }
+  }
+  ctx.restore();
+}
+
+/* ============ 激光笔与点光源 ============ */
+function drawPen(y){
+  ctx.save();
+  ctx.shadowBlur=10;ctx.shadowColor='rgba(255,60,60,.9)';
+  ctx.fillStyle='#ff5b5b';ctx.beginPath();ctx.arc(215,y,3,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  var ng=ctx.createLinearGradient(0,y-7,0,y+7);
+  ng.addColorStop(0,'#333947');ng.addColorStop(1,'#181c24');
+  ctx.fillStyle=ng;
+  ctx.beginPath();ctx.moveTo(196,y-7);ctx.lineTo(213,y-3);ctx.lineTo(213,y+3);ctx.lineTo(196,y+7);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.stroke();
+  var bg2=ctx.createLinearGradient(0,y-13,0,y+13);
+  bg2.addColorStop(0,'#3a3f4b');bg2.addColorStop(1,'#20242e');
+  ctx.fillStyle=bg2;rr(46,y-13,150,26,13);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.stroke();
+  ctx.fillStyle='#171b22';rr(46,y-13,12,26,6);ctx.fill();
+  ctx.fillStyle='#c62f2f';rr(72,y-19,22,7,3);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(75,y-18,16,1.5);
+  ctx.restore();
+}
+function drawPens(){
+  var offs=PEN_OFF[S.count];
+  for(var i=0;i<offs.length;i++)drawPen(CY+S.dy+offs[i]);
+}
+function drawSource(){
+  var sx=S.src.x,sy=S.src.y;
+  ctx.save();
+  ctx.strokeStyle='#7fb8e8';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(sx,CY);ctx.lineTo(sx,sy+6);ctx.stroke();
+  ctx.fillStyle='#7fb8e8';tri(sx,sy,sx-5,sy+11,sx+5,sy+11);
+  ctx.shadowBlur=16;ctx.shadowColor='rgba(255,211,77,.95)';
+  ctx.fillStyle='#fff3c4';ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#9fc6ea';ctx.font='12px '+FONT;ctx.textAlign='center';
+  ctx.fillText('S',sx,CY+18);
+  ctx.restore();
+}
+function drawInfo(){
+  var f=fSigned();
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='13px '+FONT;
+  var mode=S.mode==='parallel'?('平行光束 · '+S.count+' 支'):'三种特殊光线';
+  ctx.fillText((S.lens==='convex'?'凸透镜':'凹透镜')+' · f = '+(f>0?'+':'')+f+' px · '+mode,CX,30);
+  ctx.fillStyle='rgba(255,255,255,.38)';ctx.font='12px '+FONT;ctx.textAlign='left';
+  ctx.fillText(S.mode==='parallel'?'拖动激光笔组可整体上下移动':'拖动点光源 S 改变物距',16,H-14);
+  ctx.restore();
+}
+
+/* ============ 主绘制 ============ */
+function draw(now){
+  var bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#252d3d');bg.addColorStop(1,'#1a2130');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  var g=clamp((now-growStart)/0.55,0,1);g=1-(1-g)*(1-g);
+  var i,j,p;
+
+  /* 主光轴 */
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,255,.32)';ctx.lineWidth=1;ctx.setLineDash([8,6]);
+  ctx.beginPath();ctx.moveTo(16,CY);ctx.lineTo(1084,CY);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(255,255,255,.45)';ctx.font='12px '+FONT;ctx.textAlign='right';
+  ctx.fillText('主光轴',1080,CY-8);
+  ctx.strokeStyle='rgba(255,255,255,.16)';ctx.setLineDash([4,6]);
+  ctx.beginPath();ctx.moveTo(CX,CY-LH-20);ctx.lineTo(CX,CY+LH+20);ctx.stroke();
+  ctx.restore();
+
+  if(S.showF)drawFoci();
+  drawLens();
+  ctx.save();
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='12px '+FONT;ctx.textAlign='left';
+  ctx.fillText('O',CX+8,CY+17);
+  ctx.restore();
+
+  var sc=buildScene();
+
+  /* 反向延长线（浅色虚线） */
+  ctx.save();
+  ctx.globalAlpha=0.25+0.75*g;
+  ctx.strokeStyle='rgba(255,150,150,.55)';ctx.lineWidth=1.5;ctx.setLineDash([6,6]);
+  for(i=0;i<sc.dash.length;i++){
+    p=sc.dash[i].pts;
+    ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);
+    for(j=1;j<p.length;j++)ctx.lineTo(p[j][0],p[j][1]);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  /* 激光实线（发光 + 生长动画） */
+  ctx.save();
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.shadowBlur=12;ctx.shadowColor='rgba(255,60,60,.8)';
+  for(i=0;i<sc.solid.length;i++){
+    ctx.strokeStyle=sc.solid[i].dim?'rgba(255,90,90,.4)':'#ff3b3b';
+    ctx.lineWidth=sc.solid[i].dim?2:2.5;
+    strokePartial(sc.solid[i].pts,g);
+  }
+  ctx.restore();
+
+  /* 流动光点 */
+  if(g>=1){
+    ctx.save();
+    ctx.fillStyle='#ffe3e3';ctx.shadowBlur=6;ctx.shadowColor='rgba(255,90,90,.9)';
+    for(i=0;i<sc.solid.length;i++)drawDots(sc.solid[i],now,i);
+    ctx.restore();
+  }
+
+  drawFocusDots();
+  if(S.mode==='special'&&S.showImg)drawImagePoint();
+  if(S.mode==='special')drawRayLabels();
+  if(S.mode==='parallel')drawPens();else drawSource();
+  drawInfo();
+}
+
+/* ============ 交互：拖拽 ============ */
+function pos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+function penAt(x,y){
+  if(S.mode!=='parallel'||x<38||x>218)return false;
+  var offs=PEN_OFF[S.count];
+  for(var i=0;i<offs.length;i++){if(Math.abs(y-(CY+S.dy+offs[i]))<=18)return true;}
+  return false;
+}
+function srcAt(x,y){return S.mode==='special'&&dist(x,y,S.src.x,S.src.y)<=22;}
+var drag=null;
+cv.addEventListener('pointerdown',function(e){
+  var p=pos(e);
+  if(penAt(p[0],p[1])){drag={t:'p',y0:p[1],dy0:S.dy};}
+  else if(srcAt(p[0],p[1])){drag={t:'s'};}
+  if(drag){try{cv.setPointerCapture(e.pointerId);}catch(err){}cv.style.cursor='grabbing';e.preventDefault();}
+});
+cv.addEventListener('pointermove',function(e){
+  var p=pos(e);
+  if(drag){
+    if(drag.t==='p'){S.dy=clamp(drag.dy0+(p[1]-drag.y0),-110,150);}
+    else{S.src.x=clamp(p[0],CX-470,CX-90);S.src.y=clamp(p[1],CY-165,CY-28);}
+    return;
+  }
+  cv.style.cursor=(penAt(p[0],p[1])||srcAt(p[0],p[1]))?'grab':'default';
+});
+function endDrag(){drag=null;cv.style.cursor='default';}
+cv.addEventListener('pointerup',endDrag);
+cv.addEventListener('pointercancel',endDrag);
+
+/* ============ UI 控件 ============ */
+var $=function(id){return document.getElementById(id);};
+function setOn(id,v){
+  var bs=$(id).querySelectorAll('button');
+  for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].dataset.v===v);
+}
+function segWire(id,cb){
+  $(id).addEventListener('click',function(e){
+    var b=e.target&&e.target.closest?e.target.closest('button'):null;
+    if(b)cb(b.dataset.v);
+  });
+}
+segWire('segLens',function(v){S.lens=v;restartGrow();syncUI();});
+segWire('segMode',function(v){S.mode=v;restartGrow();syncUI();});
+segWire('segCount',function(v){S.count=parseInt(v,10);restartGrow();syncUI();});
+
+$('fSlider').addEventListener('input',function(){S.fAbs=parseInt(this.value,10);updFVal();});
+$('fSlider').addEventListener('change',function(){restartGrow();});
+$('cR1').addEventListener('change',function(){S.rays.r1=this.checked;restartGrow();});
+$('cR2').addEventListener('change',function(){S.rays.r2=this.checked;restartGrow();});
+$('cR3').addEventListener('change',function(){S.rays.r3=this.checked;restartGrow();});
+$('chkF').addEventListener('change',function(){S.showF=this.checked;});
+$('chkExt').addEventListener('change',function(){S.showExt=this.checked;});
+$('chkImg').addEventListener('change',function(){S.showImg=this.checked;});
+
+$('btnIntro').addEventListener('click',function(){$('introModal').style.display='flex';});
+$('btnCloseIntro').addEventListener('click',function(){$('introModal').style.display='none';});
+$('introModal').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+$('btnSet').addEventListener('click',function(){
+  var p=$('setPanel');p.style.display=(p.style.display==='block')?'none':'block';
+});
+$('btnReset').addEventListener('click',function(){
+  Object.assign(S,JSON.parse(JSON.stringify(DEF)));
+  restartGrow();syncUI();
+});
+
+function updFVal(){
+  var f=fSigned();
+  $('fVal').textContent='f = '+(f>0?'+':'')+f+' px';
+}
+function syncUI(){
+  setOn('segLens',S.lens);setOn('segMode',S.mode);setOn('segCount',String(S.count));
+  $('segCount').classList.toggle('disabled',S.mode!=='parallel');
+  $('fSlider').value=S.fAbs;updFVal();
+  $('rayCard').style.display=S.mode==='special'?'block':'none';
+  $('r2txt').textContent=S.lens==='convex'?'② 平行主轴 → 折射后过焦点 F':'② 平行主轴 → 折射后似从虚焦点发出';
+  $('r3txt').textContent=S.lens==='convex'?'③ 过焦点 F → 折射后平行主轴':'③ 对准对侧虚焦点 → 折射后平行';
+  $('cR1').checked=S.rays.r1;$('cR2').checked=S.rays.r2;$('cR3').checked=S.rays.r3;
+  $('chkF').checked=S.showF;$('chkExt').checked=S.showExt;$('chkImg').checked=S.showImg;
+}
+
+/* ============ 启动 ============ */
+function fit(){
+  var d=Math.min(1.5,window.devicePixelRatio||1);
+  cv.width=W*d;cv.height=H*d;
+  ctx.setTransform(d,0,0,d,0,0);
+}
+window.addEventListener('resize',fit);
+/* ============ 渲染循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ============ */
+var rafId=null,lastRender=0,dirty=true;
+function frame(now){
+  rafId=requestAnimationFrame(frame);
+  now=now||0;
+  if(now-lastRender<33) return;   // 30 FPS 闸（生长动画/流动光点为时间基准，速度不变）
+  lastRender=now; dirty=false;
+  draw(performance.now()/1000);
+}
+function startLoop(){ if(rafId===null){ dirty=true; rafId=requestAnimationFrame(frame); } }
+function stopLoop(){ if(rafId!==null){ cancelAnimationFrame(rafId); rafId=null; } }
+document.addEventListener('visibilitychange',function(){ document.hidden?stopLoop():startLoop(); });
+['pointerdown','pointermove','input','change','click','keydown'].forEach(function(ev){
+  document.addEventListener(ev,function(){ dirty=true; },true);
+});
+window.addEventListener('resize',function(){ dirty=true; });
+fit();syncUI();restartGrow();startLoop();
+})();
+</script>
+</body>
+</html>

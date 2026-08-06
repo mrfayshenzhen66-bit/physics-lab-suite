@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>凸透镜成像规律 · 光学模拟仿真实验室</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; background:#141a26; overflow:hidden;
+    font-family:'PingFang SC','Microsoft YaHei',sans-serif; }
+  #topbar {
+    height:46px; background:rgba(20,26,38,.9); display:flex; align-items:center;
+    padding:0 18px; color:#fff; position:relative; z-index:10;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  #topbar a.back { color:#fff; text-decoration:none; font-size:14px; opacity:.9; }
+  #topbar a.back:hover { opacity:1; text-decoration:underline; }
+  #topbar .title { position:absolute; left:50%; transform:translateX(-50%);
+    font-size:16px; font-weight:600; letter-spacing:1px; }
+  #topbar .hint { margin-left:auto; font-size:12px; color:#8a93a6; }
+  #stage { position:relative; width:100%; height:calc(100% - 46px);
+    display:flex; align-items:center; justify-content:center; }
+  #canvasWrap { position:relative; }
+  canvas { display:block; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+
+  .panel {
+    position:absolute; background:rgba(20,26,38,.85); border:1px solid rgba(255,255,255,.08);
+    border-radius:10px; color:#e8ecf3; padding:10px 14px; font-size:13px;
+    backdrop-filter:blur(4px); z-index:5;
+  }
+  #readout { top:14px; right:14px; min-width:238px; line-height:1.9; }
+  #readout .row { display:flex; justify-content:space-between; }
+  #readout .val { color:#ffd34d; font-variant-numeric:tabular-nums; }
+  #readout .verify { border-top:1px dashed rgba(255,255,255,.15); margin-top:4px; padding-top:4px;
+    font-size:12px; color:#9fd6a0; }
+  #conclusion { top:14px; right:14px; margin-top:0; }
+  #conclBox { top:196px; right:14px; max-width:260px; font-size:13px; line-height:1.7;
+    color:#ffe9a8; border-color:rgba(255,211,77,.25); }
+  #conclBox b { color:#ffd34d; }
+
+  #presets { top:14px; left:14px; display:flex; flex-direction:column; gap:6px; }
+  #presets .ptitle { font-size:12px; color:#8a93a6; margin-bottom:2px; }
+  .pbtn {
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); color:#dfe5ee;
+    border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; text-align:left;
+    font-family:inherit; transition:background .15s;
+  }
+  .pbtn:hover { background:rgba(255,255,255,.16); }
+  .pbtn.accent { border-color:rgba(255,211,77,.5); color:#ffd34d; }
+  .pbtn.accent:hover { background:rgba(255,211,77,.15); }
+
+  #toolbar {
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    background:rgba(20,26,38,.85); border:1px solid rgba(255,255,255,.08);
+    border-radius:24px; padding:7px 10px; display:flex; gap:8px; z-index:6;
+  }
+  #toolbar button {
+    background:transparent; border:1px solid rgba(255,255,255,.14); color:#dfe5ee;
+    border-radius:16px; padding:6px 18px; font-size:13px; cursor:pointer; font-family:inherit;
+    transition:background .15s;
+  }
+  #toolbar button:hover { background:rgba(255,255,255,.14); }
+
+  #introModal, #settingsPanel {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    background:rgba(18,24,36,.96); border:1px solid rgba(255,255,255,.12);
+    border-radius:12px; color:#e8ecf3; padding:22px 26px; width:460px; z-index:20;
+    box-shadow:0 12px 50px rgba(0,0,0,.6); font-size:14px; line-height:1.9; display:none;
+  }
+  #introModal h3, #settingsPanel h3 { font-size:16px; margin-bottom:10px; color:#ffd34d; }
+  #introModal .closeX, #settingsPanel .closeX {
+    position:absolute; top:10px; right:14px; cursor:pointer; color:#8a93a6; font-size:18px;
+  }
+  #introModal .closeX:hover, #settingsPanel .closeX:hover { color:#fff; }
+  .setRow { display:flex; align-items:center; gap:10px; margin:12px 0; font-size:13px; }
+  .setRow label { width:110px; color:#aab3c2; }
+  .setRow input[type=range] { flex:1; accent-color:#ffd34d; }
+  .setRow .sv { width:64px; text-align:right; color:#ffd34d; font-variant-numeric:tabular-nums; }
+  .setRow input[type=checkbox] { accent-color:#ffd34d; }
+</style>
+</head>
+<body>
+<div id="topbar">
+  <a class="back" href="index.html">← 返回合集</a>
+  <div class="title">凸透镜成像规律</div>
+  <div class="hint">拖动蜡烛改物距 · 拖动烛焰改高度 · 拖动光屏找像</div>
+</div>
+<div id="stage">
+  <div id="canvasWrap">
+    <canvas id="cv" width="1100" height="640"></canvas>
+
+    <div class="panel" id="presets">
+      <div class="ptitle">物距预设</div>
+      <button class="pbtn" data-u="2.5">u &gt; 2f（照相机）</button>
+      <button class="pbtn" data-u="2.0">u = 2f（等大）</button>
+      <button class="pbtn" data-u="1.5">f &lt; u &lt; 2f（投影仪）</button>
+      <button class="pbtn" data-u="1.0">u = f（不成像）</button>
+      <button class="pbtn" data-u="0.7">u &lt; f（放大镜）</button>
+      <button class="pbtn accent" id="btnAuto">⌖ 光屏自动对焦</button>
+    </div>
+
+    <div class="panel" id="readout">
+      <div class="row"><span>物距 u</span><span class="val" id="rU">—</span></div>
+      <div class="row"><span>焦距 f</span><span class="val" id="rF">—</span></div>
+      <div class="row"><span>像距 v</span><span class="val" id="rV">—</span></div>
+      <div class="row"><span>放大率 |m|</span><span class="val" id="rM">—</span></div>
+      <div class="verify" id="rVerify">1/u + 1/v = 1/f</div>
+    </div>
+    <div class="panel" id="conclBox"><b>成像结论：</b><span id="rConcl">—</span></div>
+
+    <div id="toolbar">
+      <button id="btnIntro">简介</button>
+      <button id="btnSettings">设置</button>
+      <button id="btnReset">重置</button>
+    </div>
+
+    <div id="introModal">
+      <span class="closeX" id="introClose">×</span>
+      <h3>实验简介</h3>
+      <p>凸透镜成像遵循薄透镜公式：1/u + 1/v = 1/f（u 为物距，v 为像距，f 为焦距）。</p>
+      <p>从烛焰顶端发出的三条特殊光线——平行于主光轴的光线经透镜后过焦点、过焦点的光线经透镜后平行于主光轴、过光心的光线方向不变——其交点即为像的位置。</p>
+      <p>当 u &gt; f 时成倒立的实像，可用光屏承接；当 u &lt; f 时成正立放大的虚像，需透过透镜观察。</p>
+      <p>操作：左右拖动蜡烛改变物距，上下拖动烛焰改变物体高度，拖动光屏寻找清晰的像，也可点击「光屏自动对焦」。</p>
+    </div>
+
+    <div id="settingsPanel">
+      <span class="closeX" id="setClose">×</span>
+      <h3>设置</h3>
+      <div class="setRow">
+        <label>焦距 f</label>
+        <input type="range" id="setF" min="5" max="10" step="0.5" value="10">
+        <span class="sv" id="setFV">10.0 cm</span>
+      </div>
+      <div class="setRow">
+        <label>烛焰高度</label>
+        <input type="range" id="setH" min="40" max="110" step="1" value="70">
+        <span class="sv" id="setHV">70 px</span>
+      </div>
+      <div class="setRow">
+        <label>光线流动动画</label>
+        <input type="checkbox" id="setAnim" checked>
+      </div>
+      <div class="setRow">
+        <label>显示像的箭头</label>
+        <input type="checkbox" id="setArrow" checked>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  // ============ 常量与状态 ============
+  var W = 1100, H = 640;
+  var LENS_X = 540, AXIS_Y = 390;      // 透镜位置、主光轴高度
+  var SCALE = 18;                       // 1 cm = 18 px
+  var U_MIN = 3, U_MAX = 26;            // 物距范围 (cm)
+  var LENS_HALF_H = 140;                // 透镜半高
+
+  var state = {
+    f: 10,          // 焦距 cm
+    u: 25,          // 物距 cm（默认 u>2f）
+    h: 70,          // 物体高度 px
+    screenX: 840,   // 光屏 x
+    anim: true,
+    showArrow: true
+  };
+
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+
+  // ============ 物理计算 ============
+  function calcV(u, f){                 // 薄透镜公式 1/u+1/v=1/f
+    if (Math.abs(u - f) < 1e-9) return Infinity;
+    return 1 / (1/f - 1/u);
+  }
+  function objX(){ return LENS_X - state.u * SCALE; }
+
+  // ============ 自适应缩放 ============
+  function fitCanvas(){
+    var stage = document.getElementById('stage');
+    var availW = stage.clientWidth - 24, availH = stage.clientHeight - 24;
+    var s = Math.min(availW / W, availH / H);
+    cv.style.width = (W * s) + 'px';
+    cv.style.height = (H * s) + 'px';
+  }
+  window.addEventListener('resize', fitCanvas);
+
+  // ============ 工具：折线路径与流动光点 ============
+  function pathLengths(pts){
+    var segs = [], total = 0, i, l;
+    for (i = 0; i < pts.length - 1; i++){
+      l = Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]);
+      segs.push(l); total += l;
+    }
+    return { segs: segs, total: total };
+  }
+  function pointAt(pts, pl, d){
+    d = Math.max(0, Math.min(d, pl.total));
+    var i;
+    for (i = 0; i < pl.segs.length; i++){
+      if (d <= pl.segs[i] || i === pl.segs.length - 1){
+        var t = pl.segs[i] === 0 ? 0 : d / pl.segs[i];
+        return [ pts[i][0] + (pts[i+1][0]-pts[i][0]) * t,
+                 pts[i][1] + (pts[i+1][1]-pts[i][1]) * t ];
+      }
+      d -= pl.segs[i];
+    }
+    return pts[pts.length-1];
+  }
+  function drawLaserPath(pts, opts){
+    opts = opts || {};
+    var i;
+    ctx.save();
+    if (opts.dash) ctx.setLineDash(opts.dash);
+    ctx.strokeStyle = opts.color || '#ff3b3b';
+    ctx.lineWidth = opts.width || 2.4;
+    if (!opts.noGlow){
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(255,60,60,.8)';
+    }
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.stroke();
+    ctx.restore();
+
+    if (state.anim && !opts.dash && !opts.noDots){
+      var pl = pathLengths(pts);
+      if (pl.total > 4){
+        var n = Math.max(2, Math.round(pl.total / 160));
+        for (i = 0; i < n; i++){
+          var d = ((tGlobal + i / n) % 1) * pl.total;
+          var p = pointAt(pts, pl, d);
+          ctx.save();
+          ctx.fillStyle = '#fff';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(255,80,80,.9)';
+          ctx.beginPath();
+          ctx.arc(p[0], p[1], 2.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  // ============ 场景绘制 ============
+  var tGlobal = 0;
+
+  function drawBackground(){
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#252d3d');
+    g.addColorStop(1, '#1a2130');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawAxisAndScale(){
+    // 主光轴
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.35)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(30, AXIS_Y); ctx.lineTo(W - 20, AXIS_Y);
+    ctx.stroke();
+    // 刻度：每 5 cm
+    ctx.fillStyle = 'rgba(255,255,255,.45)';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    var cm;
+    for (cm = -25; cm <= 30; cm += 5){
+      var x = LENS_X + cm * SCALE;
+      if (x < 30 || x > W - 16) continue;
+      ctx.strokeStyle = 'rgba(255,255,255,.25)';
+      ctx.beginPath();
+      ctx.moveTo(x, AXIS_Y - 4); ctx.lineTo(x, AXIS_Y + 4);
+      ctx.stroke();
+      ctx.fillText(Math.abs(cm) + '', x, AXIS_Y + 18);
+    }
+    ctx.fillText('(cm)', LENS_X + 33 * SCALE > W - 40 ? W - 40 : LENS_X + 33 * SCALE, AXIS_Y + 18);
+    ctx.restore();
+  }
+
+  function drawLens(){
+    var top = AXIS_Y - LENS_HALF_H, bot = AXIS_Y + LENS_HALF_H;
+    ctx.save();
+    // 双凸透镜
+    ctx.beginPath();
+    ctx.moveTo(LENS_X, top);
+    ctx.quadraticCurveTo(LENS_X - 36, AXIS_Y, LENS_X, bot);
+    ctx.quadraticCurveTo(LENS_X + 36, AXIS_Y, LENS_X, top);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(150,200,255,.18)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(170,210,255,.75)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // 上下箭头（凸透镜符号）
+    ctx.strokeStyle = 'rgba(200,220,245,.8)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(LENS_X, top - 14); ctx.lineTo(LENS_X, bot + 14);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(LENS_X - 6, top - 6); ctx.lineTo(LENS_X, top - 14); ctx.lineTo(LENS_X + 6, top - 6);
+    ctx.moveTo(LENS_X - 6, bot + 6); ctx.lineTo(LENS_X, bot + 14); ctx.lineTo(LENS_X + 6, bot + 6);
+    ctx.stroke();
+    // 焦点与 2F 标记
+    var fpx = state.f * SCALE;
+    ctx.fillStyle = '#ffd34d';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    var marks = [
+      [LENS_X - fpx, 'F'], [LENS_X + fpx, 'F'],
+      [LENS_X - 2 * fpx, '2F'], [LENS_X + 2 * fpx, '2F']
+    ];
+    var i, x;
+    for (i = 0; i < marks.length; i++){
+      x = marks[i][0];
+      if (x < 36 || x > W - 24) continue;
+      ctx.beginPath();
+      ctx.arc(x, AXIS_Y, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillText(marks[i][1], x, AXIS_Y + 34);
+    }
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.fillText('O', LENS_X, AXIS_Y + 34);
+    ctx.restore();
+  }
+
+  function drawCandle(){
+    var x = objX(), tipY = AXIS_Y - state.h;
+    var bodyH = state.h - 20;
+    ctx.save();
+    // 烛体
+    var g = ctx.createLinearGradient(x - 8, 0, x + 8, 0);
+    g.addColorStop(0, '#e8dcc0'); g.addColorStop(.5, '#f7efdb'); g.addColorStop(1, '#cbbd9c');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 7, AXIS_Y - bodyH, 14, bodyH);
+    ctx.strokeStyle = 'rgba(0,0,0,.35)';
+    ctx.strokeRect(x - 7, AXIS_Y - bodyH, 14, bodyH);
+    // 烛芯
+    ctx.strokeStyle = '#5a4a33';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x, AXIS_Y - bodyH); ctx.lineTo(x, tipY + 9);
+    ctx.stroke();
+    // 火焰
+    var fg = ctx.createRadialGradient(x, tipY + 6, 1, x, tipY + 6, 12);
+    fg.addColorStop(0, '#fff6c8');
+    fg.addColorStop(.45, '#ffcf4d');
+    fg.addColorStop(1, 'rgba(255,120,30,0)');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.ellipse(x, tipY + 6, 7.5, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // 底座
+    ctx.fillStyle = '#4a5261';
+    ctx.fillRect(x - 16, AXIS_Y, 32, 7);
+    // 物体箭头（黄色，轴→焰尖）
+    ctx.strokeStyle = '#ffd34d';
+    ctx.fillStyle = '#ffd34d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 20, AXIS_Y); ctx.lineTo(x - 20, tipY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - 25, tipY + 8); ctx.lineTo(x - 20, tipY); ctx.lineTo(x - 15, tipY + 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawScreen(v, imgX, imgH){
+    var sx = state.screenX;
+    var top = AXIS_Y - 130, bot = AXIS_Y + 130;
+    ctx.save();
+    // 屏面
+    ctx.fillStyle = 'rgba(230,235,242,.92)';
+    ctx.fillRect(sx - 4, top, 8, bot - top);
+    ctx.strokeStyle = 'rgba(255,255,255,.5)';
+    ctx.strokeRect(sx - 4, top, 8, bot - top);
+    // 背面 45° 斜线纹理
+    ctx.strokeStyle = 'rgba(120,130,145,.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    var i;
+    for (i = -130; i < 130; i += 9){
+      ctx.moveTo(sx + 4, AXIS_Y + i);
+      ctx.lineTo(sx + 4 + 12, AXIS_Y + i + 12);
+    }
+    ctx.stroke();
+    // 底座
+    ctx.fillStyle = '#4a5261';
+    ctx.fillRect(sx - 18, AXIS_Y + 130, 36, 7);
+
+    // 屏上承接的像（仅实像能成在屏上）
+    if (v > 0 && isFinite(v)){
+      var blur = Math.min(Math.abs(sx - imgX) * 0.12, 26);
+      var sharp = Math.max(1 - Math.abs(sx - imgX) / 90, 0.12);
+      var hImg = Math.min(imgH, 118);
+      var cy = AXIS_Y + hImg * 0.55;   // 倒立像，中心在轴下方
+      var k, off, a;
+      for (k = -2; k <= 2; k++){
+        off = k * blur / 2;
+        a = blur < 0.5 ? (k === 0 ? 0.95 : 0) : sharp * 0.22;
+        if (a <= 0.01) continue;
+        var fg = ctx.createRadialGradient(sx, cy + off, 1, sx, cy + off, hImg * 0.62);
+        fg.addColorStop(0, 'rgba(255,240,180,' + a + ')');
+        fg.addColorStop(.5, 'rgba(255,190,80,' + a * 0.85 + ')');
+        fg.addColorStop(1, 'rgba(255,120,30,0)');
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.ellipse(sx, cy + off, 5 + hImg * 0.16, hImg * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (blur < 1.5){
+        ctx.fillStyle = 'rgba(159,214,160,.95)';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('清晰的像', sx, top - 10);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,.5)';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('模糊', sx, top - 10);
+      }
+    } else {
+      // 虚像/不成像：屏上只有发散光斑
+      var ox = objX(), ty = AXIS_Y - state.h;
+      var y1 = ty, y3 = AXIS_Y + (AXIS_Y - ty) * (sx - LENS_X) / (LENS_X - ox) ;
+      var spread = Math.abs(y3 - y1) + 30;
+      var g2 = ctx.createRadialGradient(sx, (y1 + y3) / 2, 2, sx, (y1 + y3) / 2, spread);
+      g2.addColorStop(0, 'rgba(255,200,120,.25)');
+      g2.addColorStop(1, 'rgba(255,120,30,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.ellipse(sx, (y1 + y3) / 2, 8, spread, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.5)';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('屏上无像', sx, top - 10);
+    }
+    ctx.restore();
+  }
+
+  function drawRaysAndImage(){
+    var f = state.f, u = state.u, h = state.h;
+    var fpx = f * SCALE;
+    var ox = objX(), ty = AXIS_Y - h;
+    var sx = state.screenX;
+    var v = calcV(u, f);
+    var hasImage = isFinite(v);
+    var imgX = hasImage ? LENS_X + v * SCALE : NaN;
+    var imgH = hasImage ? Math.abs(v / u) * h : 0;
+    var eps = Math.abs(u - f) < 0.001;
+
+    // ---- 光线 1：平行主光轴 → 过右焦点 ----
+    var p1 = [LENS_X, ty];
+    var F2 = [LENS_X + fpx, AXIS_Y];
+    var d1x = F2[0] - p1[0], d1y = F2[1] - p1[1];
+    var tEnd = (sx - p1[0]) / d1x;
+    var q1 = [p1[0] + d1x * tEnd, p1[1] + d1y * tEnd];
+    drawLaserPath([[ox, ty], p1, q1]);
+    if (hasImage && v < 0){
+      // 反向延长虚线 → 虚像
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(255,80,80,.55)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(p1[0], p1[1]);
+      var tB = (imgX - p1[0]) / d1x;
+      ctx.lineTo(p1[0] + d1x * tB, p1[1] + d1y * tB);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ---- 光线 2：过左焦点（或延长线过左焦点）→ 平行 ----
+    if (!eps){
+      var F1 = [LENS_X - fpx, AXIS_Y];
+      // 直线 F1—T 与透镜平面 x=LENS_X 的交点
+      var k2 = (LENS_X - F1[0]) / (ox - F1[0]);
+      var p2y = AXIS_Y + (ty - AXIS_Y) * k2;
+      if (Math.abs(p2y - AXIS_Y) < LENS_HALF_H + 30){
+        drawLaserPath([[ox, ty], [LENS_X, p2y], [sx, p2y]]);
+        if (hasImage && v < 0){
+          ctx.save();
+          ctx.setLineDash([6, 6]);
+          ctx.strokeStyle = 'rgba(255,80,80,.55)';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(LENS_X, p2y);
+          ctx.lineTo(imgX, p2y);   // 平行光反向延长到虚像高度? 虚像在反向延长线上
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+
+    // ---- 光线 3：过光心 → 不偏折 ----
+    var O = [LENS_X, AXIS_Y];
+    var d3x = O[0] - ox, d3y = O[1] - ty;
+    var t3 = (sx - ox) / d3x;
+    var q3 = [ox + d3x * t3, ty + d3y * t3];
+    drawLaserPath([[ox, ty], q3]);
+    if (hasImage && v < 0){
+      ctx.save();
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(255,80,80,.55)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(O[0], O[1]);
+      var t3b = (imgX - ox) / d3x;
+      ctx.lineTo(ox + d3x * t3b, ty + d3y * t3b);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ---- 像的箭头 ----
+    if (hasImage && state.showArrow){
+      if (v > 0){
+        // 实像：倒立实心箭头（轴下方）
+        var iy = AXIS_Y + imgH;
+        ctx.save();
+        ctx.strokeStyle = '#ff6b4a';
+        ctx.fillStyle = '#ff6b4a';
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(255,100,70,.6)';
+        ctx.beginPath();
+        ctx.moveTo(imgX, AXIS_Y); ctx.lineTo(imgX, iy);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(imgX - 6, iy - 9); ctx.lineTo(imgX, iy); ctx.lineTo(imgX + 6, iy - 9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // 虚像：正立虚线箭头（物体同侧，轴上方）
+        var vy = AXIS_Y - imgH;
+        ctx.save();
+        ctx.setLineDash([7, 5]);
+        ctx.strokeStyle = 'rgba(255,211,77,.9)';
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.moveTo(imgX, AXIS_Y); ctx.lineTo(imgX, vy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(255,211,77,.9)';
+        ctx.beginPath();
+        ctx.moveTo(imgX - 6, vy + 9); ctx.lineTo(imgX, vy); ctx.lineTo(imgX + 6, vy + 9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    return { v: v, imgX: imgX, imgH: imgH };
+  }
+
+  function drawVirtualHint(){
+    // u<f：提示透过透镜观察虚像
+    ctx.save();
+    var ex = 950, ey = 190;
+    // 眼睛图标
+    ctx.strokeStyle = 'rgba(255,211,77,.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, 22, 12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd34d';
+    ctx.beginPath();
+    ctx.arc(ex, ey, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,233,168,.95)';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('u < f：从右侧透过透镜向左观察', ex, ey + 36);
+    ctx.fillText('可见正立、放大的虚像', ex, ey + 54);
+    ctx.restore();
+  }
+
+  // ============ 读数与结论（DOM） ============
+  var elU = document.getElementById('rU'),
+      elF = document.getElementById('rF'),
+      elV = document.getElementById('rV'),
+      elM = document.getElementById('rM'),
+      elVerify = document.getElementById('rVerify'),
+      elConcl = document.getElementById('rConcl');
+
+  function updateReadout(v){
+    var u = state.u, f = state.f;
+    elU.textContent = u.toFixed(2) + ' cm';
+    elF.textContent = f.toFixed(1) + ' cm';
+    var eqF = Math.abs(u - f) < 0.06, eq2F = Math.abs(u - 2 * f) < 0.06;
+    if (Math.abs(u - f) < 0.001){
+      elV.textContent = '∞（不成像）';
+      elM.textContent = '—';
+      elVerify.textContent = '1/u + 1/v = 1/f ：u = f，v → ∞';
+      elConcl.textContent = 'u = f，折射光线互相平行，不成像。';
+      return;
+    }
+    elV.textContent = (v > 0 ? v.toFixed(2) + ' cm' : v.toFixed(2) + ' cm（虚像）');
+    var m = Math.abs(v / u);
+    elM.textContent = m.toFixed(2) + ' ×';
+    var lhs = 1 / u + 1 / v, rhs = 1 / f;
+    elVerify.textContent = '1/u + 1/v = ' + lhs.toFixed(4) + ' ≈ 1/f = ' + rhs.toFixed(4) + ' cm⁻¹ ✓';
+    if (v < 0){
+      elConcl.textContent = 'u < f：正立、放大的虚像，物像同侧 · 应用：放大镜';
+    } else if (eqF){
+      elConcl.textContent = 'u = f：不成像';
+    } else if (u > 2 * f && !eq2F){
+      elConcl.textContent = 'u > 2f：倒立、缩小的实像（f < v < 2f）· 应用：照相机';
+    } else if (eq2F){
+      elConcl.textContent = 'u = 2f：倒立、等大的实像（v = 2f）';
+    } else {
+      elConcl.textContent = 'f < u < 2f：倒立、放大的实像（v > 2f）· 应用：投影仪';
+    }
+  }
+
+  // ============ 主循环（30 FPS 上限 + 按需渲染 + 切后台自动暂停） ============
+  var rafId = null, lastRender = 0, dirty = true;
+  function animating(){ return state.anim; } // 传播动画开启时逐帧渲染；关闭后仅交互触发重绘
+  function frame(now){
+    rafId = requestAnimationFrame(frame);
+    now = now || 0;
+    if (!animating() && !dirty) return;   // 静止且画面已最新：本帧跳过
+    if (now - lastRender < 33) return;    // 30 FPS 闸（dirty 保持到下一帧）
+    lastRender = now; dirty = false;
+    tGlobal = state.anim ? (now / 1000 * 0.28) % 1 : 0;
+    drawBackground();
+    drawAxisAndScale();
+    var v0 = calcV(state.u, state.f);
+    var imgX0 = isFinite(v0) ? LENS_X + v0 * SCALE : NaN;
+    var imgH0 = isFinite(v0) ? Math.abs(v0 / state.u) * state.h : 0;
+    drawScreen(v0, imgX0, imgH0);
+    drawLens();
+    drawCandle();
+    var r = drawRaysAndImage();
+    if (r.v < 0) drawVirtualHint();
+    updateReadout(r.v);
+  }
+  function startLoop(){ if (rafId === null){ dirty = true; rafId = requestAnimationFrame(frame); } }
+  function stopLoop(){ if (rafId !== null){ cancelAnimationFrame(rafId); rafId = null; } }
+  document.addEventListener('visibilitychange', function(){ document.hidden ? stopLoop() : startLoop(); });
+  ['pointerdown','pointermove','input','change','click','keydown'].forEach(function(ev){
+    document.addEventListener(ev, function(){ dirty = true; }, true);
+  });
+  window.addEventListener('resize', function(){ dirty = true; });
+
+  // ============ 交互：拖拽 ============
+  var dragMode = null;   // 'candle' | 'flame' | 'screen'
+  function toLogical(e){
+    var rect = cv.getBoundingClientRect();
+    var s = W / rect.width;
+    return [ (e.clientX - rect.left) * s, (e.clientY - rect.top) * s ];
+  }
+  function hitTest(p){
+    var x = p[0], y = p[1];
+    var ox = objX(), ty = AXIS_Y - state.h;
+    if (Math.hypot(x - ox, y - (ty + 6)) < 18) return 'flame';
+    if (Math.abs(x - state.screenX) < 12 && y > AXIS_Y - 135 && y < AXIS_Y + 140) return 'screen';
+    if (Math.abs(x - ox) < 16 && y > ty && y < AXIS_Y + 10) return 'candle';
+    return null;
+  }
+  cv.addEventListener('pointerdown', function(e){
+    var p = toLogical(e);
+    dragMode = hitTest(p);
+    if (dragMode) cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', function(e){
+    var p = toLogical(e);
+    if (!dragMode){
+      var hov = hitTest(p);
+      cv.style.cursor = hov === 'flame' ? 'ns-resize' : (hov ? 'ew-resize' : 'default');
+      return;
+    }
+    if (dragMode === 'candle'){
+      var u = (LENS_X - p[0]) / SCALE;
+      state.u = Math.max(U_MIN, Math.min(U_MAX, u));
+    } else if (dragMode === 'flame'){
+      var h = AXIS_Y - 6 - p[1];
+      state.h = Math.max(40, Math.min(110, h));
+      document.getElementById('setH').value = Math.round(state.h);
+      document.getElementById('setHV').textContent = Math.round(state.h) + ' px';
+    } else if (dragMode === 'screen'){
+      state.screenX = Math.max(LENS_X + 30, Math.min(W - 25, p[0]));
+    }
+  });
+  cv.addEventListener('pointerup', function(){ dragMode = null; });
+  cv.addEventListener('pointercancel', function(){ dragMode = null; });
+
+  // ============ 预设与自动对焦 ============
+  function autoFocus(){
+    var v = calcV(state.u, state.f);
+    if (isFinite(v) && v > 0){
+      state.screenX = Math.max(LENS_X + 30, Math.min(W - 25, LENS_X + v * SCALE));
+      return true;
+    }
+    return false;
+  }
+  var presetBtns = document.querySelectorAll('#presets .pbtn[data-u]');
+  var i;
+  for (i = 0; i < presetBtns.length; i++){
+    presetBtns[i].addEventListener('click', function(){
+      var k = parseFloat(this.getAttribute('data-u'));
+      var u = state.f * k;
+      state.u = Math.max(U_MIN, Math.min(U_MAX, u));
+      autoFocus();
+    });
+  }
+  document.getElementById('btnAuto').addEventListener('click', function(){
+    if (!autoFocus()){
+      elConcl.textContent = 'u ≤ f：成虚像或不成像，光屏无法承接，请透过透镜观察。';
+    }
+  });
+
+  // ============ 工具栏 ============
+  var introModal = document.getElementById('introModal');
+  var settingsPanel = document.getElementById('settingsPanel');
+  document.getElementById('btnIntro').addEventListener('click', function(){
+    introModal.style.display = introModal.style.display === 'block' ? 'none' : 'block';
+    settingsPanel.style.display = 'none';
+  });
+  document.getElementById('introClose').addEventListener('click', function(){
+    introModal.style.display = 'none';
+  });
+  document.getElementById('btnSettings').addEventListener('click', function(){
+    settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+    introModal.style.display = 'none';
+  });
+  document.getElementById('setClose').addEventListener('click', function(){
+    settingsPanel.style.display = 'none';
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    state.f = 10; state.u = 25; state.h = 70;
+    state.anim = true; state.showArrow = true;
+    document.getElementById('setF').value = 10;
+    document.getElementById('setFV').textContent = '10.0 cm';
+    document.getElementById('setH').value = 70;
+    document.getElementById('setHV').textContent = '70 px';
+    document.getElementById('setAnim').checked = true;
+    document.getElementById('setArrow').checked = true;
+    autoFocus();
+  });
+
+  // ============ 设置面板控件 ============
+  document.getElementById('setF').addEventListener('input', function(){
+    state.f = parseFloat(this.value);
+    document.getElementById('setFV').textContent = state.f.toFixed(1) + ' cm';
+    if (state.u > U_MAX) state.u = U_MAX;
+    autoFocus();
+  });
+  document.getElementById('setH').addEventListener('input', function(){
+    state.h = parseFloat(this.value);
+    document.getElementById('setHV').textContent = state.h + ' px';
+  });
+  document.getElementById('setAnim').addEventListener('change', function(){
+    state.anim = this.checked;
+  });
+  document.getElementById('setArrow').addEventListener('change', function(){
+    state.showArrow = this.checked;
+  });
+
+  // ============ 启动 ============
+  fitCanvas();
+  autoFocus();   // 默认 u=25, f=10 → v=16.67cm，光屏自动在像距处
+  startLoop();
+})();
+</script>
+</body>
+</html>
